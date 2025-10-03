@@ -1,7 +1,6 @@
-from typing import List
-
 from src.DAO.BundleDAO import BundleDAO
 from src.DAO.ItemDAO import ItemDAO
+from src.Model.Bundle import Bundle
 from src.Model.DiscountedBundle import DiscountedBundle
 from src.Model.Item import Item
 from src.Model.PredeinedBundle import PredefinedBundle
@@ -30,8 +29,8 @@ class AdminMenuService:
     def delete_bundle(self, id: str) -> None:
         pass
 
-    def list_items(self) -> List[Item]:
+    def list_items(self) -> list[Item]:
         pass
 
-    def list_bundles(self) -> List:
+    def list_bundles(self) -> list[Bundle]:
         pass
