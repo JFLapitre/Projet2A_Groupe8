@@ -10,3 +10,5 @@ class Item(BaseModel):
     stock: int
     availability: bool
 
+item = Item(id = 1, name = 'b', description = 'b', price = 3.2, itemtype = 'dessert', stock = 3, availability = True)
+print(item)
