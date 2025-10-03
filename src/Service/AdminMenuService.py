@@ -15,7 +15,12 @@ class AdminMenuService:
         pass
 
     def update_item(self, id: str, desc: str, price: float, stock: int, availability: bool) -> None:
-        pass
+        item = ItemDAO.get_by_id(id)
+        # corps fonction
+        ItemDAO.delete_by_id(id)
+        ItemDAO.add(item)
+
+        ItemDAO.ajouter
 
     def delete_item(self, id: str) -> None:
         pass
