@@ -1,5 +1,5 @@
-from AbstractBundle.py import AbstractBundle
-from Item.py import Item
+from abstract_bundle.py import AbstractBundle
+from item.py import Item
 
 
 class PredefinedBundle(AbstractBundle):
