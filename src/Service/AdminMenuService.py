@@ -1,5 +1,5 @@
 from src.DAO.BundleDAO import BundleDAO
-from src.DAO.ItemDAO import ItemDAO
+from src.DAO.itemDAO import ItemDAO
 from src.Model.Bundle import Bundle
 from src.Model.DiscountedBundle import DiscountedBundle
 from src.Model.Item import Item
@@ -21,24 +21,31 @@ class AdminMenuService:
             assert not availability, "Zero stock implies non-availability"
 
         new_item = Item(name=name, description=desc, price=price, stock=stock, availability=availability)
-        self.item_dao.add(new_item)  # méthode de la DAO
+        self.item_dao.add_item(new_item)
 
     def update_item(self, id: str, desc: str, price: float, stock: int, availability: bool) -> None:
-        item = ItemDAO.get_by_id(id)  # type Item
+        item = self.item_dao.find_item_by_id(id)
+        if not item:
+            raise ValueError(f"No item found with id {id}.")
 
         item.description = desc
-
-        # always have a positive price
-        if price > 0:
+        if price >= 0:
             item.price = price
-
+        else:
+            raise ValueError("Price must be positive.")
+        if stock < 0:
+            raise ValueError("Stock cannot be negative.")
+        if stock == 0:
+            assert not availability, "Zero stock implies non-availability"
         item.stock = stock
         item.availability = availability
-
-        ItemDAO.update(item)
+        self.item_dao.update_item(item)
 
     def delete_item(self, id: str) -> None:
-        pass
+        item = self.item_dao.find_item_by_id(id)
+        if not item:
+            raise ValueError(f"No item found with id {id}.")
+        self.item_dao.delete_item(id)
 
     def create_predefined(self, name: str, composition: list, price: float) -> PredefinedBundle:
         pass
