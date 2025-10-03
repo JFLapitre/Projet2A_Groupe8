@@ -9,4 +9,3 @@ class Item(BaseModel):
     item_type: str
     stock: int
     availability: bool
-

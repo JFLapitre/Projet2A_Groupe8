@@ -1,8 +1,8 @@
 from typing import Optional
 
 import pytest
-
 from src.Model.User import User
+
 from src.Service.PasswordService import create_salt, hash_password, validate_username_password
 
 
