@@ -27,8 +27,6 @@ class AdminMenuService:
         item = self.item_dao.find_item_by_id(id)
         if not item:
             raise ValueError(f"No item found with id {id}.")
-
-        item.description = desc
         if price >= 0:
             item.price = price
         else:
@@ -37,6 +35,8 @@ class AdminMenuService:
             raise ValueError("Stock cannot be negative.")
         if stock == 0:
             assert not availability, "Zero stock implies non-availability"
+
+        item.description = desc
         item.stock = stock
         item.availability = availability
         self.item_dao.update_item(item)
@@ -45,19 +45,34 @@ class AdminMenuService:
         item = self.item_dao.find_item_by_id(id)
         if not item:
             raise ValueError(f"No item found with id {id}.")
+
         self.item_dao.delete_item(id)
 
-    def create_predefined(self, name: str, composition: list, price: float) -> PredefinedBundle:
-        pass
+    def create_predefined_bundle(self, name: str, composition: list, price: float) -> None:
+        if price <= 0:
+            raise ValueError("Price must be positive.")
+        if not composition:
+            raise ValueError("Composition cannot be empty.")
 
-    def create_discounted_bundle(self, name: str, components: list, discount: float) -> DiscountedBundle:
-        pass
+        new_bundle = PredefinedBundle(name=name, composition=composition, price=price)
+        self.bundle_dao.add_predifined_bundle(new_bundle)  # à implémenter
+
+    def create_discounted_bundle(self, name: str, components: list, discount: float) -> None:
+        if discount <= 0 or discount >= 100:
+            raise ValueError("Discount must be between 0 and 100.")
+        if not components:
+            raise ValueError("Components list cannot be empty.")
+
+        new_bundle = DiscountedBundle(name=name, components=components, discount=discount)
+        self.bundle_dao.add_dicounted_bundle(new_bundle)  # à implémenter
 
     def delete_bundle(self, id: str) -> None:
-        pass
+        if not self.bundle_dao.find_bundle_by_id(id):  # à implémenter
+            raise ValueError(f"No bundle found with id {id}.")
+        self.bundle_dao.delete_bundle(id)  # à implémenter
 
     def list_items(self) -> list[Item]:
-        pass
+        self.item_dao.find_all_items()
 
     def list_bundles(self) -> list[Bundle]:
-        pass
+        self.bundle_dao.find_all_bundles()
