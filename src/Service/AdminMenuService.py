@@ -14,9 +14,11 @@ class AdminMenuService:
     def create_item(self, name: str, desc: str, price: float, stock: int, availability: bool) -> None:
         """Create a new item"""
         if price < 0:
-            raise ValueError("Le prix doit être positif.")
+            raise ValueError("Price must be positive.")
         if stock < 0:
-            raise ValueError("Le stock ne peut pas être négatif.")
+            raise ValueError("Stock cannot be negative.")
+        if stock == 0:
+            assert not availability, "Zero stock implies non-availability"
 
         new_item = Item(name=name, description=desc, price=price, stock=stock, availability=availability)
         self.item_dao.add(new_item)  # méthode de la DAO
