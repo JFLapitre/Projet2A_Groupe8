@@ -1,5 +1,5 @@
-from AbstractBundle.py import AbstractBundle
-from Customer.py import Customer
+from abstract_bundle.py import AbstractBundle
+from customer.py import Customer
 from pydantic import BaseModel
 
 

@@ -1,7 +1,7 @@
 import pytest
 from pydantic_core import ValidationError
 
-from src.Model.Item import Item
+from src.Model.item import Item
 
 
 def test_item_constructor_ok():
