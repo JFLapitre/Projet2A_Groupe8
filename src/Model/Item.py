@@ -6,7 +6,7 @@ class Item(BaseModel):
     name: str
     description: str
     price: float
-    itemtype: str
+    item_type: str
     stock: int
     availability: bool
 

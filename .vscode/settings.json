@@ -1,4 +1,5 @@
 {
+    "python.pythonPah": "{workspaceFolder}",
     "python.testing.pytestArgs": [
         "tests"
     ],
