@@ -3,9 +3,10 @@ import urllib
 
 API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
 
-origin = "Paris,France"
+origin = "Longjumeau,France"
 destination = "Bruz,France"
-waypoints = "Laval,France"
+waypoints = ["Paris,France"]
+
 
 url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={API_KEY}"
 
