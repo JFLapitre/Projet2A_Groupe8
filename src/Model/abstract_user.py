@@ -8,4 +8,3 @@ class AbstractUser(BaseModel, ABC):
     name: str
     password: str
     mail: str
-

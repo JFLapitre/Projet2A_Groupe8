@@ -6,4 +6,3 @@ class DiscountedBundle(AbstractBundle):
     components: list[str]
     discount: float
     composition: list[Item]
-

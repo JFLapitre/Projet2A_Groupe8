@@ -1,5 +1,6 @@
-import requests
 import urllib
+
+import requests
 
 API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
 
@@ -12,7 +13,6 @@ url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&des
 
 response = requests.get(url)
 data = response.json()
-
 
 
 # Exemple : afficher la distance et la durée

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Delivery(BaseModel):
-    id : int
-    driver : Driver
-    orders : list[Order]
-    status : str
+    id: int
+    driver: Driver
+    orders: list[Order]
+    status: str
