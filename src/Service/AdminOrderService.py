@@ -10,7 +10,8 @@ class AdminOrderService:
         self.delivery_dao = DeliveryDAO()
 
     def list_waiting_orders(self) -> list[Order]:
-        pass
+        all_orders = self.order_dao.list_all_orders()  # à implémenter
+        return [order for order in all_orders if order.status == "Waiting"]
 
     def list_deliveries(self) -> list[Delivery]:
-        pass
+        return self.delivery_dao.list_deliveries()  # à implémenter
