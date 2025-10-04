@@ -9,4 +9,4 @@ class DeliveryService:
         pass
 
     def validate_delivery(self):
-        DeliveryDAO.validate_delivery()
+        self.delivery_dao.validate_delivery()
