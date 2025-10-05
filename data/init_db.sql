@@ -11,6 +11,17 @@ CREATE TABLE fd.user (
     sign_up_date DATE NOT NULL
 );
 
+-- Table address
+DROP TABLE IF EXISTS fd.address CASCADE;
+CREATE TABLE fd.address (
+    id_address SERIAL PRIMARY KEY,
+    city VARCHAR(20) NOT NULL,
+    postal_code VARCHAR(5) NOT NULL,
+    street_name VARCHAR(50) NOT NULL,
+    street_number INT NOT NULL
+);
+
+
 -- Table customer
 DROP TABLE IF EXISTS fd.customer CASCADE;
 CREATE TABLE fd.customer (
