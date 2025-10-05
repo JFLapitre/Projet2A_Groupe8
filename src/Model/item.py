@@ -1,11 +1,9 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
 class Item(BaseModel):
-    id: int
+    id_item: Optional[int] = None  
     name: str
-    description: str
-    price: float
     item_type: str
-    stock: int
-    availability: bool
+    price: float

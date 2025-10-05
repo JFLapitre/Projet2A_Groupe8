@@ -1,6 +1,6 @@
 from typing import List
 
-from src.Model.Item import Item
+from src.Model.item import Item
 
 from .DBConnector import DBConnector
 
@@ -12,7 +12,7 @@ class ItemDAO:
         self.db_connector = db_connector
 
     def find_item_by_id(self, item_id: int) -> Item:
-        raw_item = self.db_connector.sql_query("SELECT * from fd.item WHERE id=%s", [item_id], "one")
+        raw_item = self.db_connector.sql_query("SELECT * from fd.item WHERE id_item=%s", [item_id], "one")
         if raw_item is None:
             return None
         return Item(**raw_item)
@@ -42,7 +42,7 @@ class ItemDAO:
     def add_item(self, item: Item) -> Item:
         raw_created_item = self.db_connector.sql_query(
             """
-        INSERT INTO fd.item (id, name, item_type, price)
+        INSERT INTO fd.item (id_item, name, item_type, price)
         VALUES (DEFAULT, %(name)s, %(item_type)s, %(price)s)
         RETURNING *;
         """,
@@ -61,5 +61,5 @@ class ItemDAO:
         Returns:
             bool: True if the deletion suceeded, False otherwise.
         """
-        res = self.db_connector.sql_query("DELETE FROM fd.item WHERE id = %(id)s RETURNING id;", {"id": item_id}, "one")
+        res = self.db_connector.sql_query("DELETE FROM fd.item WHERE id = %(id)s RETURNING id_item;", {"id": item_id}, "one")
         return res is not None
