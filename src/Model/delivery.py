@@ -1,5 +1,5 @@
-from driver.py import Driver
-from order.py import Order
+from src.Model.driver import Driver
+from src.Model.order import Order
 from pydantic import BaseModel
 
 

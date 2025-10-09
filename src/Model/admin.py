@@ -1,5 +1,5 @@
-from abstract_user.py import AbstractUser
-from order.py import Order
+from src.Model.abstract_user import AbstractUser
+from src.Model.order import Order
 
 
 class Admin(AbstractUser):

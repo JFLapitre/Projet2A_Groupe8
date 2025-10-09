@@ -1,6 +1,7 @@
-from abstract_bundle.py import AbstractBundle
-from src.Model.customer.py import Customer
 from pydantic import BaseModel
+
+from src.Model.abstract_bundle import AbstractBundle
+from src.Model.customer import Customer
 
 
 class Order(BaseModel):

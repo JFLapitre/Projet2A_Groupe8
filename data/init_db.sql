@@ -8,6 +8,7 @@ CREATE TABLE fd.user (
     id_user SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
+    user_type VARCHAR(10) NOT NULL,
     sign_up_date DATE NOT NULL
 );
 
@@ -52,7 +53,8 @@ CREATE TABLE fd.driver (
 DROP TABLE IF EXISTS fd.item CASCADE;
 CREATE TABLE fd.item (
     id_item SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    description VARCHAR(300),
     item_type VARCHAR(20) NOT NULL,
     price FLOAT NOT NULL
 );

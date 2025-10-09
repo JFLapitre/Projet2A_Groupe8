@@ -1,10 +1,10 @@
 -- Insertion des utilisateurs
-INSERT INTO fd.user (username, password, sign_up_date) VALUES
-('john_doe', 'password123', '2024-01-15'),
-('jane_smith', 'securepass456', '2024-02-20'),
-('bob_driver', 'driverpass789', '2024-01-10'),
-('alice_admin', 'adminpass321', '2024-01-01'),
-('charlie_customer', 'custpass654', '2024-03-05');
+INSERT INTO fd.user (id_user, username, password, user_type, sign_up_date) VALUES
+(1,'john_doe', 'password123', 'customer', '2024-01-15'),
+(2,'jane_smith', 'securepass456','customer', '2024-02-20'),
+(3,'bob_driver', 'driverpass789', 'driver', '2024-01-10'),
+(4,'alice_admin', 'adminpass321', 'admin', '2024-01-01'),
+(5,'charlie_customer', 'custpass654', 'customer', '2024-03-05');
 
 -- Insertion des adresses
 INSERT INTO fd.address (city, postal_code, street_name, street_number) VALUES

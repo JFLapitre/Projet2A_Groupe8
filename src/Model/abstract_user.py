@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class AbstractUser(BaseModel, ABC):
-    id: int
-    name: str
+    id_user: int
+    username: str
     password: str
-    mail: str
+    sign_up_date: str

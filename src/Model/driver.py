@@ -1,6 +1,8 @@
-from abstract_user.py import AbstractUser
-from delivery.py import Delivery
+from src.Model.abstract_user import AbstractUser
+#from src.Model.delivery import Delivery
 
 
 class Driver(AbstractUser):
-    deliveries: list[Delivery]
+    pass
+"""    deliveries: list[Delivery]
+"""
