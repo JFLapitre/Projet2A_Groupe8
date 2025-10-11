@@ -1,86 +1,86 @@
--- Insertion des utilisateurs
+-- Insert users
 INSERT INTO fd.user (id_user, username, password, user_type, sign_up_date) VALUES
-(1,'john_doe', 'password123', 'customer', '2024-01-15'),
-(2,'jane_smith', 'securepass456','customer', '2024-02-20'),
-(3,'bob_driver', 'driverpass789', 'driver', '2024-01-10'),
-(4,'alice_admin', 'adminpass321', 'admin', '2024-01-01'),
-(5,'charlie_customer', 'custpass654', 'customer', '2024-03-05');
+(1, 'john_doe', 'password123', 'customer', '2024-01-15'),
+(2, 'jane_smith', 'securepass456', 'customer', '2024-02-20'),
+(3, 'bob_driver', 'driverpass789', 'driver', '2024-01-10'),
+(4, 'alice_admin', 'adminpass321', 'admin', '2024-01-01'),
+(5, 'charlie_customer', 'custpass654', 'customer', '2024-03-05');
 
--- Insertion des adresses
+-- Insert addresses
 INSERT INTO fd.address (city, postal_code, street_name, street_number) VALUES
-('Paris', '75001', 'Rue de Rivoli', 10),
-('Lyon', '69001', 'Rue de la République', 25),
-('Marseille', '13001', 'La Canebière', 50),
-('Toulouse', '31000', 'Rue Alsace Lorraine', 15),
-('Nice', '06000', 'Promenade des Anglais', 100);
+('Paris', '75001', 'Rivoli Street', 10),
+('Lyon', '69001', 'Republic Street', 25),
+('Marseille', '13001', 'La Canebière Street', 50),
+('Toulouse', '31000', 'Alsace Lorraine Street', 15),
+('Nice', '06000', 'English Promenade', 100);
 
--- Insertion des clients
+-- Insert customers
 INSERT INTO fd.customer (id_user, name, phone_number) VALUES
 (1, 'John Doe', '0601020304'),
 (2, 'Jane Smith', '0612345678'),
 (5, 'Charlie Customer', '0623456789');
 
--- Insertion de l'admin
+-- Insert admin
 INSERT INTO fd.admin (id_user, name, phone_number) VALUES
 (4, 'Alice Admin', '0634567890');
 
--- Insertion du livreur
+-- Insert driver
 INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
 (3, 'Bob Driver', '0645678901', 'Scooter', TRUE);
 
--- Insertion des items
+-- Insert items
 INSERT INTO fd.item (name, item_type, price) VALUES
-('Pizza Margherita', 'main', 12.50),
-('Pizza 4 Fromages', 'main', 14.00),
-('Salade César', 'starter', 8.50),
+('Margherita Pizza', 'main', 12.50),
+('Four Cheese Pizza', 'main', 14.00),
+('Caesar Salad', 'starter', 8.50),
 ('Tiramisu', 'dessert', 6.00),
 ('Coca Cola', 'drink', 3.00),
-('Eau Minérale', 'drink', 2.00),
-('Burger Classique', 'main', 11.00),
-('Frites', 'side', 4.50);
+('Mineral Water', 'drink', 2.00),
+('Classic Burger', 'main', 11.00),
+('Fries', 'side', 4.50);
 
--- Insertion des bundles prédéfinis
+-- Insert predefined bundles
 INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
-('Menu Pizza', 'Pizza + Boisson + Dessert', 'predefined', 19.00, NULL),
-('Menu Burger', 'Burger + Frites + Boisson', 'predefined', 16.00, NULL);
+('Pizza Menu', 'Pizza + Drink + Dessert', 'predefined', 19.00, NULL),
+('Burger Menu', 'Burger + Fries + Drink', 'predefined', 16.00, NULL);
 
--- Insertion des bundles avec remise
+-- Insert discount bundles
 INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
-('Promo 2 Pizzas', 'Achetez 2 pizzas, obtenez 10% de réduction', 'discount', NULL, 0.10),
-('Happy Hour', 'Réduction de 20% sur toute commande avant 19h', 'discount', NULL, 0.20);
+('2 Pizzas Promo', 'Buy 2 pizzas, get 10% off', 'discount', NULL, 0.10),
+('Happy Hour', '20% off on any order before 7 PM', 'discount', NULL, 0.20);
 
--- Association items aux bundles prédéfinis
+-- Associate items with predefined bundles
 INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
--- Menu Pizza (bundle 1) : Pizza Margherita + Coca + Tiramisu
+-- Pizza Menu (bundle 1): Margherita Pizza + Coca Cola + Tiramisu
 (1, 1),
 (1, 5),
 (1, 4),
--- Menu Burger (bundle 2) : Burger + Frites + Coca
+-- Burger Menu (bundle 2): Classic Burger + Fries + Coca Cola
 (2, 7),
 (2, 8),
 (2, 5);
 
--- Insertion des commandes
+-- Insert orders
 INSERT INTO fd.order (id_user, status, address, order_date) VALUES
-(1, 'delivered', '10 Rue de Rivoli, 75001 Paris', '2024-10-01 12:30:00'),
-(2, 'in_progress', '25 Rue de la République, 69001 Lyon', '2024-10-06 18:45:00'),
-(5, 'pending', '50 La Canebière, 13001 Marseille', '2024-10-06 19:15:00');
+(1, 'delivered', '10 Rivoli Street, 75001 Paris', '2024-10-01 12:30:00'),
+(2, 'in_progress', '25 Republic Street, 69001 Lyon', '2024-10-06 18:45:00'),
+(5, 'pending', '50 La Canebière Street, 13001 Marseille', '2024-10-06 19:15:00');
 
--- Association commandes aux bundles
+-- Associate orders with bundles
 INSERT INTO fd.order_bundle (id_order, id_bundle) VALUES
-(1, 1), -- Commande 1 : Menu Pizza
-(2, 2), -- Commande 2 : Menu Burger
-(2, 3), -- Commande 2 : Promo 2 Pizzas
-(3, 1); -- Commande 3 : Menu Pizza
+(1, 1), -- Order 1: Pizza Menu
+(2, 2), -- Order 2: Burger Menu
+(2, 3), -- Order 2: 2 Pizzas Promo
+(3, 1); -- Order 3: Pizza Menu
 
--- Insertion des livraisons
+-- Insert deliveries
 INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
 (3, 'completed', '2024-10-01 13:15:00'),
 (3, 'in_progress', NULL),
 (NULL, 'pending', NULL);
 
--- Association livraisons aux commandes
+-- Associate deliveries with orders
 INSERT INTO fd.delivery_order (id_delivery, id_order) VALUES
-(1, 1), -- Livraison 1 pour commande 1
-(2, 2), -- Livraison 2 pour commande 2
-(3, 3); -- Livraison 3 pour commande 3
+(1, 1), -- Delivery 1 for order 1
+(2, 2), -- Delivery 2 for order 2
+(3, 3); -- Delivery 3 for order 3

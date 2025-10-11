@@ -1,5 +1,6 @@
 from src.DBconnector import DBConnector
 from src.Model.Delivery import Delivery
+from src.Model.Item import Item
 
 
 class DeliveryDAO:
