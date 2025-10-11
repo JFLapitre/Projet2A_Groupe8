@@ -4,4 +4,3 @@ from item.py import Item
 
 class OneItemBundle(AbstractBundle):
     composition: Item
-    quantity: int
