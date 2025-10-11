@@ -1,6 +1,7 @@
+from pydantic import BaseModel
+
 from src.Model.driver import Driver
 from src.Model.order import Order
-from pydantic import BaseModel
 
 
 class Delivery(BaseModel):
