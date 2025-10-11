@@ -3,7 +3,6 @@ from typing import List, Optional, Union
 
 from src.DBConnector import DBConnector
 from src.Model.DiscountedBundle import DiscountedBundle
-from src.Model.one_item_bundle import OneItemBundle
 from src.Model.PredeinedBundle import PredefinedBundle
 
 
