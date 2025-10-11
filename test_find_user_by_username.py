@@ -20,13 +20,14 @@ userDAO = UserDAO(db_connector)
 try:
     # Remplace 1 par un ID existant dans ta base
     user_dao = UserDAO(db_connector)   # ✅ Instanciation
-    user = user_dao.find_user_by_id(1) # ✅ Appel sur l'instance
+    user = user_dao.find_user_by_username("john_doe") # ✅ Appel sur l'instance
 
 
     if user is not None:
         print("✅ Utilisateur trouvé :")
         print(f"  - ID: {user.id_user}")
         print(f"  - Username: {user.username}")
+        print(f"  - Phone number: {user.phone_number}")
   
     else:
         print("❌ Aucun utilisateur trouvé avec cet ID.")

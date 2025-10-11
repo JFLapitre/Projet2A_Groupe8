@@ -1,8 +1,11 @@
+from typing import Optional
+
 from src.Model.abstract_user import AbstractUser
-#from src.Model.delivery import Delivery
 
 
 class Driver(AbstractUser):
-    pass
-"""    deliveries: list[Delivery]
-"""
+    id_user: Optional[int] = None
+    name: str
+    phone_number: str
+    vehicle_type: str
+    availability: bool

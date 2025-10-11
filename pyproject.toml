@@ -29,6 +29,10 @@ testpaths = [
 [tool.pdm]
 distribution = false
 
+[tool.pdm.build]
+includes = ["src"]
+source-includes = ["src"]
+package-dir = {""= "src"}
 
 [tool.pdm.scripts]
 lint = "ruff check"

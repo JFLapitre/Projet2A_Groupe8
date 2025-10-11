@@ -9,7 +9,7 @@ CREATE TABLE fd.user (
     username VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
     user_type VARCHAR(10) NOT NULL,
-    sign_up_date DATE NOT NULL
+    sign_up_date DATE 
 );
 
 -- Table address
