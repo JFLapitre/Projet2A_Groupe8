@@ -1,13 +1,14 @@
-from typing import Optional, Union, List
+import logging
+from typing import List, Optional, Union
 
+from src.Model.abstract_user import AbstractUser
 from src.Model.admin import Admin
 from src.Model.customer import Customer
 from src.Model.driver import Driver
-from src.Model.abstract_user import AbstractUser
 
 from .DBConnector import DBConnector
 
-import logging
+
 class UserDAO:
     db_connector: DBConnector
 
@@ -28,7 +29,7 @@ class UserDAO:
                 WHERE u.id_user = %(id_user)s
                 """,
                 {"id_user": id_user},
-                "one"
+                "one",
             )
 
             if not raw_user:
@@ -43,7 +44,7 @@ class UserDAO:
                     username=raw_user["username"],
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
-                    phone_number=raw_user.get("customer_phone")
+                    phone_number=raw_user.get("customer_phone"),
                 )
             elif user_type == "driver":
                 return Driver(
@@ -52,7 +53,7 @@ class UserDAO:
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
                     phone_number=raw_user.get("driver_phone"),
-                    vehicle_type=raw_user.get("vehicle_type")
+                    vehicle_type=raw_user.get("vehicle_type"),
                 )
             elif user_type == "admin":
                 return Admin(
@@ -60,7 +61,7 @@ class UserDAO:
                     username=raw_user["username"],
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
-                    phone_number=raw_user.get("admin_phone")
+                    phone_number=raw_user.get("admin_phone"),
                 )
             else:
                 return AbstractUser(**raw_user)
@@ -68,8 +69,6 @@ class UserDAO:
         except Exception as e:
             logging.error(f"Failed to fetch user {id_user}: {e}")
             return None
-
-
 
     def find_user_by_username(self, username: int) -> Optional[Union[Customer, Driver, Admin]]:
         """Find a user by their username (returns the correct type)."""
@@ -84,7 +83,7 @@ class UserDAO:
                 WHERE u.username = %(username)s
                 """,
                 {"username": username},
-                "one"
+                "one",
             )
             if not raw_user:
                 return None
@@ -133,8 +132,6 @@ class UserDAO:
             logging.error(f"Failed to fetch users: {e}")
             return []
 
-
-
     def add_user(self, user: Union[Customer, Driver, Admin]) -> Optional[Union[Customer, Driver, Admin]]:
         """Add a new user"""
         id_user = self.db_connector.sql_query(
@@ -143,11 +140,7 @@ class UserDAO:
         VALUES (DEFAULT, %(username)s, %(salt)s, %(password)s, %(user_type)s)
         RETURNING id_user;
         """,
-            {
-                "username": user.username,
-                "salt": user.salt, 
-                "password": user.password, 
-                "user_type": user.user_type},
+            {"username": user.username, "salt": user.salt, "password": user.password, "user_type": user.user_type},
             "one",
         )
         if isinstance(user, Customer):
@@ -156,36 +149,24 @@ class UserDAO:
                 INSERT INTO fd.customer (id_user, phone_number)
                 VALUES (%(id_user)s, %(phone_number)s)
                 """,
-                {
-                    "id_user": id_user,
-                    "phone_numer": user.phone_number
-                }
-                )
+                {"id_user": id_user, "phone_numer": user.phone_number},
+            )
         elif isinstance(user, Driver):
             self.db_connector.sql_query(
                 """
                 INSERT INTO fd.driver (id_user, phone_number)
                 VALUES (%(id_user)s, %(phone_number)s, %(vehicle_type)s)
                 """,
-                {
-                    "id_user": id_user,
-                    "phone_number": user.phone_number,
-                    "vehicle_type": user.vehicle_type
-                }
-                )
+                {"id_user": id_user, "phone_number": user.phone_number, "vehicle_type": user.vehicle_type},
+            )
         elif isinstance(user, Admin):
             self.db_connector.sql_query(
                 """
                 INSERT INTO fd.admins (id_user, phone_number)
                 VALUES (%(id_user)s, %(phone_number)s)
                 """,
-                {
-                    "id_user": id_user,
-                    "phone_numer": user.phone_number
-                }
+                {"id_user": id_user, "phone_numer": user.phone_number},
             )
 
         # Retourne l'utilisateur complet
         return self.find_by_id(id_user)
-
-
