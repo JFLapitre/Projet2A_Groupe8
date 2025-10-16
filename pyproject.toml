@@ -20,10 +20,8 @@ license = {text = "MIT"}
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
-pythonpath = [ "."] 
-testpaths = [
-    "tests",
-]
+pythonpath = ["."] 
+testpaths = ["tests"]
 
 
 [tool.pdm]
