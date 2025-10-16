@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-from src.DAO.UserRepo import UserRepo
+from src.DAO.userDAO import UserRepo
 
 if TYPE_CHECKING:
     from src.Model.User import User
