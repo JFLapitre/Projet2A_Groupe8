@@ -19,13 +19,20 @@ class UserDAO:
         try:
             raw_user = self.db_connector.sql_query(
                 """
-                SELECT u.*, c.phone_number AS customer_phone,
-                    d.phone_number AS driver_phone, d.vehicle_type,
-                    a.phone_number AS admin_phone
+                SELECT
+                    u.*,
+                    c.name as customer_name,
+                    c.phone_number as customer_phone,
+                    d.name as driver_name,
+                    d.phone_number as driver_phone,
+                    d.vehicle_type,
+                    d.availability,
+                    a.name as admin_name,
+                    a.phone_number as admin_phone
                 FROM fd.user u
-                LEFT JOIN fd.customer c ON u.id_user = c.id_user
-                LEFT JOIN fd.driver d ON u.id_user = d.id_user
-                LEFT JOIN fd.admin a ON u.id_user = a.id_user
+                LEFT JOIN fd.customer c USING (id_user)
+                LEFT JOIN fd.driver d USING (id_user)
+                LEFT JOIN fd.admin a USING (id_user)
                 WHERE u.id_user = %(id_user)s
                 """,
                 {"id_user": id_user},
@@ -36,15 +43,14 @@ class UserDAO:
                 return None
 
             user_type = raw_user["user_type"]
-
-            # Crée l'objet utilisateur approprié
             if user_type == "customer":
                 return Customer(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
-                    phone_number=raw_user.get("customer_phone"),
+                    name=raw_user["customer_name"],
+                    phone_number=raw_user["customer_phone"]
                 )
             elif user_type == "driver":
                 return Driver(
@@ -52,8 +58,10 @@ class UserDAO:
                     username=raw_user["username"],
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
-                    phone_number=raw_user.get("driver_phone"),
-                    vehicle_type=raw_user.get("vehicle_type"),
+                    name=raw_user["driver_name"],
+                    phone_number=raw_user["driver_phone"],
+                    vehicle_type=raw_user["vehicle_type"],
+                    availability=raw_user["availability"]
                 )
             elif user_type == "admin":
                 return Admin(
@@ -61,10 +69,9 @@ class UserDAO:
                     username=raw_user["username"],
                     password=raw_user["password"],
                     sign_up_date=raw_user["sign_up_date"],
-                    phone_number=raw_user.get("admin_phone"),
+                    name=raw_user["admin_name"],
+                    phone_number=raw_user["admin_phone"]
                 )
-            else:
-                return AbstractUser(**raw_user)
 
         except Exception as e:
             logging.error(f"Failed to fetch user {id_user}: {e}")
@@ -95,8 +102,6 @@ class UserDAO:
                 return Driver(**raw_user)
             elif user_type == "admin":
                 return Admin(**raw_user)
-            else:
-                return AbstractUser(**raw_user)
         except Exception as e:
             logging.error(f"Failed to fetch user {username}: {e}")
             return None
@@ -125,8 +130,6 @@ class UserDAO:
                     users.append(Driver(**user))
                 elif user["user_type"] == "admin":
                     users.append(Admin(**user))
-                else:
-                    users.append(AbstractUser(**user))
             return users
         except Exception as e:
             logging.error(f"Failed to fetch users: {e}")
@@ -134,39 +137,55 @@ class UserDAO:
 
     def add_user(self, user: Union[Customer, Driver, Admin]) -> Optional[Union[Customer, Driver, Admin]]:
         """Add a new user"""
-        id_user = self.db_connector.sql_query(
+        if isinstance(user, Customer):
+            user_type = 'customer'
+        elif isinstance(user, Driver):
+            user_type = 'driver'
+        elif isinstance(user, Admin):
+            user_type = 'admin'
+
+        result = self.db_connector.sql_query(
             """
-        INSERT INTO fd.user (id_user, username, salt, password, user_type)
-        VALUES (DEFAULT, %(username)s, %(salt)s, %(password)s, %(user_type)s)
+        INSERT INTO fd.user (id_user, username, password, user_type)
+        VALUES (DEFAULT, %(username)s, %(password)s, %(user_type)s)
         RETURNING id_user;
         """,
-            {"username": user.username, "salt": user.salt, "password": user.password, "user_type": user.user_type},
+            {"username": user.username, "password": user.password, "user_type": user_type},
             "one",
         )
-        if isinstance(user, Customer):
+        id_user = result['id_user']
+        if user_type == 'customer':
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.customer (id_user, phone_number)
-                VALUES (%(id_user)s, %(phone_number)s)
+                INSERT INTO fd.customer (id_user, name, phone_number)
+                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
                 """,
-                {"id_user": id_user, "phone_numer": user.phone_number},
+                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                None
             )
-        elif isinstance(user, Driver):
+        elif user_type == 'driver':
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.driver (id_user, phone_number)
-                VALUES (%(id_user)s, %(phone_number)s, %(vehicle_type)s)
+                INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type)
+                VALUES (%(id_user)s, %(name)s, %(phone_number)s, %(vehicle_type)s)
                 """,
-                {"id_user": id_user, "phone_number": user.phone_number, "vehicle_type": user.vehicle_type},
+                {
+                    "id_user": id_user, 
+                    "name": user.name,
+                    "phone_number": user.phone_number, 
+                    "vehicle_type": user.vehicle_type
+                },
+                None
             )
-        elif isinstance(user, Admin):
+        elif user_type == 'admin':
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.admins (id_user, phone_number)
-                VALUES (%(id_user)s, %(phone_number)s)
+                INSERT INTO fd.admin (id_user, name, phone_number)
+                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
                 """,
-                {"id_user": id_user, "phone_numer": user.phone_number},
+                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                None
             )
 
         # Retourne l'utilisateur complet
-        return self.find_by_id(id_user)
+        return self.find_user_by_id(id_user)

@@ -1,8 +1,9 @@
-from src.DAO.userDAO import UserDAO  
-from src.DAO.DBConnector import DBConnector
 import logging
 
 from dotenv import load_dotenv
+
+from src.DAO.DBConnector import DBConnector
+from src.DAO.userDAO import UserDAO  # noqa: TID252
 
 load_dotenv()
 
@@ -18,16 +19,20 @@ userDAO = UserDAO(db_connector)
 # Test de find_user_by_id
 try:
     # Remplace 1 par un ID existant dans ta base
-    user_dao = UserDAO(db_connector)  # ✅ Instanciation
-    user = user_dao.find_user_by_id(1)  # ✅ Appel sur l'instance
+    user_dao = UserDAO(db_connector)   # ✅ Instanciation
+    user = user_dao.find_user_by_username("john_doe") # ✅ Appel sur l'instance
+
 
     if user is not None:
         print("✅ Utilisateur trouvé :")
         print(f"  - ID: {user.id_user}")
         print(f"  - Username: {user.username}")
-
+        print(f"  - Phone number: {user.phone_number}")
+  
     else:
         print("❌ Aucun utilisateur trouvé avec cet ID.")
 
 except Exception as e:
     print(f"⚠️ Erreur lors de la récupération de l'utilisateur : {e}")
+
+
