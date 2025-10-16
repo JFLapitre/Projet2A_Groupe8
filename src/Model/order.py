@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from scr.Model.item import Item
 
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.customer import Customer
+from src.Model.item import Item
 
 
 class Order(BaseModel):
