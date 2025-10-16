@@ -49,6 +49,18 @@ INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
 ('2 Pizzas Promo', 'Buy 2 pizzas, get 10% off', 'discount', NULL, 0.10),
 ('Happy Hour', '20% off on any order before 7 PM', 'discount', NULL, 0.20);
 
+-- Insert single item
+-- Insert single items as bundles with the corresponding item price
+INSERT INTO fd.bundle (name, description, bundle_type, price, discount)
+SELECT 
+    i.name, 
+    '1 single item', 
+    'single_item', 
+    i.price, 
+    NULL
+FROM fd.item i
+WHERE i.name IN ('Classic Burger', 'Fries');
+
 -- Associate items with predefined bundles
 INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 -- Pizza Menu (bundle 1): Margherita Pizza + Coca Cola + Tiramisu

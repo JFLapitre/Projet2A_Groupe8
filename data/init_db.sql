@@ -65,7 +65,7 @@ CREATE TABLE fd.bundle (
     id_bundle SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(300),
-    bundle_type VARCHAR(20) NOT NULL, -- "predefined" ou "discount"
+    bundle_type VARCHAR(20) NOT NULL, -- "predefined", "single_item" ou "discounted"
     price FLOAT, -- Peut être NULL pour les discounted bundles
     discount FLOAT -- Peut être NULL pour les predefined bundles
 );
