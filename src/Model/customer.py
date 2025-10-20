@@ -1,7 +1,10 @@
-from src.Model.abstract_user import AbstractUser
-from pydantic import BaseModel, validator
 from datetime import date
 from typing import Optional
+
+from pydantic import ConfigDict
+
+from src.Model.abstract_user import AbstractUser
+
 
 class Customer(AbstractUser):
     id_user: int
@@ -10,5 +13,4 @@ class Customer(AbstractUser):
     sign_up_date: date  # Accepte un objet date
     phone_number: Optional[str] = None
 
-    class Config:
-        from_attributes = True  # Pour Pydantic v2
+    model_config = ConfigDict(from_attributes=True)

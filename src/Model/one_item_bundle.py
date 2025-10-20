@@ -1,5 +1,6 @@
-from abtract_bundle.py import AbstractBundle
-from item.py import Item
+from src.Model.abtract_bundle import AbstractBundle
+
+from src.Model.item import Item
 
 
 class OneItemBundle(AbstractBundle):
