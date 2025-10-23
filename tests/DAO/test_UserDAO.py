@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-from src.DAO.userDAO import UserRepo
+from src.DAO.userDAO import UserDAO
 
 if TYPE_CHECKING:
-    from src.Model.User import User
+    from src.Model.abstract_user import AbstractUser 
 
 
 class MockDBConnector:
@@ -22,7 +22,7 @@ class MockDBConnector:
 
 
 def test_get_user_by_id():
-    user_repo = UserRepo(MockDBConnector())
+    user_repo = UserDAO(MockDBConnector())
     user: User = user_repo.get_by_id(1)
     assert user is not None
     assert user.id == 1

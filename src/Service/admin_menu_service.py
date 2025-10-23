@@ -1,9 +1,9 @@
-from src.DAO.BundleDAO import BundleDAO
+from src.DAO.bundleDAO import BundleDAO
 from src.DAO.itemDAO import ItemDAO
-from src.Model.Bundle import Bundle
-from src.Model.DiscountedBundle import DiscountedBundle
-from src.Model.Item import Item
-from src.Model.PredeinedBundle import PredefinedBundle
+from src.Model.abstract_bundle import AbstractBundle
+from src.Model.discounted_bundle import DiscountedBundle
+from src.Model.item import Item
+from src.Model.predefined_bundle import PredefinedBundle
 
 
 class AdminMenuService:
@@ -57,6 +57,9 @@ class AdminMenuService:
         new_bundle = PredefinedBundle(name=name, composition=composition, price=price)
         self.bundle_dao.add_predifined_bundle(new_bundle)  # à implémenter
 
+    def create_one_item_bundle(self) -> None:
+        pass
+
     def create_discounted_bundle(self, name: str, components: list, discount: float) -> None:
         if discount <= 0 or discount >= 100:
             raise ValueError("Discount must be between 0 and 100.")
@@ -74,5 +77,5 @@ class AdminMenuService:
     def list_items(self) -> list[Item]:
         self.item_dao.find_all_items()
 
-    def list_bundles(self) -> list[Bundle]:
+    def list_bundles(self) -> list[AbstractBundle]:
         self.bundle_dao.find_all_bundles()

@@ -1,7 +1,7 @@
 from typing import Optional
 
 import pytest
-from src.Model.User import User
+from src.Model.abstract_user import AbstractUser
 
 from src.Service.PasswordService import create_salt, hash_password, validate_username_password
 
@@ -24,8 +24,8 @@ def test_create_salt():
     assert len(salt) == 256
 
 
-class MockUserRepo:
-    def get_by_username(self, username: str) -> Optional[User]:
+class MockUserDAO:
+    def get_by_username(self, username: str) -> Optional[AbstractUser]:
         if username == "janjak":
             return User(
                 id=4,
@@ -37,7 +37,7 @@ class MockUserRepo:
             return None
 
 
-user_repo = MockUserRepo()
+user_DAO = MockUserDAO()
 
 
 def test_validate_username_password_is_ok():

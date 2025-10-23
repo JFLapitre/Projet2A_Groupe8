@@ -1,9 +1,9 @@
 import logging
 from typing import List, Optional, Union
 
-from src.DBConnector import DBConnector
-from src.Model.DiscountedBundle import DiscountedBundle
-from src.Model.PredeinedBundle import PredefinedBundle
+from src.DAO.DBConnector import DBConnector
+from src.Model.discounted_bundle import DiscountedBundle
+from src.Model.predefined_bundle import PredefinedBundle
 
 
 class BundleDAO:

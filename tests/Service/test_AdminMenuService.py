@@ -1,6 +1,6 @@
 import pytest
 
-from src.services.admin_menu_service import AdminMenuService
+from src.Service.admin_menu_service import AdminMenuService
 
 
 @pytest.fixture
