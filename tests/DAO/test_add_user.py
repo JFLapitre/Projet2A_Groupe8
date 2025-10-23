@@ -28,7 +28,7 @@ justinledriver = Driver(
 )
 
 
-# Test de find_user_by_id
+# Test de add_user
 try:
     # Remplace 1 par un ID existant dans ta base
     user_dao = UserDAO(db_connector)  # ✅ Instanciation
