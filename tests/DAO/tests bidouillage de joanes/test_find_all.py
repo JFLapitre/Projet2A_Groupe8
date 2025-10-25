@@ -1,8 +1,9 @@
-from src.DAO.userDAO import UserDAO  
-from src.DAO.DBConnector import DBConnector
 import logging
 
 from dotenv import load_dotenv
+
+from src.DAO.DBConnector import DBConnector
+from src.DAO.userDAO import UserDAO
 
 load_dotenv()
 
@@ -17,10 +18,9 @@ userDAO = UserDAO(db_connector)
 
 
 try:
-    
-    user_dao = UserDAO(db_connector) 
+    user_dao = UserDAO(db_connector)
     users = user_dao.find_all()
-
+    print(users is not None)
     if users is not None:
         print("✅ Utilisateurs trouvés :")
         for user in users:

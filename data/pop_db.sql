@@ -96,3 +96,25 @@ INSERT INTO fd.delivery_order (id_delivery, id_order) VALUES
 (1, 1), -- Delivery 1 for order 1
 (2, 2), -- Delivery 2 for order 2
 (3, 3); -- Delivery 3 for order 3
+
+-- ========================================
+-- Reset all sequences to continue after existing data
+-- ========================================
+
+-- Reset user sequence
+SELECT setval('fd.user_id_user_seq', (SELECT MAX(id_user) FROM fd.user));
+
+-- Reset address sequence
+SELECT setval('fd.address_id_address_seq', (SELECT MAX(id_address) FROM fd.address));
+
+-- Reset item sequence
+SELECT setval('fd.item_id_item_seq', (SELECT MAX(id_item) FROM fd.item));
+
+-- Reset bundle sequence
+SELECT setval('fd.bundle_id_bundle_seq', (SELECT MAX(id_bundle) FROM fd.bundle));
+
+-- Reset order sequence
+SELECT setval('fd.order_id_order_seq', (SELECT MAX(id_order) FROM fd.order));
+
+-- Reset delivery sequence
+SELECT setval('fd.delivery_id_delivery_seq', (SELECT MAX(id_delivery) FROM fd.delivery));

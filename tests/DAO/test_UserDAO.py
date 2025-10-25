@@ -1,10 +1,10 @@
+from datetime import date
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from src.DAO.userDAO import UserDAO
-from datetime import date
 
 if TYPE_CHECKING:
-    from src.Model.abstract_user import AbstractUser 
+    from src.Model.abstract_user import AbstractUser
 
 
 class MockDBConnector:
@@ -43,7 +43,7 @@ class MockDBConnector:
                 "admin_name": None,
                 "admin_phone": None,
             }
-        
+
         if "from fd.user" in q and "where u.username" in q:
             if not data:
                 raise Exception("no data provided")
@@ -69,7 +69,7 @@ class MockDBConnector:
                 "admin_name": None,
                 "admin_phone": None,
             }
-        
+
         return None
 
 
@@ -79,6 +79,7 @@ def test_find_user_by_id():
     assert user is not None
     assert user.id_user == 1
     assert user.username == "janjak"
+
 
 def test_find_user_by_username():
     user_DAO = UserDAO(MockDBConnector())
