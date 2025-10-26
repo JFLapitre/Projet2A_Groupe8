@@ -4,5 +4,5 @@ from pydantic import BaseModel
 
 
 class AbstractBundle(BaseModel, ABC):
-    id: int
+    id_bundle: int
     name: str

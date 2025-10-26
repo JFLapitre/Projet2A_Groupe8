@@ -5,7 +5,7 @@ from src.Model.order import Order
 
 
 class Delivery(BaseModel):
-    id: int
-    driver: Driver
+    id_delivery: int
+    id_driver: Driver
     orders: list[Order]
     status: str

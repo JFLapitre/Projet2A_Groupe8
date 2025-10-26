@@ -7,7 +7,6 @@ from src.Model.abstract_user import AbstractUser
 
 
 class Customer(AbstractUser):
-    id_user: int
     sign_up_date: date = Field(default_factory=date.today)
     phone_number: Optional[str] = None
 

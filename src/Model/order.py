@@ -5,7 +5,7 @@ from src.Model.item import Item
 
 
 class Order(BaseModel):
-    id: int
+    id_order: int
     customer: int
     adress: str
     bundles: list[AbstractBundle]

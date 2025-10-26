@@ -2,14 +2,20 @@ import logging
 from typing import List, Optional
 
 from src.DAO.DBConnector import DBConnector
+from src.DAO.orderDAO import OrderDAO  # Pour récupérer les Orders
+from src.DAO.userDAO import UserDAO  # Pour récupérer le Driver
 from src.Model.delivery import Delivery
 
 
 class DeliveryDAO:
     db_connector: DBConnector
+    user_dao: UserDAO
+    order_dao: OrderDAO
 
-    def __init__(self, db_connector: DBConnector) -> None:
+    def __init__(self, db_connector: DBConnector, user_dao: UserDAO, order_dao: OrderDAO) -> None:
         self.db_connector = db_connector
+        self.user_dao = user_dao
+        self.order_dao = order_dao
 
     def find_delivery_by_id(self, id_delivery: int) -> Optional[Delivery]:
         """Find a delivery by its ID.
@@ -26,7 +32,33 @@ class DeliveryDAO:
             )
             if raw_delivery is None:
                 return None
-            return Delivery(**raw_delivery)
+
+            # Récupère le driver via UserDAO
+            driver = None
+            if raw_delivery["id_driver"] is not None:
+                driver = self.user_dao.find_user_by_id(raw_delivery["id_driver"])
+
+            # Récupère les orders associées
+            raw_order_ids = self.db_connector.sql_query(
+                "SELECT id_order FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s",
+                {"id_delivery": id_delivery},
+                "all",
+            )
+
+            # Récupère les objets Order complets
+            orders = []
+            for order_data in raw_order_ids:
+                order = self.order_dao.find_order_by_id(order_data["id_order"])
+                if order:
+                    orders.append(order)
+
+            return Delivery(
+                id_delivery=raw_delivery["id_delivery"],
+                id_driver=driver,
+                orders=orders,
+                status=raw_delivery["status"],
+                delivery_time=raw_delivery["delivery_time"],
+            )
         except Exception as e:
             logging.error(f"Failed to fetch delivery {id_delivery}: {e}")
             return None
@@ -38,8 +70,45 @@ class DeliveryDAO:
             List[Delivery]: A list of Delivery objects (empty if no deliveries exist).
         """
         try:
-            raw_all_deliveries = self.db_connector.sql_query("SELECT * FROM fd.delivery", {}, "all")
-            return [Delivery(**delivery) for delivery in raw_all_deliveries]
+            raw_deliveries = self.db_connector.sql_query("SELECT * FROM fd.delivery", {}, "all")
+
+            deliveries = []
+            for delivery_data in raw_deliveries:
+                # Récupère le driver via UserDAO
+                driver = None
+                if delivery_data["id_driver"] is not None:
+                    driver = self.user_dao.find_user_by_id(delivery_data["id_driver"])
+
+                # Récupère les orders associées
+                raw_order_ids = self.db_connector.sql_query(
+                    """
+                    SELECT id_order 
+                    FROM fd.delivery_order 
+                    WHERE id_delivery = %(id_delivery)s
+                    """,
+                    {"id_delivery": delivery_data["id_delivery"]},
+                    "all",
+                )
+
+                # Récupère les objets Order complets
+                orders = []
+                for order_data in raw_order_ids:
+                    order = self.order_dao.find_order_by_id(order_data["id_order"])
+                    if order:
+                        orders.append(order)
+
+                # Crée l'objet Delivery avec les objets complets
+                deliveries.append(
+                    Delivery(
+                        id_delivery=delivery_data["id_delivery"],
+                        id_driver=driver,
+                        orders=orders,
+                        status=delivery_data["status"],
+                        delivery_time=delivery_data["delivery_time"],
+                    )
+                )
+
+            return deliveries
         except Exception as e:
             logging.error(f"Failed to fetch all deliveries: {e}")
             return []
@@ -54,6 +123,9 @@ class DeliveryDAO:
             bool: True if update succeeded, False otherwise.
         """
         try:
+            # Extrait l'ID du driver (si c'est un objet Driver)
+            id_driver = delivery.id_driver.id_user if hasattr(delivery.id_driver, "id_user") else delivery.id_driver
+
             res = self.db_connector.sql_query(
                 """
                 UPDATE fd.delivery
@@ -65,7 +137,7 @@ class DeliveryDAO:
                 """,
                 {
                     "id_delivery": delivery.id_delivery,
-                    "id_driver": delivery.id_driver,
+                    "id_driver": id_driver,
                     "status": delivery.status,
                     "delivery_time": delivery.delivery_time,
                 },
@@ -86,16 +158,35 @@ class DeliveryDAO:
             Delivery: The created delivery with its ID, or None if failed.
         """
         try:
+            # Extrait l'ID du driver (si c'est un objet Driver)
+            id_driver = delivery.id_driver.id_user if hasattr(delivery.id_driver, "id_user") else delivery.id_driver
+
             raw_created_delivery = self.db_connector.sql_query(
                 """
                 INSERT INTO fd.delivery (id_driver, status, delivery_time)
                 VALUES (%(id_driver)s, %(status)s, %(delivery_time)s)
                 RETURNING *;
                 """,
-                {"id_driver": delivery.id_driver, "status": delivery.status, "delivery_time": delivery.delivery_time},
+                {"id_driver": id_driver, "status": delivery.status, "delivery_time": delivery.delivery_time},
                 "one",
             )
-            return Delivery(**raw_created_delivery)
+
+            id_delivery = raw_created_delivery["id_delivery"]
+
+            # Associe les orders à la delivery
+            for order in delivery.orders:
+                order_id = order.id_order if hasattr(order, "id_order") else order
+                self.db_connector.sql_query(
+                    """
+                    INSERT INTO fd.delivery_order (id_delivery, id_order)
+                    VALUES (%(id_delivery)s, %(id_order)s)
+                    """,
+                    {"id_delivery": id_delivery, "id_order": order_id},
+                    None,
+                )
+
+            # Retourne la delivery complète avec ses relations
+            return self.find_delivery_by_id(id_delivery)
         except Exception as e:
             logging.error(f"Failed to add delivery: {e}")
             return None
@@ -110,6 +201,12 @@ class DeliveryDAO:
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
+            # Supprime d'abord les associations dans delivery_order
+            self.db_connector.sql_query(
+                "DELETE FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, None
+            )
+
+            # Puis supprime la delivery
             res = self.db_connector.sql_query(
                 "DELETE FROM fd.delivery WHERE id_delivery = %(id_delivery)s RETURNING id_delivery;",
                 {"id_delivery": id_delivery},

@@ -27,7 +27,7 @@ class ItemDAO:
         return [Item(**item) for item in raw_all_items]
 
     def update_item(self, item: Item):
-        res = self.db_connector.sql_query(
+        self.db_connector.sql_query(
             "UPDATE fd.item                                      "
             "   SET name = %(name)s,                             "
             "       item_type = %(item_type)s,                   "
