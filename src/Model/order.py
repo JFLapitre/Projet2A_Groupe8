@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 from src.Model.abstract_bundle import AbstractBundle
-from src.Model.item import Item
+from src.Model.address import Address
+from src.Model.customer import Customer
 
 
 class Order(BaseModel):
     id_order: int
-    customer: int
-    adress: str
+    customer: Customer
+    address: Address
     bundles: list[AbstractBundle]
-    items: list[Item]
     status: str

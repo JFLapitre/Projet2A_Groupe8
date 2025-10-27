@@ -2,8 +2,8 @@ import logging
 from typing import List, Optional
 
 from src.DAO.DBConnector import DBConnector
-from src.DAO.orderDAO import OrderDAO  # Pour récupérer les Orders
-from src.DAO.userDAO import UserDAO  # Pour récupérer le Driver
+from src.DAO.orderDAO import OrderDAO
+from src.DAO.userDAO import UserDAO
 from src.Model.delivery import Delivery
 
 
@@ -54,7 +54,7 @@ class DeliveryDAO:
 
             return Delivery(
                 id_delivery=raw_delivery["id_delivery"],
-                id_driver=driver,
+                driver=driver,
                 orders=orders,
                 status=raw_delivery["status"],
                 delivery_time=raw_delivery["delivery_time"],
@@ -101,7 +101,7 @@ class DeliveryDAO:
                 deliveries.append(
                     Delivery(
                         id_delivery=delivery_data["id_delivery"],
-                        id_driver=driver,
+                        driver=driver,
                         orders=orders,
                         status=delivery_data["status"],
                         delivery_time=delivery_data["delivery_time"],
@@ -124,7 +124,7 @@ class DeliveryDAO:
         """
         try:
             # Extrait l'ID du driver (si c'est un objet Driver)
-            id_driver = delivery.id_driver.id_user if hasattr(delivery.id_driver, "id_user") else delivery.id_driver
+            id_driver = delivery.driver.id_user
 
             res = self.db_connector.sql_query(
                 """
@@ -159,7 +159,7 @@ class DeliveryDAO:
         """
         try:
             # Extrait l'ID du driver (si c'est un objet Driver)
-            id_driver = delivery.id_driver.id_user if hasattr(delivery.id_driver, "id_user") else delivery.id_driver
+            id_driver = delivery.id_driver.id_user
 
             raw_created_delivery = self.db_connector.sql_query(
                 """

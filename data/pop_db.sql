@@ -73,10 +73,10 @@ INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 (2, 5);
 
 -- Insert orders
-INSERT INTO fd.order (id_user, status, address, order_date) VALUES
-(1, 'delivered', '10 Rivoli Street, 75001 Paris', '2024-10-01 12:30:00'),
-(2, 'in_progress', '25 Republic Street, 69001 Lyon', '2024-10-06 18:45:00'),
-(5, 'pending', '50 La Canebière Street, 13001 Marseille', '2024-10-06 19:15:00');
+INSERT INTO fd.order (id_user, status, id_address, order_date) VALUES
+(1, 'delivered', 1, '2024-10-01 12:30:00'),
+(2, 'in_progress', 2, '2024-10-06 18:45:00'),
+(5, 'pending', 3, '2024-10-06 19:15:00');
 
 -- Associate orders with bundles
 INSERT INTO fd.order_bundle (id_order, id_bundle) VALUES

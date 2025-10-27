@@ -84,7 +84,7 @@ CREATE TABLE fd.order (
     id_order SERIAL PRIMARY KEY,
     id_user INT REFERENCES fd.user(id_user) ON DELETE CASCADE,
     status VARCHAR(20) NOT NULL,
-    address VARCHAR(255) NOT NULL,
+    id_address INT REFERENCES fd.address(id_address),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
