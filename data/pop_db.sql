@@ -40,22 +40,24 @@ INSERT INTO fd.item (name, item_type, price) VALUES
 ('Fries', 'side', 4.50);
 
 -- Insert predefined bundles
-INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
-('Pizza Menu', 'Pizza + Drink + Dessert', 'predefined', 19.00, NULL),
-('Burger Menu', 'Burger + Fries + Drink', 'predefined', 16.00, NULL);
+INSERT INTO fd.bundle (name, description, bundle_type, required_item_types,  price, discount) VALUES
+('Pizza Menu', 'Pizza + Drink + Dessert', 'predefined', NULL, 19.00, NULL),
+('Burger Menu', 'Burger + Fries + Drink', 'predefined', NULL, 16.00, NULL);
 
 -- Insert discount bundles
-INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
-('2 Pizzas Promo', 'Buy 2 pizzas, get 10% off', 'discount', NULL, 0.10),
-('Happy Hour', '20% off on any order before 7 PM', 'discount', NULL, 0.20);
+INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount) VALUES
+('2 Pizzas Promo', 'Buy 2 pizzas, get 10% off', 'discount', ARRAY['main', 'main'], NULL, 0.10),
+('Simple bundle', '', 'discount', ARRAY['main', 'drink'], NULL, 0.20),
+('Complete bundle', '', 'discount', ARRAY['starter', 'main', 'dessert'], NULL, 0.2);
 
 -- Insert single item
 -- Insert single items as bundles with the corresponding item price
-INSERT INTO fd.bundle (name, description, bundle_type, price, discount)
+INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount)
 SELECT 
     i.name, 
     '1 single item', 
-    'single_item', 
+    'single_item',
+    NULL, 
     i.price, 
     NULL
 FROM fd.item i
