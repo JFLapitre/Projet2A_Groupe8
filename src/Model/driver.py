@@ -1,5 +1,3 @@
-from typing import Optional
-
 from src.Model.abstract_user import AbstractUser
 
 

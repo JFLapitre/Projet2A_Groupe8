@@ -1,6 +1,8 @@
-import pytest
 from datetime import date
+
+import pytest
 from pydantic_core import ValidationError
+
 from src.Model.customer import Customer
 
 
@@ -10,7 +12,7 @@ def test_customer_constructor_ok():
         username="john_doe",
         password="secret",
         sign_up_date=date(2025, 1, 1),
-        phone_number="0606060606"
+        phone_number="0606060606",
     )
     assert customer.id_user == 1
     assert customer.username == "john_doe"
@@ -26,5 +28,5 @@ def test_customer_invalid_id_raises_validationerror():
             username="john_doe",
             password="secret",
             sign_up_date=date(2025, 1, 1),
-            phone_number="0606060606"
+            phone_number="0606060606",
         )
