@@ -49,7 +49,6 @@ class ItemDAO:
             {"name": item.name, "item_type": item.item_type, "price": item.price},
             "one",
         )
-        # pyrefly: ignore
         return Item(**raw_created_item)
 
     def delete_item(self, id_item: int) -> bool:

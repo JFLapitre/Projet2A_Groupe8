@@ -36,17 +36,14 @@ class OrderDAO(BaseModel):
             if raw_order is None:
                 return None
 
-            # Récupère le customer via UserDAO
             customer = None
             if raw_order["id_user"] is not None:
                 customer = self.user_dao.find_user_by_id(raw_order["id_user"])
 
-            # Récupère l'adresse via AddressDAO
             address = None
             if raw_order["id_address"] is not None:
                 address = self.address_dao.find_address_by_id(raw_order["id_address"])
 
-            # Récupère les bundles associés
             raw_bundle_ids = self.db_connector.sql_query(
                 """
                 SELECT id_bundle 
@@ -57,7 +54,6 @@ class OrderDAO(BaseModel):
                 "all",
             )
 
-            # Récupère les objets Bundle complets
             bundles = []
             for bundle_data in raw_bundle_ids:
                 bundle = self.bundle_dao.find_bundle_by_id(bundle_data["id_bundle"])
@@ -87,17 +83,14 @@ class OrderDAO(BaseModel):
 
             orders = []
             for order_data in raw_orders:
-                # Récupère le customer via UserDAO
                 customer = None
                 if order_data["id_user"] is not None:
                     customer = self.user_dao.find_user_by_id(order_data["id_user"])
 
-                # Récupère l'adresse via AddressDAO
                 address = None
                 if order_data["id_address"] is not None:
                     address = self.address_dao.find_address_by_id(order_data["id_address"])
 
-                # Récupère les bundles associés
                 raw_bundle_ids = self.db_connector.sql_query(
                     """
                     SELECT id_bundle 
@@ -108,14 +101,12 @@ class OrderDAO(BaseModel):
                     "all",
                 )
 
-                # Récupère les objets Bundle complets
                 bundles = []
                 for bundle_data in raw_bundle_ids:
                     bundle = self.bundle_dao.find_bundle_by_id(bundle_data["id_bundle"])
                     if bundle:
                         bundles.append(bundle)
 
-                # Crée l'objet Order avec les objets complets
                 orders.append(
                     Order(
                         id_order=order_data["id_order"],
@@ -167,7 +158,6 @@ class OrderDAO(BaseModel):
             Order: The created order with its ID, or None if failed.
         """
         try:
-            # Extrait les IDs des objets
             id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
             id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
 
@@ -188,7 +178,6 @@ class OrderDAO(BaseModel):
 
             id_order = raw_created_order["id_order"]
 
-            # Associe les bundles à l'order
             for bundle in order.bundles:
                 bundle_id = bundle.id_bundle if hasattr(bundle, "id_bundle") else bundle
                 self.db_connector.sql_query(
@@ -200,7 +189,6 @@ class OrderDAO(BaseModel):
                     None,
                 )
 
-            # Retourne l'order complet avec ses relations
             return self.find_order_by_id(id_order)
         except Exception as e:
             logging.error(f"Failed to add order: {e}")
@@ -216,7 +204,6 @@ class OrderDAO(BaseModel):
             bool: True if update succeeded, False otherwise.
         """
         try:
-            # Extrait les IDs des objets
             id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
             id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
 
@@ -240,13 +227,10 @@ class OrderDAO(BaseModel):
                 "one",
             )
 
-            # Met à jour les bundles associés
-            # Supprime les anciennes associations
             self.db_connector.sql_query(
                 "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": order.id_order}, None
             )
 
-            # Ajoute les nouvelles associations
             for bundle in order.bundles:
                 bundle_id = bundle.id_bundle if hasattr(bundle, "id_bundle") else bundle
                 self.db_connector.sql_query(
@@ -273,17 +257,14 @@ class OrderDAO(BaseModel):
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
-            # Supprime d'abord les associations dans order_bundle
             self.db_connector.sql_query(
                 "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": id_order}, None
             )
 
-            # Supprime aussi les associations dans delivery_order
             self.db_connector.sql_query(
                 "DELETE FROM fd.delivery_order WHERE id_order = %(id_order)s", {"id_order": id_order}, None
             )
 
-            # Puis supprime l'order
             res = self.db_connector.sql_query(
                 "DELETE FROM fd.order WHERE id_order = %(id_order)s RETURNING id_order;", {"id_order": id_order}, "one"
             )

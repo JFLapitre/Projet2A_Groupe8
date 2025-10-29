@@ -5,6 +5,6 @@ from src.Model.item import Item
 
 
 class DiscountedBundle(AbstractBundle):
-    components: Optional[list[str]]
+    required_item_types: list[str]
     discount: float
     composition: list[Item]

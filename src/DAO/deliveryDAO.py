@@ -33,19 +33,16 @@ class DeliveryDAO:
             if raw_delivery is None:
                 return None
 
-            # Récupère le driver via UserDAO
             driver = None
             if raw_delivery["id_driver"] is not None:
                 driver = self.user_dao.find_user_by_id(raw_delivery["id_driver"])
 
-            # Récupère les orders associées
             raw_order_ids = self.db_connector.sql_query(
                 "SELECT id_order FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s",
                 {"id_delivery": id_delivery},
                 "all",
             )
 
-            # Récupère les objets Order complets
             orders = []
             for order_data in raw_order_ids:
                 order = self.order_dao.find_order_by_id(order_data["id_order"])
@@ -74,12 +71,10 @@ class DeliveryDAO:
 
             deliveries = []
             for delivery_data in raw_deliveries:
-                # Récupère le driver via UserDAO
                 driver = None
                 if delivery_data["id_driver"] is not None:
                     driver = self.user_dao.find_user_by_id(delivery_data["id_driver"])
 
-                # Récupère les orders associées
                 raw_order_ids = self.db_connector.sql_query(
                     """
                     SELECT id_order 
@@ -90,14 +85,12 @@ class DeliveryDAO:
                     "all",
                 )
 
-                # Récupère les objets Order complets
                 orders = []
                 for order_data in raw_order_ids:
                     order = self.order_dao.find_order_by_id(order_data["id_order"])
                     if order:
                         orders.append(order)
 
-                # Crée l'objet Delivery avec les objets complets
                 deliveries.append(
                     Delivery(
                         id_delivery=delivery_data["id_delivery"],
@@ -123,7 +116,6 @@ class DeliveryDAO:
             bool: True if update succeeded, False otherwise.
         """
         try:
-            # Extrait l'ID du driver (si c'est un objet Driver)
             id_driver = delivery.driver.id_user
 
             res = self.db_connector.sql_query(
@@ -158,7 +150,6 @@ class DeliveryDAO:
             Delivery: The created delivery with its ID, or None if failed.
         """
         try:
-            # Extrait l'ID du driver (si c'est un objet Driver)
             id_driver = delivery.id_driver.id_user
 
             raw_created_delivery = self.db_connector.sql_query(
@@ -173,7 +164,6 @@ class DeliveryDAO:
 
             id_delivery = raw_created_delivery["id_delivery"]
 
-            # Associe les orders à la delivery
             for order in delivery.orders:
                 order_id = order.id_order if hasattr(order, "id_order") else order
                 self.db_connector.sql_query(
@@ -185,7 +175,6 @@ class DeliveryDAO:
                     None,
                 )
 
-            # Retourne la delivery complète avec ses relations
             return self.find_delivery_by_id(id_delivery)
         except Exception as e:
             logging.error(f"Failed to add delivery: {e}")
@@ -201,12 +190,10 @@ class DeliveryDAO:
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
-            # Supprime d'abord les associations dans delivery_order
             self.db_connector.sql_query(
                 "DELETE FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, None
             )
 
-            # Puis supprime la delivery
             res = self.db_connector.sql_query(
                 "DELETE FROM fd.delivery WHERE id_delivery = %(id_delivery)s RETURNING id_delivery;",
                 {"id_delivery": id_delivery},

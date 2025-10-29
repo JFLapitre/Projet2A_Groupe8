@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
-from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
@@ -43,7 +42,6 @@ class BundleDAO(BaseModel):
             if not raw_bundle:
                 return None
 
-            # Récupère la composition (les items) via la table de liaison
             raw_items = self.db_connector.sql_query(
                 """
                 SELECT i.*
@@ -55,14 +53,12 @@ class BundleDAO(BaseModel):
                 "all",
             )
 
-            # Récupère les objets Item complets
             composition = []
             for item_data in raw_items:
                 item = self.item_dao.find_item_by_id(item_data["id_item"])
                 if item:
                     composition.append(item)
 
-            # Crée le bon type de bundle selon bundle_type
             bundle_type = raw_bundle["bundle_type"]
 
             if bundle_type == "predefined":
@@ -79,6 +75,7 @@ class BundleDAO(BaseModel):
                     name=raw_bundle["name"],
                     description=raw_bundle["description"],
                     discount=raw_bundle["discount"],
+                    required_item_types=raw_bundle["required_item_types"],
                     composition=composition,
                 )
             elif bundle_type == "single_item":
@@ -141,7 +138,6 @@ class BundleDAO(BaseModel):
 
             id_bundle = raw_created_bundle["id_bundle"]
 
-            # Associe les items au bundle
             for item in bundle.composition:
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
@@ -182,7 +178,6 @@ class BundleDAO(BaseModel):
 
             id_bundle = raw_created_bundle["id_bundle"]
 
-            # Associe les items au bundle
             for item in bundle.composition:
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
@@ -223,7 +218,6 @@ class BundleDAO(BaseModel):
 
             id_bundle = raw_created_bundle["id_bundle"]
 
-            # Associe l'item au bundle
             for item in bundle.composition:
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
@@ -275,7 +269,8 @@ class BundleDAO(BaseModel):
                     UPDATE fd.bundle
                     SET name = %(name)s,
                         description = %(description)s,
-                        discount = %(discount)s
+                        discount = %(discount)s,
+                        required_item_types = %(required_item_types)s
                     WHERE id_bundle = %(id_bundle)s
                     """,
                     {
@@ -283,6 +278,7 @@ class BundleDAO(BaseModel):
                         "name": bundle.name,
                         "description": bundle.description,
                         "discount": bundle.discount,
+                        "required_item_types": bundle.required_item_types,
                     },
                     None,
                 )
@@ -304,13 +300,10 @@ class BundleDAO(BaseModel):
                     None,
                 )
 
-            # Met à jour la composition
-            # Supprime les anciennes associations
             self.db_connector.sql_query(
                 "DELETE FROM fd.bundle_item WHERE id_bundle = %(id_bundle)s", {"id_bundle": bundle.id_bundle}, None
             )
 
-            # Ajoute les nouvelles associations
             for item in bundle.composition:
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
@@ -339,12 +332,10 @@ class BundleDAO(BaseModel):
             bool: True if deletion was successful, False otherwise
         """
         try:
-            # Supprime d'abord les associations dans bundle_item
             self.db_connector.sql_query(
                 "DELETE FROM fd.bundle_item WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
             )
 
-            # Puis supprime le bundle
             self.db_connector.sql_query(
                 "DELETE FROM fd.bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
             )
