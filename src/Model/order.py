@@ -1,4 +1,6 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.address import Address
@@ -11,3 +13,4 @@ class Order(BaseModel):
     address: Address
     bundles: list[AbstractBundle]
     status: str
+    order_date : datetime = Field(default_factory=datetime.now)

@@ -11,7 +11,7 @@ def test_discounted_bundle_constructor_ok():
     bundle = DiscountedBundle(
         id_bundle=3,
         name="Breton Combo",
-        components=["main", "drink"],
+        required_item_types=["main", "drink"],
         discount=0.1,
         composition=[item1, item2],
     )
@@ -29,7 +29,7 @@ def test_discounted_bundle_invalid_discount_type():
         DiscountedBundle(
             id_bundle=3,
             name="Breton Combo",
-            components=["main", "drink"],
+            required_item_types=["main", "drink"],
             discount="10 percent",
             composition=[item],
         )
