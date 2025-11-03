@@ -15,7 +15,7 @@ def test_driver_constructor_ok():
         name="Jean Dupont",
         phone_number="0601020304",
         vehicle_type="bike",
-        availability=True
+        availability=True,
     )
 
     assert driver.id_user == 1
@@ -39,5 +39,5 @@ def test_driver_invalid_id_raises_validationerror():
             name="Jean Dupont",
             phone_number="0601020304",
             vehicle_type="bike",
-            availability=True
+            availability=True,
         )

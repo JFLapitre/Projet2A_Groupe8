@@ -7,6 +7,7 @@ from src.Service.admin_menu_service import AdminMenuService
 def admin_menu_service():
     return AdminMenuService()
 
+
 # Test create_item
 @pytest.mark.parametrize(
     "name, desc, price, stock, availability, should_raise_error, error_message",
@@ -34,10 +35,12 @@ def test_create_item_with_various_inputs(
         assert result.stock == stock
         assert result.availability == availability
 
+
 # Test update_item
 @pytest.fixture
 def admin_menu_service():
     return AdminMenuService()
+
 
 @pytest.mark.parametrize(
     "id, desc, price, stock, availability, should_raise_error, error_message",
@@ -45,7 +48,6 @@ def admin_menu_service():
         # Valid cases
         ("Id", "New Description", 12.99, 200, True, False, None),
         ("Id", "New Description", 12.99, 0, False, False, None),
-
         # Invalid cases
         ("Id", "New Description", -12.99, 200, True, True, "Price must be positive"),
         ("Wrong Id", "New Description", 12.99, 200, True, True, "No item found"),
@@ -70,20 +72,18 @@ def test_update_item_with_various_inputs(
         assert result.stock == stock
         assert result.availability == availability
 
+
 # Test delete_item
 @pytest.mark.parametrize(
     "id, should_raise_error, error_message",
     [
         # Valid cases
         ("Id", False, None),
-
         # Invalid cases
         ("Wrong Id", True, "No item found"),
     ],
 )
-def test_delete_item_with_various_inputs(
-    admin_menu_service, id, should_raise_error, error_message
-):
+def test_delete_item_with_various_inputs(admin_menu_service, id, should_raise_error, error_message):
     if id == "Id" and not should_raise_error:
         admin_menu_service.create_item(id, "Description", 12.99, 200, True)
 

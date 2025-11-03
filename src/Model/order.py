@@ -13,4 +13,4 @@ class Order(BaseModel):
     address: Address
     bundles: list[AbstractBundle]
     status: str
-    order_date : datetime = Field(default_factory=datetime.now)
+    order_date: datetime = Field(default_factory=datetime.now)

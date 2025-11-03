@@ -20,4 +20,3 @@ def test_predefined_bundle_invalid_price_type():
     item = Item(id_item=1, name="Galette", item_type="main", price=4.5)
     with pytest.raises(ValidationError):
         PredefinedBundle(id_bundle=1, name="Classic", composition=[item], price="four")
-

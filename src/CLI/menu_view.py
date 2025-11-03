@@ -1,6 +1,5 @@
-from src.CLI.order_builder_view import OrderBuilderView
-
 from src.CLI.abstract_view import AbstractView
+from src.CLI.order_builder_view import OrderBuilderView
 
 
 class MenuView(AbstractView):

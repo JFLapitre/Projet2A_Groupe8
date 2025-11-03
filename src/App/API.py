@@ -30,6 +30,7 @@ app.add_middleware(
 # app.include_router(menu_router, prefix="/menus")
 # app.include_router(delivery_router, prefix="/deliveries")
 
+
 @app.get("/", include_in_schema=False)
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")

@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, status
-
 from src.Model.Movie import Movie
 
 movie_router = APIRouter(prefix="/movies", tags=["Movies"])
