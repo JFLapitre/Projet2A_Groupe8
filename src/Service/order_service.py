@@ -7,8 +7,6 @@ from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
-from src.Model.abstract_bundle import AbstractBundle
-from src.Model.address import Address
 from src.Model.customer import Customer
 from src.Model.order import Order
 
