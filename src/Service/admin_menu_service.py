@@ -1,81 +1,141 @@
 from src.DAO.bundleDAO import BundleDAO
+from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
+from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
 
 
 class AdminMenuService:
-    def __init__(self):
-        self.item_dao = ItemDAO()
-        self.bundle_dao = BundleDAO()
+    def __init__(self, db_connector: DBConnector):
+        """
+        Initializes the service and injects dependencies into the DAOs.
+        """
+        self.item_dao = ItemDAO(db_connector=db_connector)
+        self.bundle_dao = BundleDAO(db_connector=db_connector, item_dao=self.item_dao)
 
-    def create_item(self, name: str, desc: str, price: float, stock: int, availability: bool) -> None:
-        """Create a new item"""
+    def create_item(self, name: str, desc: str, price: float, stock: int, availability: bool, item_type: str) -> None:
+        """
+        Validates and creates a new item in the database.
+        """
         if price < 0:
             raise ValueError("Price must be positive.")
         if stock < 0:
             raise ValueError("Stock cannot be negative.")
-        if stock == 0:
-            assert not availability, "Zero stock implies non-availability"
+        if stock == 0 and availability:
+            raise ValueError("Zero stock implies non-availability.")
 
-        new_item = Item(name=name, description=desc, price=price, stock=stock, availability=availability)
-        self.item_dao.add_item(new_item)
+        new_item = Item(
+            name=name, description=desc, price=price, stock=stock, availability=availability, item_type=item_type
+        )
+        created_item = self.item_dao.add_item(new_item)
+        if not created_item:
+            raise Exception(f"Failed to create item: {name}")
 
-    def update_item(self, id: str, desc: str, price: float, stock: int, availability: bool) -> None:
+    def update_item(
+        self, id: int, name: str, desc: str, price: float, stock: int, availability: bool, item_type: str
+    ) -> None:
+        """
+        Finds an existing item by ID, validates new data, and updates it.
+        """
         item = self.item_dao.find_item_by_id(id)
         if not item:
-            raise ValueError(f"No item found with id {id}.")
+            raise ValueError(f"No item found with ID {id}.")
+
         if price >= 0:
             item.price = price
         else:
             raise ValueError("Price must be positive.")
+
         if stock < 0:
             raise ValueError("Stock cannot be negative.")
-        if stock == 0:
-            assert not availability, "Zero stock implies non-availability"
+        if stock == 0 and availability:
+            raise ValueError("Zero stock implies non-availability.")
 
+        # Update all fields
+        item.name = name
         item.description = desc
         item.stock = stock
         item.availability = availability
-        self.item_dao.update_item(item)
+        item.item_type = item_type
 
-    def delete_item(self, id: str) -> None:
+        updated_item = self.item_dao.update_item(item)
+        if not updated_item:
+            raise Exception(f"Failed to update item: {id}")
+
+    def delete_item(self, id: int) -> None:
+        """
+        Finds an item by ID and deletes it from the database.
+        """
         item = self.item_dao.find_item_by_id(id)
         if not item:
-            raise ValueError(f"No item found with id {id}.")
+            raise ValueError(f"No item found with ID {id}.")
 
-        self.item_dao.delete_item(id)
+        if not self.item_dao.delete_item(id):
+            raise Exception(f"Failed to delete item: {id}")
 
-    def create_predefined_bundle(self, name: str, composition: list, price: float) -> None:
+    def create_predefined_bundle(self, name: str, description: str, composition: list, price: float) -> None:
+        """
+        Validates and creates a new predefined (fixed-price) bundle.
+        """
         if price <= 0:
             raise ValueError("Price must be positive.")
         if not composition:
             raise ValueError("Composition cannot be empty.")
 
-        new_bundle = PredefinedBundle(name=name, composition=composition, price=price)
-        self.bundle_dao.add_predifined_bundle(new_bundle)  # à implémenter
+        new_bundle = PredefinedBundle(name=name, description=description, composition=composition, price=price)
+        created_bundle = self.bundle_dao.add_predefined_bundle(new_bundle)
+        if not created_bundle:
+            raise Exception(f"Failed to create predefined bundle: {name}")
 
-    def create_one_item_bundle(self) -> None:
-        pass
+    def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
+        """
+        ValidTates and creates a new bundle containing only one item.
+        """
+        if price <= 0:
+            raise ValueError("Price must be positive.")
+        if not item:
+            raise ValueError("Item cannot be null.")
 
-    def create_discounted_bundle(self, name: str, components: list, discount: float) -> None:
-        if discount <= 0 or discount >= 100:
-            raise ValueError("Discount must be between 0 and 100.")
-        if not components:
-            raise ValueError("Components list cannot be empty.")
+        new_bundle = OneItemBundle(name=name, description=description, price=price, composition=[item])
+        created_bundle = self.bundle_dao.add_one_item_bundle(new_bundle)
+        if not created_bundle:
+            raise Exception(f"Failed to create one-item bundle: {name}")
 
-        new_bundle = DiscountedBundle(name=name, components=components, discount=discount)
-        self.bundle_dao.add_dicounted_bundle(new_bundle)  # à implémenter
+    def create_discounted_bundle(self, name: str, description: str, composition: list, discount: float) -> None:
+        """
+        Validates and creates a new bundle that applies a discount.
+        """
+        if not (0 < discount < 100):
+            raise ValueError("Discount must be between 0 and 100 (exclusive).")
+        if not composition:
+            raise ValueError("Composition cannot be empty.")
 
-    def delete_bundle(self, id: str) -> None:
-        if not self.bundle_dao.find_bundle_by_id(id):  # à implémenter
-            raise ValueError(f"No bundle found with id {id}.")
-        self.bundle_dao.delete_bundle(id)  # à implémenter
+        new_bundle = DiscountedBundle(name=name, description=description, composition=composition, discount=discount)
+        created_bundle = self.bundle_dao.add_discounted_bundle(new_bundle)
+        if not created_bundle:
+            raise Exception(f"Failed to create discounted bundle: {name}")
+
+    def delete_bundle(self, id: int) -> None:
+        """
+        Finds a bundle by ID and deletes it from the database.
+        """
+        if not self.bundle_dao.find_bundle_by_id(id):
+            raise ValueError(f"No bundle found with ID {id}.")
+
+        if not self.bundle_dao.delete_bundle(id):
+            raise Exception(f"Failed to delete bundle: {id}")
 
     def list_items(self) -> list[Item]:
-        self.item_dao.find_all_items()
+        """
+        Retrieves a list of all items from the database.
+        """
+        return self.item_dao.find_all_items()
 
     def list_bundles(self) -> list[AbstractBundle]:
-        self.bundle_dao.find_all_bundles()
+        """
+        Retrieves a list of all bundles from the database.
+        """
+        return self.bundle_dao.find_all_bundles()
