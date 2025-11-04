@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
-from src.Model.APIUser import APIUser
 
+from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 from src.Service.PasswordService import check_password_strength, validate_username_password
 
-from .init_app import jwt_service, user_repo, user_service
+from .init_app import jwt_service, user_dao, user_service
 from .JWTBearer import JWTBearer
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ def login(username: str, password: str) -> JWTResponse:
     Authenticate with username and password and obtain a token
     """
     try:
-        user = validate_username_password(username=username, password=password, user_repo=user_repo)
+        user = validate_username_password(username=username, password=password, user_dao=user_dao)
     except Exception as error:
         raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
 
@@ -57,7 +57,7 @@ def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, De
 def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
     token = credentials.credentials
     user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_repo.get_by_id(user_id)
+    user: User | None = user_dao.get_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return APIUser(id=user.id, username=user.username)
