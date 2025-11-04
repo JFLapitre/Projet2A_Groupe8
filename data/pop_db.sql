@@ -78,14 +78,18 @@ INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 INSERT INTO fd.order (id_user, status, id_address, order_date) VALUES
 (1, 'delivered', 1, '2024-10-01 12:30:00'),
 (2, 'in_progress', 2, '2024-10-06 18:45:00'),
-(5, 'pending', 3, '2024-10-06 19:15:00');
+(5, 'pending', 3, '2024-10-06 19:15:00'),
+(4, 'in_progress', 4, '2024-10-06 20:00:00'), -- New order 4
+(6, 'in_progress', 5, '2024-10-06 20:05:00'); -- New order 5
 
 -- Associate orders with bundles
 INSERT INTO fd.order_bundle (id_order, id_bundle) VALUES
 (1, 1), -- Order 1: Pizza Menu
 (2, 2), -- Order 2: Burger Menu
 (2, 3), -- Order 2: 2 Pizzas Promo
-(3, 1); -- Order 3: Pizza Menu
+(3, 1), -- Order 3: Pizza Menu
+(4, 3), -- Order 4: 2 Pizzas Promo
+(5, 2); -- Order 5: Burger Menu
 
 -- Insert deliveries
 INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
@@ -93,11 +97,14 @@ INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
 (3, 'in_progress', NULL),
 (NULL, 'pending', NULL);
 
--- Associate deliveries with orders
+-- Associate orders with deliveries
 INSERT INTO fd.delivery_order (id_delivery, id_order) VALUES
-(1, 1), -- Delivery 1 for order 1
-(2, 2), -- Delivery 2 for order 2
-(3, 3); -- Delivery 3 for order 3
+(1, 1), -- Delivery 1 -> Order 1
+(2, 2), -- Delivery 2 -> Order 2
+(3, 3), -- Delivery 3 -> Order 3
+(2, 4), -- Delivery 2 -> Order 4 (new)
+(2, 5); -- Delivery 2 -> Order 5 (new)
+
 
 -- ========================================
 -- Reset all sequences to continue after existing data
