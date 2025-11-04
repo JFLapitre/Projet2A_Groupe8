@@ -80,7 +80,7 @@ INSERT INTO fd.order (id_user, status, id_address, order_date) VALUES
 (2, 'in_progress', 2, '2024-10-06 18:45:00'),
 (5, 'pending', 3, '2024-10-06 19:15:00'),
 (4, 'in_progress', 4, '2024-10-06 20:00:00'), -- New order 4
-(6, 'in_progress', 5, '2024-10-06 20:05:00'); -- New order 5
+(4, 'in_progress', 5, '2024-10-06 20:05:00'); -- New order 5
 
 -- Associate orders with bundles
 INSERT INTO fd.order_bundle (id_order, id_bundle) VALUES
