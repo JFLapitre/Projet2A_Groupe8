@@ -11,12 +11,6 @@ class AuthenticationService:
         """
         self.user_dao = UserDAO(db_connector=db_connector)
 
-    def _hash_function(self, string: str) -> str:
-        """
-        Hash simple (remplacer plus tard par une vraie fonction sécurisée)
-        """
-        return hashlib.sha256(string.encode()).hexdigest()
-
     def login(self, username: str, password: str) -> Customer:
         """
         Authentifie un utilisateur (customer) avec username/password
