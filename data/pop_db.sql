@@ -1,10 +1,10 @@
 -- Insert users
-INSERT INTO fd.user (id_user, username, password, user_type, sign_up_date) VALUES
-(1, 'john_doe', 'password123', 'customer', '2024-01-15'),
-(2, 'jane_smith', 'securepass456', 'customer', '2024-02-20'),
-(3, 'bob_driver', 'driverpass789', 'driver', '2024-01-10'),
-(4, 'alice_admin', 'adminpass321', 'admin', '2024-01-01'),
-(5, 'charlie_customer', 'custpass654', 'customer', '2024-03-05');
+INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date) VALUES
+(1, 'john_doe', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'aa453f466c612b04de2e62b5501c264e462b06bac3ce18dc4bf7ad38e2d17bdf', 'customer', '2024-01-15'),
+(2, 'jane_smith', 'e34d7db48a3fb5808c8360136c07151b14b68f342a8ff87d9aef2236c405bfc8', '9faef269131b1838ab8e95af580e7c109e1de4448ba0282bdf06f19726ff55ea', 'customer', '2024-02-20'),
+(3, 'bob_driver', 'cb582b020a1f3c2cd95515946c05e719da58b7424e2d256f2ca7a5e4dc07e5d0', 'db7bdbc3bc99617b49292001145c705fdde6111d24716f0c7984ea02546231c1', 'driver', '2024-01-10'),
+(4, 'alice_admin', 'ae09bdc7f44c029a41114fa07ae66da4c7339b39b50329a21a316eb1ebd2ea20', '8759bb4e872578c20b9a835a4f78d8b46dcea0a80745c3dfcc71a9e5d8f6e35f', 'admin', '2024-01-01'),
+(5, 'charlie_customer', 'c30d262fa113f34a7fcfe07ef3c813247170e8de9e4983c8741e30066c4c3ec0', '96feb3fd1738208a82870371dc52a5def69343165bcf2789e1a53f54eda61336', 'customer', '2024-03-05');
 
 -- Insert addresses
 INSERT INTO fd.address (city, postal_code, street_name, street_number) VALUES
@@ -78,14 +78,18 @@ INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 INSERT INTO fd.order (id_user, status, id_address, order_date) VALUES
 (1, 'delivered', 1, '2024-10-01 12:30:00'),
 (2, 'in_progress', 2, '2024-10-06 18:45:00'),
-(5, 'pending', 3, '2024-10-06 19:15:00');
+(5, 'pending', 3, '2024-10-06 19:15:00'),
+(4, 'in_progress', 4, '2024-10-06 20:00:00'), -- New order 4
+(4, 'in_progress', 5, '2024-10-06 20:05:00'); -- New order 5
 
 -- Associate orders with bundles
 INSERT INTO fd.order_bundle (id_order, id_bundle) VALUES
 (1, 1), -- Order 1: Pizza Menu
 (2, 2), -- Order 2: Burger Menu
 (2, 3), -- Order 2: 2 Pizzas Promo
-(3, 1); -- Order 3: Pizza Menu
+(3, 1), -- Order 3: Pizza Menu
+(4, 3), -- Order 4: 2 Pizzas Promo
+(5, 2); -- Order 5: Burger Menu
 
 -- Insert deliveries
 INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
@@ -93,11 +97,14 @@ INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
 (3, 'in_progress', NULL),
 (NULL, 'pending', NULL);
 
--- Associate deliveries with orders
+-- Associate orders with deliveries
 INSERT INTO fd.delivery_order (id_delivery, id_order) VALUES
-(1, 1), -- Delivery 1 for order 1
-(2, 2), -- Delivery 2 for order 2
-(3, 3); -- Delivery 3 for order 3
+(1, 1), -- Delivery 1 -> Order 1
+(2, 2), -- Delivery 2 -> Order 2
+(3, 3), -- Delivery 3 -> Order 3
+(2, 4), -- Delivery 2 -> Order 4 (new)
+(2, 5); -- Delivery 2 -> Order 5 (new)
+
 
 -- ========================================
 -- Reset all sequences to continue after existing data

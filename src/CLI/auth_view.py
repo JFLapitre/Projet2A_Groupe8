@@ -1,104 +1,110 @@
-from typing import Any
+import logging
 
-from src.CLI.abstract_view import AbstractView
 from src.CLI.session import Session
+from src.Service.authentication_service import AuthenticationService
 
 
-class AuthView(AbstractView):
-    """
-    Login / register view. Tries to call realistic methods on provided services:
-    - auth service: .login(username,password) or .authenticate(...)
-    - user service: .register_customer(...) or .create_user(...)
-    """
+class AuthView:
+    def __init__(self, session: Session, services: dict = None):
+        """
+        Vue CLI pour l'authentification.
+        :param session: objet Session pour gérer l'état de l'utilisateur
+        :param services: dictionnaire optionnel de services, doit contenir 'auth'
+        """
+        self.session = session
+        self.auth_service = services["auth"] if services and "auth" in services else AuthenticationService()
 
-    def display(self) -> None:
+    def display(self):
+        """
+        Affiche l'interface d'authentification.
+        Retourne True si l'utilisateur est maintenant authentifié, False sinon.
+        """
         while True:
             print("\n=== EJR Eats — Authentication ===")
             print("1) Login")
-            print("2) Register")
+            print("2) Create a Customer account")
             print("q) Back")
-            choice = self.prompt("Choice: ")
+
+            choice = input("Choice: ").strip()
             if choice == "1":
-                self._login()
-                if self.session.is_authenticated():
-                    return
+                if self._login():
+                    return True
             elif choice == "2":
-                self._register()
+                if self._register():
+                    return True
             elif choice.lower() == "q":
-                return
+                return False
             else:
-                self.print_error("Invalid choice.")
+                print("Invalid choice.")
 
-    def _login(self) -> None:
-        username = self.prompt("Username: ")
-        password = self.prompt("Password: ")
-        auth = self.services.get("auth")
-        user_srv = self.services.get("user")
+    def _login(self) -> bool:
+        username = input("Username: ").strip()
+        password = input("Password: ").strip()
 
-        # First try auth service generic login
         try:
-            if auth:
-                if hasattr(auth, "login"):
-                    user = auth.login(username, password)
-                elif hasattr(auth, "authenticate"):
-                    user = auth.authenticate(username, password)
-                else:
-                    raise RuntimeError("Auth service doesn't implement login/authenticate")
-            elif user_srv:
-                # fallback to user service login names
-                if hasattr(user_srv, "login_customer"):
-                    user = user_srv.login_customer(username, password)
-                elif hasattr(user_srv, "validate_username_password"):
-                    # some projects keep validate_username_password as function in utils; it returns user
-                    user = user_srv.validate_username_password(username, password)
-                else:
-                    raise RuntimeError("No usable auth/user service found")
-            else:
-                raise RuntimeError("No auth/user service provided")
-        except Exception as e:
-            self.print_error(f"Login failed: {e}")
-            return
+            user = self.auth_service.login(username, password)
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            return False
 
-        # normalize expected return types (dict or object)
-        if isinstance(user, dict):
-            self.session.user_id = user.get("id") or user.get("user_id") or user.get("id_user")
-            self.session.username = user.get("username")
-            self.session.role = user.get("role", "customer")
-            self.session.token = user.get("token")
-        else:
-            # object with attributes
-            self.session.user_id = getattr(user, "id", None) or getattr(user, "id_user", None)
-            self.session.username = getattr(user, "username", None)
-            self.session.role = getattr(user, "role", "customer")
-            # JWT token optional
-            self.session.token = getattr(user, "token", None)
+        if user.__class__.__name__.lower() == "admin":
+            print("[INFO] Admins must use the web API interface (not CLI).")
+            return False
 
-        if self.session.is_authenticated():
-            self.print_info(f"Welcome {self.session.username}!")
-        else:
-            self.print_error("Login succeeded but user id couldn't be resolved.")
+        # Met à jour la session
+        self.session.user_id = user.id_user
+        self.session.username = user.username
+        self.session.role = user.__class__.__name__
 
-    def _register(self) -> None:
-        username = self.prompt("Choose username: ")
-        password = self.prompt("Choose password: ")
-        default_address = self.prompt("Default address (optional): ")
+        print(f"[SUCCESS] Logged in as {user.username} ({user.__class__.__name__})")
+        return True
 
-        user_srv = self.services.get("user")
-        auth = self.services.get("auth")
+    def _register(self) -> bool:
+        print("\n=== Registration ===")
+        username = input("Username: ").strip()
+        password = input("Password: ").strip()
+        phone_number = input("Phone number: ").strip()
+
         try:
-            if user_srv:
-                # try common register methods
-                if hasattr(user_srv, "register_customer"):
-                    user_srv.register_customer(username=username, password=password, default_address=default_address)
-                elif hasattr(user_srv, "create_user"):
-                    user_srv.create_user(username=username, password=password)
-                else:
-                    # fallback to auth service
-                    raise RuntimeError("User service has no register method")
-            elif auth and hasattr(auth, "register"):
-                auth.register(id=username, name=username, password=password, default_address=default_address)
-            else:
-                raise RuntimeError("No service to register user")
-            self.print_info("Account created. You can now login.")
+            # Utilisation générique avec user_type='customer'
+            user = self.auth_service.user_dao.add_user_raw(
+                username=username,
+                password=self.auth_service._hash_function(password),
+                phone_number=phone_number,
+                user_type="customer",
+            )
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            return False
         except Exception as e:
-            self.print_error(f"Registration failed: {e}")
+            print(f"[ERROR] Registration failed: {e}")
+            return False
+
+        # Met à jour la session
+        self.session.user_id = user.id_user
+        self.session.username = user.username
+        self.session.role = user.__class__.__name__
+
+        print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
+        return True
+
+        print("\n=== Registration ===")
+        username = input("Username: ").strip()
+        password = input("Password: ").strip()
+
+        try:
+            user = self.auth_service.register(username=username, password=password)
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            return False
+        except Exception as e:
+            print(f"[ERROR] Registration failed: {e}")
+            return False
+
+            # Met à jour la session avec le nouvel utilisateur
+            self.session.user_id = user.id_user
+            self.session.username = user.username
+            self.session.role = user.__class__.__name__
+
+            print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
+            return True

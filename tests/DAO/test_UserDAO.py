@@ -8,59 +8,63 @@ if TYPE_CHECKING:
 
 
 class MockDBConnector:
+    from datetime import date
+    def __init__(self):
+        self.users = [
+            {
+                "id_user": 1,
+                "user_type": "customer",
+                "username": "janjak",
+                "password": "myHashedPassword",
+                "sign_up_date": date.today(),
+                "customer_name": "Jean",
+                "customer_phone": "0000000000",
+                "driver_name": None,
+                "driver_phone": None,
+                "vehicle_type": None,
+                "availability": None,
+                "admin_name": None,
+                "admin_phone": None,
+            }
+        ]
+        self.next_id = 2
+
     def sql_query(
         self,
         query: str,
         data: Optional[Union[tuple, list, dict]] = None,
         return_type: Union[Literal["one"], Literal["all"], None] = "one",
     ):
-        # normalize query (remove extra whitespace, lowercase) to match the DAO's multi-line SQL
         q = " ".join(query.lower().split())
 
-        # match the find_user_by_id query (FROM fd.user ... WHERE u.id_user = %(id_user)s)
         if "from fd.user" in q and "where u.id_user" in q:
-            if not data:
-                raise Exception("no data provided")
-            if isinstance(data, dict):
-                id_user = data.get("id_user")
-            elif isinstance(data, (list, tuple)):
-                id_user = data[0]
-            else:
-                id_user = data
-
-            return {
-                "id_user": id_user,
-                "user_type": "customer",
-                "username": "janjak",
-                "password": "myHashedPassword",
-                "sign_up_date": date.today(),
-                "customer_name": "janjak",
-                "customer_phone": "0000000000",
-                "driver_name": None,
-                "driver_phone": None,
-                "vehicle_type": None,
-                "availability": None,
-                "admin_name": None,
-                "admin_phone": None,
-            }
+            id_user = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == id_user:
+                    return u
+            return None
 
         if "from fd.user" in q and "where u.username" in q:
-            if not data:
-                raise Exception("no data provided")
-            if isinstance(data, dict):
-                username = data.get("username")
-            elif isinstance(data, (list, tuple)):
-                username = data[2]
-            else:
-                username = data
+            username = data.get("username")
+            for u in self.users:
+                if u["username"] == username:
+                    return u
+            return None
 
-            return {
-                "id_user": 1,
-                "user_type": "customer",
-                "username": username,
-                "password": "myHashedPassword",
+        if "from fd.user" in q and "left join" in q and "where" not in q:
+            if return_type == "all":
+                return self.users
+            else:
+                return self.users[0]
+
+        if q.startswith("insert into fd.user"):
+            new_user = {
+                "id_user": self.next_id,
+                "user_type": data.get("user_type"),
+                "username": data.get("username"),
+                "password": data.get("password"),
                 "sign_up_date": date.today(),
-                "customer_name": "janjak",
+                "customer_name": data.get("username"),
                 "customer_phone": "0000000000",
                 "driver_name": None,
                 "driver_phone": None,
@@ -68,9 +72,28 @@ class MockDBConnector:
                 "availability": None,
                 "admin_name": None,
                 "admin_phone": None,
+                "salt": "random_salt_value",
+                "hash_password": "random_hash",
+
             }
+            self.users.append(new_user)
+            self.next_id += 1
+            return {"id_user": new_user["id_user"]}
+
+        if q.startswith("update fd.user"):
+            id_user = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == id_user:
+                    u.update(data)
+            return None
+
+        if q.startswith("delete from fd.user"):
+            id_user = data.get("id_user")
+            self.users = [u for u in self.users if u["id_user"] != id_user]
+            return None
 
         return None
+
 
 
 def test_find_user_by_id():
@@ -87,3 +110,34 @@ def test_find_user_by_username():
     assert user is not None
     assert user.id_user == 1
     assert user.username == "janjak"
+
+def test_find_all():
+    user_DAO = UserDAO(MockDBConnector())
+    users: list[AbstractUser] = user_DAO.find_all()
+    assert users is not None
+    assert isinstance(users, list)  # Vérifie que le résultat est une liste
+    assert len(users) > 0
+
+def test_add_user():
+    mock_db = MockDBConnector()
+    user_DAO = UserDAO(mock_db)
+
+    from src.Model.customer import Customer
+    new_user = Customer(
+        id_user=0,
+        username="alice",
+        password="secret",
+        sign_up_date=date.today(),
+        customer_name="Alice",
+        phone_number="0123456789",
+        salt="random_salt_value",
+        hash_password="random_hash"
+    )
+
+    added_user = user_DAO.add_user(new_user)
+    assert added_user is not None
+    assert added_user.username == "alice"
+    assert added_user.id_user != 0  # Vérifie que l'ID a été assigné
+    # Vérifie que l'utilisateur a été ajouté dans le mock
+    assert any(u["username"] == "alice" for u in mock_db.users)
+

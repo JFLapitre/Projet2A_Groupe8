@@ -61,7 +61,6 @@ class DeliveryService:
     def assign_driver_to_delivery(self, delivery_id: int, driver_id: int) -> Optional[Delivery]:
         """
         Assigns an available driver to a pending delivery and sets its status to 'in_progress'.
-        This replaces the skeleton 'start_delivery' method.
         """
         delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
         if not delivery:

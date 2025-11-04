@@ -48,7 +48,8 @@ class UserDAO:
                 return Customer(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    password=raw_user["password"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["customer_name"],
                     phone_number=raw_user["customer_phone"],
@@ -57,7 +58,8 @@ class UserDAO:
                 return Driver(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    password=raw_user["password"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["driver_name"],
                     phone_number=raw_user["driver_phone"],
@@ -68,7 +70,8 @@ class UserDAO:
                 return Admin(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    password=raw_user["password"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["admin_name"],
                     phone_number=raw_user["admin_phone"],
@@ -148,7 +151,7 @@ class UserDAO:
                         Customer(
                             id_user=user["id_user"],
                             username=user["username"],
-                            password=user["password"],
+                            hash_password=user["hash_password"],
                             sign_up_date=user["sign_up_date"],
                             name=user["customer_name"],
                             phone_number=user["customer_phone"],
@@ -159,7 +162,7 @@ class UserDAO:
                         Driver(
                             id_user=user["id_user"],
                             username=user["username"],
-                            password=user["password"],
+                            hash_password=user["hash_password"],
                             sign_up_date=user["sign_up_date"],
                             name=user["driver_name"],
                             phone_number=user["driver_phone"],
@@ -172,7 +175,7 @@ class UserDAO:
                         Admin(
                             id_user=user["id_user"],
                             username=user["username"],
-                            password=user["password"],
+                            hash_password=user["hash_password"],
                             sign_up_date=user["sign_up_date"],
                             name=user["admin_name"],
                             phone_number=user["admin_phone"],
@@ -195,13 +198,13 @@ class UserDAO:
 
         result = self.db_connector.sql_query(
             """
-        INSERT INTO fd.user (id_user, username, password, user_type, sign_up_date)
-        VALUES (DEFAULT, %(username)s, %(password)s, %(user_type)s, %(sign_up_date)s)
+        INSERT INTO fd.user (id_user, username, hash_password, user_type, sign_up_date)
+        VALUES (DEFAULT, %(username)s, %(hash_password)s, %(user_type)s, %(sign_up_date)s)
         RETURNING id_user;
         """,
             {
                 "username": user.username,
-                "password": user.password,
+                "hash_password": user.hash_password,
                 "user_type": user_type,
                 "sign_up_date": date.today(),
             },
@@ -257,14 +260,14 @@ class UserDAO:
                 """
                 UPDATE fd.user
                 SET username = %(username)s,
-                    password = %(password)s,
+                    hash_password = %(hash_password)s,
                     user_type = %(user_type)s
                 WHERE id_user = %(id_user)s
                 """,
                 {
                     "id_user": user.id_user,
                     "username": user.username,
-                    "password": user.password,
+                    "hash_password": user.hash_password,
                     "user_type": user_type,
                 },
                 None,
@@ -369,3 +372,72 @@ class UserDAO:
         except Exception as e:
             logging.error(f"Failed to delete user {id_user}: {e}")
             return False
+
+    def add_user_raw(
+        self,
+        username: str,
+        hash_password: str,
+        phone_number: str,
+        user_type: str = "customer",
+    ) -> "AbstractUser":
+        """
+        Ajoute un utilisateur de type user_type en base et retourne l'objet correspondant
+        avec l'id généré par la base.
+        """
+        # Crée l'entrée dans fd.user
+        result = self.db_connector.sql_query(
+            """
+            INSERT INTO fd.user (id_user, username, hash_password, user_type, sign_up_date)
+            VALUES (DEFAULT, %(username)s, %(hash_password)s, %(user_type)s, CURRENT_DATE)
+            RETURNING id_user;
+            """,
+            {"username": username, "hash_password": hash_password, "user_type": user_type},
+            "one",
+        )
+        id_user = result["id_user"]
+
+        # Crée l'entrée spécifique selon le type
+        if user_type == "customer":
+            table = "customer"
+        elif user_type == "driver":
+            table = "driver"
+        elif user_type == "admin":
+            table = "admin"
+        else:
+            raise ValueError(f"Unknown user_type '{user_type}'")
+
+        self.db_connector.sql_query(
+            f"""
+            INSERT INTO fd.{table} (id_user, name, phone_number)
+            VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+            """,
+            {"id_user": id_user, "name": username, "phone_number": phone_number},
+            None,
+        )
+
+        # Retourne l'objet correspondant
+        if user_type == "customer":
+            return Customer(
+                id_user=id_user,
+                username=username,
+                hash_password=hash_password,
+                phone_number=phone_number,
+            )
+        elif user_type == "driver":
+            return Driver(
+                id_user=id_user,
+                username=username,
+                hash_password=hash_password,
+                phone_number=phone_number,
+                name=username,
+                vehicle_type="",  # par défaut vide
+                availability=True,
+            )
+        elif user_type == "admin":
+            return Admin(
+                id_user=id_user,
+                username=username,
+                hash_password=hash_password,
+                phone_number=phone_number,
+                name=username,
+            )
