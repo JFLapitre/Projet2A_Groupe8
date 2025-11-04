@@ -24,3 +24,10 @@ print(final2)
 print(final3)
 print(final4)
 print(final5)
+
+
+mdp_test = "soleil1234"
+sel_test = "jambon"
+
+final_test = hashlib.sha256((mdp_test + sel_test).encode()).hexdigest()
+print(final_test)

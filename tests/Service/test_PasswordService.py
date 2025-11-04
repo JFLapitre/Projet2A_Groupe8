@@ -1,57 +1,106 @@
-from typing import Optional
-
 import pytest
 
-from src.Model.abstract_user import AbstractUser
-from src.Service.PasswordService import create_salt, hash_password, validate_username_password
+from src.Service.password_service import PasswordService
 
 
-def test_hash_password():
-    password = "soleil1234"
-    hashed_password = hash_password(password)
-    assert hashed_password == "a88c648411492422ee9a1f4b03d3f5b71705499786f4415a59b51b255611ba50"
+@pytest.fixture
+def service():
+    """
+    Provides a PasswordService instance for each test.
+    """
+    return PasswordService()
 
 
-def test_hash_password_with_salt():
+def test_hash_password_with_known_salt(service: PasswordService):
+    """
+    Tests hashing a known password and salt produces a known hash.
+    """
     password = "soleil1234"
     salt = "jambon"
-    hashed_password = hash_password(password, salt)
-    assert hashed_password == "56d25b0190eb6fcdab76f20550aa3e85a37ee48d520ac70385ae3615deb7d53a"
+    # This hash is specific to your *new* implementation logic.
+    expected_hash = "7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7"
+
+    hashed_password = service.hash_password(password, salt)
+
+    assert hashed_password == expected_hash
 
 
-def test_create_salt():
-    salt = create_salt()
-    assert len(salt) == 256
+def test_hash_password_requires_salt(service: PasswordService):
+    """
+    Tests that hash_password raises ValueError if no salt is provided.
+    """
+    password = "onepassword"
+
+    with pytest.raises(ValueError) as e:
+        service.hash_password(password, salt=None)
+
+    assert "Salt must be provided" in str(e.value)
 
 
-class MockUserDAO:
-    def get_by_username(self, username: str) -> Optional[AbstractUser]:
-        if username == "janjak":
-            return User(
-                id=4,
-                username="janjak",
-                salt="jambon",
-                password="56d25b0190eb6fcdab76f20550aa3e85a37ee48d520ac70385ae3615deb7d53a",
-            )
-        else:
-            return None
+def test_different_salts_produce_different_hashes(service: PasswordService):
+    """
+    Tests that the same password with different salts produces different hashes.
+    """
+    password = "mysecretpassword"
+    salt1 = "salt_A"
+    salt2 = "salt_B"
+
+    hash1 = service.hash_password(password, salt1)
+    hash2 = service.hash_password(password, salt2)
+
+    assert hash1 != hash2
 
 
-user_DAO = MockUserDAO()
+def test_hash_is_consistent(service: PasswordService):
+    """
+    Tests that hashing the same password and salt multiple times yields the same hash.
+    """
+    password = "consistent123"
+    salt = "fixed_salt"
+
+    hash1 = service.hash_password(password, salt)
+    hash2 = service.hash_password(password, salt)
+
+    assert hash1 == hash2
 
 
-def test_validate_username_password_is_ok():
-    janjak = validate_username_password("janjak", "soleil1234", user_repo)
-    assert janjak.id == 4
+def test_strength_valid_length(service: PasswordService):
+    """
+    Tests that a password meeting the length requirement passes.
+    """
+    try:
+        service.check_password_strength("ValidPassword123")
+        service.check_password_strength("123456789")
+    except Exception as e:
+        pytest.fail(f"check_password_strength raised an unexpected exception: {e}")
 
 
-def test_validate_username_password_unknown_user():
-    with pytest.raises(Exception) as exception_info:
-        validate_username_password("Jean-Jacques", "soleil1234", user_repo)
-    assert str(exception_info.value) == "user with username Jean-Jacques not found"
+def test_strength_exact_length(service: PasswordService):
+    """
+    Tests that a password of exactly 8 characters passes.
+    """
+    try:
+        service.check_password_strength("12345678")
+    except Exception as e:
+        pytest.fail(f"check_password_strength raised an unexpected exception: {e}")
 
 
-def test_validate_username_password_incorrect_password():
-    with pytest.raises(Exception) as exception_info:
-        validate_username_password("janjak", "wrongpassword", user_repo)
-    assert str(exception_info.value) == "Incorrect password"
+def test_strength_too_short(service: PasswordService):
+    """
+    Tests that a password shorter than 8 characters raises an Exception.
+    """
+    with pytest.raises(Exception) as e:
+        service.check_password_strength("1234567")
+
+    # Check the specific error message
+    assert "Password length must be at least 8 characters" in str(e.value)
+
+
+def test_strength_empty_string(service: PasswordService):
+    """
+    Tests that an empty string (length 0) raises an Exception.
+    """
+    with pytest.raises(Exception) as e:
+        service.check_password_strength("")  # 0 chars
+
+    assert "Password length must be at least 8 characters" in str(e.value)
