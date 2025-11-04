@@ -211,21 +211,21 @@ class UserDAO:
         if user_type == "customer":
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.customer (id_user, name, phone_number)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+                INSERT INTO fd.customer (id_user, customer_name, phone_number)
+                VALUES (%(id_user)s, %(customer_name)s, %(phone_number)s)
                 """,
-                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                {"id_user": id_user, "customer_name": user.name, "phone_number": user.phone_number},
                 None,
             )
         elif user_type == "driver":
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s, %(vehicle_type)s)
+                INSERT INTO fd.driver (id_user, driver_name, phone_number, vehicle_type)
+                VALUES (%(id_user)s, %(driver_name)s, %(phone_number)s, %(vehicle_type)s)
                 """,
                 {
                     "id_user": id_user,
-                    "name": user.name,
+                    "driver_name": user.name,
                     "phone_number": user.phone_number,
                     "vehicle_type": user.vehicle_type,
                 },
@@ -234,10 +234,10 @@ class UserDAO:
         elif user_type == "admin":
             self.db_connector.sql_query(
                 """
-                INSERT INTO fd.admin (id_user, name, phone_number)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+                INSERT INTO fd.admin (id_user, admin_name, phone_number)
+                VALUES (%(id_user)s, %(admin_name)s, %(phone_number)s)
                 """,
-                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                {"id_user": id_user, "admin_name": user.name, "phone_number": user.phone_number},
                 None,
             )
 
