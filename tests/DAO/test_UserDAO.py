@@ -72,6 +72,9 @@ class MockDBConnector:
                 "availability": None,
                 "admin_name": None,
                 "admin_phone": None,
+                "salt": "random_salt_value",
+                "hash_password": "random_hash",
+
             }
             self.users.append(new_user)
             self.next_id += 1
@@ -121,12 +124,14 @@ def test_add_user():
 
     from src.Model.customer import Customer
     new_user = Customer(
-        id_user=0,  # sera remplacé par l'ID renvoyé
+        id_user=0,
         username="alice",
         password="secret",
         sign_up_date=date.today(),
-        customer_name="Alice",   # corrigé ici
+        customer_name="Alice",
         phone_number="0123456789",
+        salt="random_salt_value",
+        hash_password="random_hash"
     )
 
     added_user = user_DAO.add_user(new_user)
