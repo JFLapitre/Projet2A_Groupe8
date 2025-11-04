@@ -260,14 +260,14 @@ class UserDAO:
                 """
                 UPDATE fd.user
                 SET username = %(username)s,
-                    hash_password = %(hash_password)s,
+                    hash_password = %(password)s,
                     user_type = %(user_type)s
                 WHERE id_user = %(id_user)s
                 """,
                 {
                     "id_user": user.id_user,
                     "username": user.username,
-                    "hash_password": user.hash_password,
+                    "hash_password": user.password,
                     "user_type": user_type,
                 },
                 None,

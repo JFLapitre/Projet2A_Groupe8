@@ -2,6 +2,7 @@ from datetime import date
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from src.DAO.userDAO import UserDAO
+from src.Model.customer import Customer
 
 if TYPE_CHECKING:
     from src.Model.abstract_user import AbstractUser
@@ -9,6 +10,7 @@ if TYPE_CHECKING:
 
 class MockDBConnector:
     from datetime import date
+
     def __init__(self):
         self.users = [
             {
@@ -25,6 +27,8 @@ class MockDBConnector:
                 "availability": None,
                 "admin_name": None,
                 "admin_phone": None,
+                "hash_password": "random_hash",
+                "salt": "random_salt",
             }
         ]
         self.next_id = 2
@@ -64,7 +68,7 @@ class MockDBConnector:
                 "username": data.get("username"),
                 "password": data.get("password"),
                 "sign_up_date": date.today(),
-                "customer_name": data.get("username"),
+                "name": data.get("username"),
                 "customer_phone": "0000000000",
                 "driver_name": None,
                 "driver_phone": None,
@@ -72,19 +76,27 @@ class MockDBConnector:
                 "availability": None,
                 "admin_name": None,
                 "admin_phone": None,
-                "salt": "random_salt_value",
+                "salt": "random_salt",
                 "hash_password": "random_hash",
-
             }
             self.users.append(new_user)
             self.next_id += 1
             return {"id_user": new_user["id_user"]}
 
-        if q.startswith("update fd.user"):
+        if "update fd.user" in q:
             id_user = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == id_user:
-                    u.update(data)
+                    u.update(
+                        {
+                            "username": data.get("username"),
+                            "name": data.get("customer_name") or data.get("name"),
+                            "phone_number": data.get("phone_number"),
+                            "password": data.get("password"),
+                            "salt": data.get("salt"),
+                            "hash_password": data.get("hash_password"),
+                        }
+                    )
             return None
 
         if q.startswith("delete from fd.user"):
@@ -93,7 +105,6 @@ class MockDBConnector:
             return None
 
         return None
-
 
 
 def test_find_user_by_id():
@@ -111,6 +122,7 @@ def test_find_user_by_username():
     assert user.id_user == 1
     assert user.username == "janjak"
 
+
 def test_find_all():
     user_DAO = UserDAO(MockDBConnector())
     users: list[AbstractUser] = user_DAO.find_all()
@@ -118,11 +130,13 @@ def test_find_all():
     assert isinstance(users, list)  # Vérifie que le résultat est une liste
     assert len(users) > 0
 
+
 def test_add_user():
     mock_db = MockDBConnector()
     user_DAO = UserDAO(mock_db)
 
     from src.Model.customer import Customer
+
     new_user = Customer(
         id_user=0,
         username="alice",
@@ -131,7 +145,7 @@ def test_add_user():
         customer_name="Alice",
         phone_number="0123456789",
         salt="random_salt_value",
-        hash_password="random_hash"
+        hash_password="random_hash",
     )
 
     added_user = user_DAO.add_user(new_user)
@@ -141,3 +155,31 @@ def test_add_user():
     # Vérifie que l'utilisateur a été ajouté dans le mock
     assert any(u["username"] == "alice" for u in mock_db.users)
 
+
+def test_update_user():
+    mock_db = MockDBConnector()
+    user_DAO = UserDAO(mock_db)
+
+    existing_user = user_DAO.find_user_by_id(1)
+    assert existing_user is not None, "L'utilisateur initial doit exister"
+
+    updated_user = Customer(
+        id_user=1,
+        username="janjak_updated",
+        password="newSecret",
+        sign_up_date=date.today(),
+        customer_name="Jean Updated",
+        phone_number="0000000001",
+        salt="random_salt",
+        hash_password="random_hash",
+    )
+
+    user_DAO.update_user(updated_user)
+
+    modified_user = user_DAO.find_user_by_id(1)
+    assert modified_user is not None
+    assert modified_user.username == "janjak_updated"
+    assert modified_user.customer_name == "Jean Updated"
+    assert modified_user.phone_number == "0000000001"
+    assert modified_user.salt == "random_salt"
+    assert modified_user.hash_password == "random_hash"
