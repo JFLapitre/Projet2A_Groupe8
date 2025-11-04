@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from typing import Optional, Union, Literal
 from psycopg2.extras import RealDictCursor
 
+from src.DAO.DBConnector import DBConnector
+
+
 # Charge les variables d'environnement
 load_dotenv()
 
@@ -22,7 +25,6 @@ class ResetDatabase:
                 pop_db_as_string = pop_db.read()
 
             # Création du connecteur DB
-            from src.DAO.DBConnector import DBConnector
             db_connector = DBConnector()
 
             # Exécution des scripts SQL en utilisant sql_query

@@ -369,3 +369,31 @@ class UserDAO:
         except Exception as e:
             logging.error(f"Failed to delete user {id_user}: {e}")
             return False
+
+    def add_user_raw(self, username: str, password: str, phone_number: str) -> Customer:
+        result = self.db_connector.sql_query(
+            """
+            INSERT INTO fd.user (id_user, username, password, user_type, sign_up_date)
+            VALUES (DEFAULT, %(username)s, %(password)s, 'customer', CURRENT_DATE)
+            RETURNING id_user;
+            """,
+            {"username": username, "password": password},
+            "one",
+        )
+        id_user = result["id_user"]
+
+        self.db_connector.sql_query(
+            """
+            INSERT INTO fd.customer (id_user, name, phone_number)
+            VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+            """,
+            {"id_user": id_user, "name": username, "phone_number": phone_number},
+            None,
+        )
+
+        return Customer(
+            id_user=id_user,
+            username=username,
+            password=password,
+            phone_number=phone_number,
+        )
