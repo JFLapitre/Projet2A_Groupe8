@@ -63,6 +63,34 @@ class AuthView:
         print("\n=== Registration ===")
         username = input("Username: ").strip()
         password = input("Password: ").strip()
+        phone_number = input("Phone number: ").strip()
+
+        try:
+            # Utilisation générique avec user_type='customer'
+            user = self.auth_service.user_dao.add_user_raw(
+                username=username,
+                password=self.auth_service._hash_function(password),
+                phone_number=phone_number,
+                user_type="customer",
+            )
+        except ValueError as e:
+            print(f"[ERROR] {e}")
+            return False
+        except Exception as e:
+            print(f"[ERROR] Registration failed: {e}")
+            return False
+
+        # Met à jour la session
+        self.session.user_id = user.id_user
+        self.session.username = user.username
+        self.session.role = user.__class__.__name__
+
+        print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
+        return True
+
+        print("\n=== Registration ===")
+        username = input("Username: ").strip()
+        password = input("Password: ").strip()
 
         try:
             user = self.auth_service.register(username=username, password=password)
@@ -73,10 +101,10 @@ class AuthView:
             print(f"[ERROR] Registration failed: {e}")
             return False
 
-        # Met à jour la session avec le nouvel utilisateur
-        self.session.user_id = user.id_user
-        self.session.username = user.username
-        self.session.role = user.__class__.__name__
+            # Met à jour la session avec le nouvel utilisateur
+            self.session.user_id = user.id_user
+            self.session.username = user.username
+            self.session.role = user.__class__.__name__
 
-        print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
-        return True
+            print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
+            return True
