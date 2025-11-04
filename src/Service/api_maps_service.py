@@ -29,6 +29,8 @@ class ApiMapsService:
     def __init__(self) -> None:
         self.delivery_dao = DeliveryDAO()
 
+        
+
     def Driveritinerary(destination, waypoints=[]):
         API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
         origin = "51 Rue Blaise Pascal, Bruz, France"
