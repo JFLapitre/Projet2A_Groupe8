@@ -10,4 +10,4 @@ class AbstractUser(BaseModel, ABC):
     username: str
     password: str
     salt : str
-    #sign_up_date: Optional[datetime] = None
+    sign_up_date: Optional[datetime] = None
