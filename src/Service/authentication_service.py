@@ -1,38 +1,44 @@
-from src.DAO.CustomerDAO import CustomerDAO
-from src.Model.Customer import Customer
+import hashlib
 
-
-# à modifer
-def hash_function(string: str) -> str:
-    pass
+from src.DAO.userDAO import UserDAO
+from src.Model.customer import Customer
 
 
 class AuthenticationService:
-    def __init__(self):
-        self.customer_dao = CustomerDAO()
+    def __init__(self, db_connector):
+        """
+        Service d'authentification utilisant la table user/customer
+        """
+        self.user_dao = UserDAO(db_connector=db_connector)
 
-    def login(self, id: str, password: str) -> Customer:
-        customer = self.customer_dao.find_by_id(id)
-        if not customer:
+    def login(self, username: str, password: str) -> Customer:
+        """
+        Authentifie un utilisateur (customer) avec username/password
+        """
+        user = self.user_dao.find_user_by_username(username)
+        if not user:
             raise ValueError("User not found")
 
-        hash_in_db = self.customer_dao.find_hashed_password_by_id(id)  # à implémenter
-
-        if hash_function(password) != hash_in_db:
+        hashed_input = self._hash_function(password)
+        if hashed_input != user.password:
             raise ValueError("Incorrect password")
 
-        return customer
+        return user
 
-    def register(self, id: str, name: str, password: str, default_address: str) -> Customer:
-        if self.customer_dao.find_by_id(id):
-            raise ValueError(f"User with id {id} already exists")
+    def register(self, username: str, password: str) -> Customer:
+        if self.user_dao.find_user_by_username(username):
+            raise ValueError(f"Username '{username}' already exists")
 
-        if not id or not name or not password:
-            raise ValueError("id, name, and password are required")
+        hashed_password = self._hash_function(password)
 
-        hashed_password = hash_function(password)
+        # Demande à la DAO de créer le user et de renvoyer un Customer complet avec id_user
+        new_customer = self.user_dao.add_user_raw(
+            username=username,
+            password=hashed_password,
+            phone_number="0000000000",
+        )
 
-        new_customer = Customer(id=id, name=name, password=hashed_password, default_address=default_address)
+        if not new_customer:
+            raise Exception("Failed to create customer")
 
-        self.customer_dao.add_customer(new_customer)  # à implémenter
         return new_customer

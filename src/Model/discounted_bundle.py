@@ -8,3 +8,8 @@ class DiscountedBundle(AbstractBundle):
     required_item_types: list[str]
     discount: float
     composition: list[Item]
+
+    def compute_price(self) -> float:
+        """Sum the price of all items and apply discount."""
+        total = sum(item.price for item in self.composition)
+        return total * (1 - self.discount)

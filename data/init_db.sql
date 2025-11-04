@@ -7,7 +7,8 @@ DROP TABLE IF EXISTS fd.user CASCADE;
 CREATE TABLE fd.user (
     id_user SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
-    password VARCHAR(100) NOT NULL,
+    hash_password VARCHAR(100) NOT NULL,
+    salt VARCHAR(128) NOT NULL,
     user_type VARCHAR(10) NOT NULL,
     sign_up_date DATE 
 );
