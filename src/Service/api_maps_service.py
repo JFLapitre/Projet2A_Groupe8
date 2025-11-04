@@ -22,6 +22,12 @@ order_dao = OrderDAO(db_connector=db, user_dao=user_dao, address_dao=address_dao
 delivery_dao = DeliveryDAO(db_connector=db, user_dao=user_dao, order_dao=order_dao)
 
 
+address1 = address_dao.find_address_by_id(1)
+print(address1)
+# Exemple : on récupère une commande
+order = order_dao.find_order_by_id(1)
+
+
 API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
 
 
