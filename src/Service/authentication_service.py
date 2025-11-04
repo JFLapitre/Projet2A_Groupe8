@@ -1,5 +1,3 @@
-# src/Service/authentication_service.py
-
 import hashlib
 
 from src.DAO.userDAO import UserDAO
@@ -17,8 +15,6 @@ class AuthenticationService:
         """
         Hash simple (remplacer plus tard par une vraie fonction sécurisée)
         """
-        # ⚠️ Si tes mots de passe en base sont en clair, remplace cette ligne par :
-        # return string
         return hashlib.sha256(string.encode()).hexdigest()
 
     def login(self, username: str, password: str) -> Customer:

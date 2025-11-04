@@ -1,11 +1,13 @@
 import urllib
 
 import requests
+from dotenv import load_dotenv
 
 from src.DAO.addressDAO import AddressDAO
 from src.DAO.DBConnector import DBConnector
 from src.DAO.orderDAO import OrderDAO
 
+load_dotenv()
 # Initialisation
 db = DBConnector()
 address_dao = AddressDAO(db_connector=db)
@@ -18,7 +20,6 @@ order = order_dao.find_order_by_id(1)
 origin = f"{order.address.street_number},{order.address.street_name}, {order.address.city}"
 
 print(origin)
-
 
 
 API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
