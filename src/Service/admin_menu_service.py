@@ -76,7 +76,9 @@ class AdminMenuService:
         if not self.item_dao.delete_item(id):
             raise Exception(f"Failed to delete item: {id}")
 
-    def create_predefined_bundle(self, name: str, description: str, composition: list, price: float) -> None:
+    def create_predefined_bundle(
+        self, name: str, description: str, composition: list, availability: bool, price: float
+    ) -> None:
         """
         Validates and creates a new predefined (fixed-price) bundle.
         """
@@ -85,7 +87,9 @@ class AdminMenuService:
         if not composition:
             raise ValueError("Composition cannot be empty.")
 
-        new_bundle = PredefinedBundle(name=name, description=description, composition=composition, price=price)
+        new_bundle = PredefinedBundle(
+            name=name, description=description, composition=composition, price=price, availability=availability
+        )
         created_bundle = self.bundle_dao.add_predefined_bundle(new_bundle)
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")

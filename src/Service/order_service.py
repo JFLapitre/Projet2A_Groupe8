@@ -73,6 +73,7 @@ class OrderService:
     def add_bundle_to_order(self, order_id: int, bundle_id: int) -> Optional[Order]:
         """
         Adds a bundle to an existing 'pending' order.
+        Checks if the bundle is available (all items in it are available).
         """
         order = self.order_dao.find_order_by_id(order_id)
         if not order:
@@ -85,20 +86,22 @@ class OrderService:
         if not bundle:
             raise ValueError(f"No bundle found with ID {bundle_id}.")
 
-        # Add bundle to the order's list
+        for item in bundle.composition:
+            not_available = []
+            if not item.availability:
+                not_available.append(item.name)
+            raise ValueError(
+                f"Bundle '{bundle.name}' is unavailable because items in the list '{not_available}' are not available."
+            )
+
         order.bundles.append(bundle)
 
-        # Update the order in the database
         if not self.order_dao.update_order(order):
             raise Exception("Failed to update the order.")
 
         return self.order_dao.find_order_by_id(order_id)
 
     def validate_order(self, order_id: int) -> Optional[Order]:
-        """
-        Validates a 'pending' order, changing its status to 'validated'.
-        An order cannot be validated if it is empty.
-        """
         order = self.order_dao.find_order_by_id(order_id)
         if not order:
             raise ValueError(f"No order found with ID {order_id}.")
@@ -109,10 +112,39 @@ class OrderService:
         if not order.bundles:
             raise ValueError("Cannot validate an empty order.")
 
+        items_needed = {}
+        for bundle in order.bundles:
+            for item in bundle.composition:
+                item_id = item.id_item
+                items_needed[item_id] = items_needed.get(item_id, 0) + 1
+
+        items_to_update = []
+        for item_id, quantity_needed in items_needed.items():
+            fresh_item = self.item_dao.find_item_by_id(item_id)
+
+            if not fresh_item:
+                raise Exception(f"Item ID {item_id} required for order no longer exists.")
+
+            if fresh_item.stock < quantity_needed:
+                raise ValueError(
+                    f"Not enough stock for item '{fresh_item.name}'. Needed: {quantity_needed}, Available: {fresh_item.stock}."
+                )
+
+            fresh_item.stock -= quantity_needed
+            if fresh_item.stock == 0:
+                fresh_item.availability = False
+
+            items_to_update.append(fresh_item)
+
+        for item_to_update in items_to_update:
+            updated_item = self.item_dao.update_item(item_to_update)
+
+            if not updated_item:
+                raise Exception(f"Failed to update stock for item {item_to_update.id_item}. Validation aborted.")
         order.status = "validated"
 
         if not self.order_dao.update_order(order):
-            raise Exception("Failed to validate the order.")
+            raise Exception("Stock was updated, but failed to validate the order status.")
 
         return order
 
