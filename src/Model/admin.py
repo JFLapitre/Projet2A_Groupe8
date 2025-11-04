@@ -3,5 +3,6 @@ from src.Model.order import Order
 
 
 class Admin(AbstractUser):
+    name: str = ""
     adress: str = ""
     queue: list[Order] = []
