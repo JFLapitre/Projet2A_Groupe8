@@ -29,15 +29,15 @@ INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) 
 (3, 'Bob Driver', '0645678901', 'Scooter', TRUE);
 
 -- Insert items
-INSERT INTO fd.item (name, item_type, price) VALUES
-('Margherita Pizza', 'main', 12.50),
-('Four Cheese Pizza', 'main', 14.00),
-('Caesar Salad', 'starter', 8.50),
-('Tiramisu', 'dessert', 6.00),
-('Coca Cola', 'drink', 3.00),
-('Mineral Water', 'drink', 2.00),
-('Classic Burger', 'main', 11.00),
-('Fries', 'side', 4.50);
+INSERT INTO fd.item (name, item_type, price, stock, availability) VALUES
+('Margherita Pizza', 'main', 12.50, 20, TRUE),
+('Four Cheese Pizza', 'main', 14.00, 15, TRUE),
+('Caesar Salad', 'starter', 8.50, 10, TRUE),
+('Tiramisu', 'dessert', 6.00, 8, TRUE),
+('Coca Cola', 'drink', 3.00, 30, TRUE),
+('Mineral Water', 'drink', 2.00, 25, TRUE),
+('Classic Burger', 'main', 11.00, 12, TRUE),
+('Fries', 'side', 4.50, 18, TRUE);
 
 -- Insert predefined bundles
 INSERT INTO fd.bundle (name, description, bundle_type, required_item_types,  price, discount) VALUES
@@ -50,7 +50,7 @@ INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, pric
 ('Simple bundle', '', 'discount', ARRAY['main', 'drink'], NULL, 0.20),
 ('Complete bundle', '', 'discount', ARRAY['starter', 'main', 'dessert'], NULL, 0.2);
 
--- Insert single item
+-- Insert single item bundles
 -- Insert single items as bundles with the corresponding item price
 INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount)
 SELECT 

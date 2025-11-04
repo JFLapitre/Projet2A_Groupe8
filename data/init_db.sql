@@ -56,7 +56,9 @@ CREATE TABLE fd.item (
     name VARCHAR(20) NOT NULL,
     description VARCHAR(300),
     item_type VARCHAR(20) NOT NULL,
-    price FLOAT NOT NULL
+    price FLOAT NOT NULL,
+    stock INT NOT NULL,
+    availability BOOLEAN NOT NULL
 );
 
 -- Table bundle
