@@ -1,25 +1,24 @@
-from typing import Any, Dict
-
-from src.CLI.session import Session
+from abc import ABC, abstractmethod
 
 
-class AbstractView:
-    def __init__(self, session: Session, services: Dict[str, Any]):
+class AbstractView(ABC):
+    def __init__(self, session, services: dict):
         self.session = session
         self.services = services
 
+    @abstractmethod
     def display(self) -> None:
-        raise NotImplementedError()
+        pass
 
-    def prompt(self, msg: str = "> ") -> str:
+    def prompt(self, message: str) -> str:
         try:
-            return input(msg).strip()
+            return input(message)
         except (KeyboardInterrupt, EOFError):
             print()
             return ""
 
-    def print_info(self, msg: str) -> None:
-        print(f"[INFO] {msg}")
+    def print_error(self, message: str):
+        print(f"[ERROR] {message}")
 
-    def print_error(self, msg: str) -> None:
-        print(f"[ERROR] {msg}")
+    def print_info(self, message: str):
+        print(f"[INFO] {message}")
