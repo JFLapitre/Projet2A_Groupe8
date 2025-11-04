@@ -38,7 +38,7 @@ async def redirect_to_docs():
 
 # Fonction pour lancer en local uniquement
 def run_app():
-    uvicorn.run(app, port=8000, host="0.0.0.0")
+    uvicorn.run(app, port=5000, host="0.0.0.0")
 
 
 # Pour le développement local
