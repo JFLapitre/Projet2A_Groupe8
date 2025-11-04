@@ -89,19 +89,15 @@ class MockDBConnector:
             user_id = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == user_id:
-                    # Mise à jour des champs de la table 'user'
                     u.update(data)
             return None
         
-        # AJOUTER LA LOGIQUE POUR LA MISE À JOUR DES TABLES SPÉCIFIQUES
         if "update fd.customer" in q:
             if not data:
                 raise Exception("no data provided")
             user_id = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == user_id:
-                    # Mettre à jour les champs spécifiques au customer dans le dictionnaire du mock
-                    # Notez que dans le mock initial, les clés sont 'customer_name' et 'customer_phone'.
                     u["customer_name"] = data.get("name") 
                     u["customer_phone"] = data.get("phone_number")
             return None
@@ -191,5 +187,3 @@ def test_update_user():
     assert modified_user.phone_number == "0000000001"
     assert modified_user.salt == "random_salt"
     assert modified_user.hash_password == "newSecret"
-
-
