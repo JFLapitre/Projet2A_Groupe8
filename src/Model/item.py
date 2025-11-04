@@ -8,3 +8,6 @@ class Item(BaseModel):
     name: str
     item_type: str
     price: float
+    description: Optional[str] = None
+    stock: Optional[int] = None
+    availability: Optional[bool] = True

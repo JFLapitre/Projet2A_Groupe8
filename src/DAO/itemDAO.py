@@ -32,6 +32,9 @@ class ItemDAO:
             "   SET name = %(name)s,                             "
             "       item_type = %(item_type)s,                   "
             "       price = %(price)s                            "
+            "       description = %(description)s                "
+            "       stock = %(stock)s                            "
+            "       availability = %(availability)s              "
             " WHERE id_item = %(id_item)s                        "
             " RETURNING id_item;                                 ",
             {"id_item": item.id_item, "name": item.name, "item_type": item.item_type, "price": item.price},
@@ -43,10 +46,17 @@ class ItemDAO:
         raw_created_item = self.db_connector.sql_query(
             """
         INSERT INTO fd.item (id_item, name, item_type, price)
-        VALUES (DEFAULT, %(name)s, %(item_type)s, %(price)s)
+        VALUES (DEFAULT, %(name)s, %(item_type)s, %(price)s, %(description)s, %(stock)s, %(availability)s)
         RETURNING *;
         """,
-            {"name": item.name, "item_type": item.item_type, "price": item.price},
+            {
+                "name": item.name,
+                "item_type": item.item_type,
+                "price": item.price,
+                "description": item.description,
+                "stock": item.stock,
+                "availability": item.availability,
+            },
             "one",
         )
         return Item(**raw_created_item)
