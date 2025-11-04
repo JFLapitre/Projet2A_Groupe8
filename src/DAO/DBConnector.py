@@ -3,7 +3,7 @@ from typing import Literal, Optional, Union
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
-
+from dotenv import load_dotenv
 
 class DBConnector:
     def __init__(self, config=None):
@@ -15,6 +15,7 @@ class DBConnector:
             self.password = config["password"]
             self.schema = config["schema"]
         else:
+            load_dotenv()
             self.host = os.environ["POSTGRES_HOST"]
             self.port = os.environ["POSTGRES_PORT"]
             self.database = os.environ["POSTGRES_DATABASE"]
