@@ -7,4 +7,4 @@ from pydantic import BaseModel
 class AbstractBundle(BaseModel, ABC):
     id_bundle: int
     name: str
-    desc: Optional[str] = None
+    description: Optional[str] = None
