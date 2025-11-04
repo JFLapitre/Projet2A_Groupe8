@@ -28,11 +28,6 @@ print(address1)
 order = order_dao.find_order_by_id(1)
 
 
-origin: str = f"{order.address.street_number},{order.address.street_name}, {order.address.city}"
-
-print(origin)
-
-
 API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
 
 origin = "Rue des cerisiers,Longjumeau,France"
@@ -130,5 +125,4 @@ class ApiMApsService:
             else:
                 print("Erreur :", data["status"])
 
-
-Driveritinerary("18 Rue Charles Coudé, Bruz, France", waypoints=["17 Rue Jules lallemand, Rennes, France"])
+    Driveritinerary("18 Rue Charles Coudé, Bruz, France", waypoints=["17 Rue Jules lallemand, Rennes, France"])
