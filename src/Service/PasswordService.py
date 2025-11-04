@@ -23,7 +23,7 @@ def validate_username_password(username: str, password: str, user_DAO: UserDAO) 
     user = user_DAO.find_user_by_username(username=username)
     if not user:
         raise ValueError("User not found.")
-    if hash_password(password, user.salt) != user.hash_password:
+    if hash_password(password, user.salt) != user.password:
         raise ValueError("Incorrect password.")
 
     return user
