@@ -99,7 +99,6 @@ class DeliveryService:
         delivery.status = "completed"
         delivery.delivery_time = datetime.now()
 
-        # Also update the status of all orders within the delivery
         try:
             for order in delivery.orders:
                 order.status = "delivered"  # Assuming "delivered" is a valid status

@@ -17,7 +17,6 @@ def test_hash_password_with_known_salt(service: PasswordService):
     """
     password = "soleil1234"
     salt = "jambon"
-    # This hash is specific to your *new* implementation logic.
     expected_hash = "7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7"
 
     hashed_password = service.hash_password(password, salt)

@@ -1,8 +1,7 @@
-from src.Services.password_service import PasswordService
-
 from src.DAO.DBConnector import DBConnector
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
+from src.Service.password_service import PasswordService
 
 
 class AuthenticationService:
@@ -24,7 +23,7 @@ class AuthenticationService:
 
         hashed_input_password = self.password_service.hash_password(password, user.salt)
 
-        if hashed_input_password != user.password:
+        if hashed_input_password != user.hash_password:
             raise ValueError("Incorrect password.")
 
         return user
