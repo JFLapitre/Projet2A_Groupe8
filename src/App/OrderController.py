@@ -3,14 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from src.DAO.addressDAO import AddressDAO
-from src.DAO.bundleDAO import BundleDAO
-from src.DAO.DBConnector import DBConnector
-from src.DAO.orderDAO import OrderDAO
-from src.DAO.userDAO import UserDAO
-
-db = DBConnector()
-order_dao = OrderDAO(db, user_dao=UserDAO, address_dao=AddressDAO, bundle_dao=BundleDAO)
+from .init_app import order_dao
 
 order_router = APIRouter(prefix="/orders", tags=["Orders"])
 

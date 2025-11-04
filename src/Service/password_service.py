@@ -1,29 +1,38 @@
 import hashlib
 import secrets
-from typing import Optional
-
-from src.DAO.userDAO import UserDAO
-from src.Model.abstract_user import AbstractUser
 
 
-def hash_password(password: str, salt: Optional[str] = None) -> str:
-    return hashlib.sha256((password + salt).encode()).hexdigest()
+class PasswordService:
+    """
+    Service dedicated to the secure creation, hashing, and verification
+    of passwords using manual salting (SHA-256), compatible with
+    your database schema (separate salt column).
+    """
 
+    def __init__(self):
+        pass
 
-def create_salt() -> str:
-    return secrets.token_hex(32)
+    def create_salt(self) -> str:
+        """
+        Creates a secure, random salt string.
+        (Using 32 bytes/64 hex characters, matching the common storage size.)
+        """
+        return secrets.token_hex(32)
 
+    def hash_password(self, password: str, salt: str = None) -> str:
+        """
+        Hashes a plain text password combined with a salt using SHA-256.
+        The salt parameter is mandatory for secure hashing.
+        """
+        if not salt:
+            raise ValueError("Salt must be provided for secure hashing.")
 
-def check_password_strength(password: str):  # à modifier à l'avenir
-    if len(password) < 8:
-        raise Exception("Password length must be at least 8 characters")
+        return hashlib.sha256((password + salt).encode()).hexdigest()
 
-
-def validate_username_password(username: str, password: str, user_DAO: UserDAO) -> AbstractUser:
-    user = user_DAO.find_user_by_username(username=username)
-    if not user:
-        raise ValueError("User not found.")
-    if hash_password(password, user.salt) != user.password:
-        raise ValueError("Incorrect password.")
-
-    return user
+    def check_password_strength(self, password: str):
+        """
+        Validates minimum password strength rules (e.g., minimum length).
+        (Functionality to be expanded later.)
+        """
+        if len(password) < 8:
+            raise Exception("Password length must be at least 8 characters")

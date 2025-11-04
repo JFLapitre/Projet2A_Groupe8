@@ -1,44 +1,49 @@
-import hashlib
+from src.Services.password_service import PasswordService
 
+from src.DAO.DBConnector import DBConnector
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
 
 
 class AuthenticationService:
-    def __init__(self, db_connector):
+    def __init__(self, db_connector: DBConnector, password_service: PasswordService):
         """
-        Service d'authentification utilisant la table user/customer
+        Secure authentication service.
+        Injects UserDAO for data access and PasswordService for hashing/salting.
         """
         self.user_dao = UserDAO(db_connector=db_connector)
+        self.password_service = password_service
 
     def login(self, username: str, password: str) -> Customer:
         """
-        Authentifie un utilisateur (customer) avec username/password
+        Authenticates a user (Customer) with username/password using manual salt verification.
         """
         user = self.user_dao.find_user_by_username(username)
         if not user:
-            raise ValueError("User not found")
+            raise ValueError("User not found.")
 
-        hashed_input = self._hash_function(password)
-        if hashed_input != user.password:
-            raise ValueError("Incorrect password")
+        hashed_input_password = self.password_service.hash_password(password, user.salt)
+
+        if hashed_input_password != user.password:
+            raise ValueError("Incorrect password.")
 
         return user
 
-    def register(self, username: str, password: str) -> Customer:
+    def register(self, username: str, password: str, phone_number: str) -> Customer:
+        """
+        Registers a new user (Customer).
+        The password is first checked for strength, then securely hashed and salted before storage.
+        """
         if self.user_dao.find_user_by_username(username):
-            raise ValueError(f"Username '{username}' already exists")
+            raise ValueError(f"Username '{username}' already exists.")
 
-        hashed_password = self._hash_function(password)
+        self.password_service.check_password_strength(password)
 
-        # Demande à la DAO de créer le user et de renvoyer un Customer complet avec id_user
-        new_customer = self.user_dao.add_user_raw(
-            username=username,
-            password=hashed_password,
-            phone_number="0000000000",
-        )
+        salt = self.password_service.create_salt()
 
-        if not new_customer:
-            raise Exception("Failed to create customer")
+        hashed_password = self.password_service.hash_password(password, salt)
 
-        return new_customer
+        new_user = Customer(username=username, password=hashed_password, salt=salt, phone_number=phone_number)
+        self.user_dao.add_user(new_user)
+
+        return new_user
