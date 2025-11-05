@@ -60,9 +60,10 @@ class DriverService:
 
         for o in orders:
             o.status = "in_progress"
+            self.order_dao.update_order(o)
 
         new_delivery = Delivery(
-            driver=driver,
+            id_driver=driver_id,
             orders=orders,
             status="in_progress",
             delivery_time=None,
