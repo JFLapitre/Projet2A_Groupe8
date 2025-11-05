@@ -11,6 +11,7 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
+from src.Service.driver_service import DriverService
 
 # Initialisations
 db = DBConnector()
@@ -67,13 +68,19 @@ class ApiMapsService:
         else:
             print("Erreur :", data["status"])
 
-    Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France","18 Rue Charles Coudé, Bruz, France"])
+
+ApiMapsService. Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France","18 Rue Charles Coudé, Bruz, France"])
 
 delivery = delivery_dao.find_delivery_by_id(1)
 
 addresses = [
     f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
     for order in delivery.orders
+
 ]
 
-print(addresses)
+print(addresses) 
+
+db_connector = DBConnector()
+service = DriverService(db_connector)
+service.create_and_assign_delivery([3], 3)
