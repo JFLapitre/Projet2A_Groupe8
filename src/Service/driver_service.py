@@ -78,7 +78,7 @@ class DriverService:
                 if not self.order_dao.update_order(o):
                     raise Exception(f"Failed to update status for order {o.id_order}")
 
-            self.db_connector.commit()
+            self.db_connector()
             logging.info(f"Delivery {created_delivery.id_delivery} created and assigned to driver {driver_id}.")
             return created_delivery
 
