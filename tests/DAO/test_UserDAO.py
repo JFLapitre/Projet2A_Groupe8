@@ -259,3 +259,65 @@ def test_find_all_filtered_drivers():
     assert drivers[0].username == "driver_bob"
     assert isinstance(drivers[0], Driver)
 
+#Error tests
+def test_find_user_by_id_error():
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            if "where u.id_user" in query.lower():
+                raise Exception("Simulated DB Error")
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    user = user_DAO.find_user_by_id(1)
+    assert user is None
+
+def test_find_user_by_username_error():
+    """Test the error handling in find_user_by_username."""
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            if "where u.username" in query.lower():
+                raise Exception("Simulated DB Error")
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    user = user_DAO.find_user_by_username("janjak")
+    assert user is None
+
+def test_find_all_error():
+    """Test the error handling in find_all."""
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            if "from fd.user" in query.lower() and return_type == "all":
+                if "where" not in query.lower() or "where u.user_type" in query.lower():
+                    raise Exception("Simulated DB Error")
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    users = user_DAO.find_all()
+    assert users == []
+
+def test_update_user_error():
+    """Test the error handling in update_user."""
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            if "update fd.user" in query.lower():
+                raise Exception("Simulated DB Error")
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    error_user = Customer(id_user=1, username="fail_update", hash_password="h", salt="s", name="N", phone_number="0")
+
+    updated_user = user_DAO.update_user(error_user)
+    assert updated_user is None
+
+def test_delete_user_error():
+    """Test the error handling in delete_user."""
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            if query.lower().startswith("delete from fd.user"):
+                raise Exception("Simulated DB Error")
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    success = user_DAO.delete_user(1)
+    assert success is False
