@@ -155,6 +155,7 @@ class UserDAO:
                             sign_up_date=user["sign_up_date"],
                             name=user["customer_name"],
                             phone_number=user["customer_phone"],
+                            salt=user["salt"],
                         )
                     )
                 elif user["user_type"] == "driver":
@@ -168,6 +169,7 @@ class UserDAO:
                             phone_number=user["driver_phone"],
                             vehicle_type=user["vehicle_type"],
                             availability=user["availability"],
+                            salt=user["salt"],
                         )
                     )
                 elif user["user_type"] == "admin":
@@ -179,6 +181,7 @@ class UserDAO:
                             sign_up_date=user["sign_up_date"],
                             name=user["admin_name"],
                             phone_number=user["admin_phone"],
+                            salt=user["salt"],
                         )
                     )
             print(users)
