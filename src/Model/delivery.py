@@ -8,7 +8,7 @@ from src.Model.order import Order
 
 
 class Delivery(BaseModel):
-    id_delivery: int
+    id_delivery: Optional[int] = None
     driver: Optional[Driver]
     orders: list[Order]
     status: str

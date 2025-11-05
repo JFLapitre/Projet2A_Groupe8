@@ -2,7 +2,6 @@ import logging
 from datetime import date
 from typing import List, Optional, Union
 
-from src.Model.abstract_user import AbstractUser
 from src.Model.admin import Admin
 from src.Model.customer import Customer
 from src.Model.driver import Driver

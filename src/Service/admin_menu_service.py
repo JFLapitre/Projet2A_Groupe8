@@ -103,21 +103,23 @@ class AdminMenuService:
         if not item:
             raise ValueError("Item cannot be null.")
 
-        new_bundle = OneItemBundle(name=name, description=description, price=price, composition=[item])
+        new_bundle = OneItemBundle(name=name, description=description, price=price, composition=item)
         created_bundle = self.bundle_dao.add_one_item_bundle(new_bundle)
         if not created_bundle:
             raise Exception(f"Failed to create one-item bundle: {name}")
 
-    def create_discounted_bundle(self, name: str, description: str, composition: list, discount: float) -> None:
+    def create_discounted_bundle(self, name: str, description: str, required_item_types: list, discount: float) -> None:
         """
         Validates and creates a new bundle that applies a discount.
         """
         if not (0 < discount < 100):
             raise ValueError("Discount must be between 0 and 100 (exclusive).")
-        if not composition:
-            raise ValueError("Composition cannot be empty.")
+        if not required_item_types:
+            raise ValueError("Item types cannot be empty.")
 
-        new_bundle = DiscountedBundle(name=name, description=description, composition=composition, discount=discount)
+        new_bundle = DiscountedBundle(
+            name=name, description=description, required_item_types=required_item_types, discount=discount
+        )
         created_bundle = self.bundle_dao.add_discounted_bundle(new_bundle)
         if not created_bundle:
             raise Exception(f"Failed to create discounted bundle: {name}")

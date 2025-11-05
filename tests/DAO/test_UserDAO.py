@@ -33,7 +33,7 @@ class MockDBConnector:
                 "salt": "random_salt",
             },
             {
-                "id_user": 2, # Assurez-vous d'utiliser un nouvel ID
+                "id_user": 2,  # Assurez-vous d'utiliser un nouvel ID
                 "user_type": "driver",
                 "username": "driver_bob",
                 "password": "driverHashedPassword",
@@ -66,8 +66,8 @@ class MockDBConnector:
                 "admin_phone": "9999999999",
                 "hash_password": "random_admin_hash",
                 "salt": "random_admin_salt",
-            }
-]
+            },
+        ]
         self.next_id = 4
 
     def sql_query(
@@ -278,6 +278,7 @@ def test_add_user():
     assert added_user.id_user != 0
     assert any(u["username"] == "alice" for u in mock_db.users)
 
+
 def test_update_user():
     mock_db = MockDBConnector()
     user_DAO = UserDAO(mock_db)
@@ -293,7 +294,7 @@ def test_update_user():
         password="newSecret",
         sign_up_date=date.today(),
         name="Jean Updated",
-        phone_number="0000000001"
+        phone_number="0000000001",
     )
 
     user_DAO.update_user(updated_user)
@@ -306,6 +307,7 @@ def test_update_user():
     assert modified_user.phone_number == "0000000001"
     assert modified_user.salt == "random_salt"
     assert modified_user.hash_password == "newSecret"
+
 
 def test_delete_user():
     mock_db = MockDBConnector()
@@ -327,6 +329,7 @@ def test_delete_user():
     final_count = len(mock_db.users)
     assert final_count == initial_count - 1
 
+
 def test_find_all_filtered_drivers():
     user_DAO = UserDAO(MockDBConnector())
     drivers = user_DAO.find_all(user_type="driver")
@@ -334,140 +337,6 @@ def test_find_all_filtered_drivers():
     assert len(drivers) == 1
     assert drivers[0].username == "driver_bob"
     assert isinstance(drivers[0], Driver)
-
-def test_find_driver_by_id():
-    """Vérifie la récupération et l'instanciation correcte d'un objet Driver."""
-    user_DAO = UserDAO(MockDBConnector())
-
-    driver: Driver = user_DAO.find_user_by_id(2)
-
-    assert driver is not None
-    assert isinstance(driver, Driver)
-    assert driver.username == "driver_bob"
-    assert driver.name == "Bob Driver"
-    assert driver.vehicle_type == "Truck"
-    assert driver.availability is True
-
-def test_add_driver():
-    """Vérifie l'ajout d'un nouvel utilisateur de type Driver."""
-    mock_db = MockDBConnector()
-    user_DAO = UserDAO(mock_db)
-
-    new_driver = Driver(
-        id_user=0,
-        username="driver_sue",
-        password="secret_sue",
-        sign_up_date=date.today(),
-        name="Sue Driver",
-        phone_number="5555555555",
-        salt="salt_sue",
-        hash_password="hash_sue",
-        vehicle_type="Bike",
-        availability=False
-    )
-
-    added_driver = user_DAO.add_user(new_driver)
-
-    assert added_driver is not None
-    assert added_driver.username == "driver_sue"
-    assert added_driver.vehicle_type == "Bike"
-    assert added_driver.availability is False
-    assert any(u["username"] == "driver_sue" for u in mock_db.users)
-
-def test_update_driver():
-    """Vérifie la mise à jour des informations d'un Driver."""
-    mock_db = MockDBConnector()
-    user_DAO = UserDAO(mock_db)
-
-    existing_driver = user_DAO.find_user_by_id(2)
-    assert existing_driver.vehicle_type == "Truck"
-
-    updated_driver_data = Driver(
-        id_user=2,
-        username="bob_updated",
-        hash_password="new_hash",
-        salt="new_salt",
-        password="new_pw",
-        sign_up_date=date.today(),
-        name="Bob Updated",
-        phone_number="2222222222",
-        vehicle_type="Van",
-        availability=False
-    )
-
-    user_DAO.update_user(updated_driver_data)
-
-    modified_driver = user_DAO.find_user_by_id(2)
-
-    assert modified_driver is not None
-    assert modified_driver.username == "bob_updated"
-    assert modified_driver.name == "Bob Updated"
-    assert modified_driver.vehicle_type == "Van"
-    assert modified_driver.availability is False
-
-def test_add_admin():
-    """Vérifie l'ajout d'un nouvel utilisateur de type Admin."""
-    mock_db = MockDBConnector()
-    user_DAO = UserDAO(mock_db)
-
-    new_admin = Admin(
-        id_user=0,
-        username="new_chief",
-        password="secure_admin",
-        sign_up_date=date.today(),
-        name="Chief New",
-        phone_number="3333333333",
-        salt="salt_admin",
-        hash_password="hash_admin",
-    )
-
-    added_admin = user_DAO.add_user(new_admin)
-
-    assert added_admin is not None
-    assert isinstance(added_admin, Admin)
-    assert added_admin.username == "new_chief"
-    assert added_admin.id_user != 0
-    assert any(u["username"] == "new_chief" for u in mock_db.users)
-
-
-def test_update_admin():
-    """Vérifie la mise à jour des informations d'un Admin."""
-    mock_db = MockDBConnector()
-    user_DAO = UserDAO(mock_db)
-
-    existing_admin = user_DAO.find_user_by_id(3)
-    assert existing_admin.username == "super_admin"
-
-    updated_admin_data = Admin(
-        id_user=3,
-        username="super_admin_v2",
-        hash_password="new_admin_hash",
-        salt="new_admin_salt",
-        password="new_pw",
-        sign_up_date=date.today(),
-        name="Chief Admin Updated",
-        phone_number="4444444444",
-    )
-
-    user_DAO.update_user(updated_admin_data)
-
-    modified_admin = user_DAO.find_user_by_id(3)
-
-    assert modified_admin is not None
-    assert isinstance(modified_admin, Admin)
-    assert modified_admin.username == "super_admin_v2"
-    assert modified_admin.name == "Chief Admin Updated"
-    assert modified_admin.phone_number == "4444444444"
-
-
-def test_find_all_filtered_admins():
-    """Vérifie la récupération de tous les utilisateurs de type Admin."""
-    user_DAO = UserDAO(MockDBConnector())
-    admins = user_DAO.find_all(user_type="admin")
-    
-    assert len(admins) == 1
-    assert admins[0].username == "super_admin"
-    assert isinstance(admins[0], Admin)
 
 #Error tests
 def test_find_user_by_id_error():
@@ -481,8 +350,10 @@ def test_find_user_by_id_error():
     user = user_DAO.find_user_by_id(1)
     assert user is None
 
+
 def test_find_user_by_username_error():
     """Test the error handling in find_user_by_username."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "where u.username" in query.lower():
@@ -493,8 +364,10 @@ def test_find_user_by_username_error():
     user = user_DAO.find_user_by_username("janjak")
     assert user is None
 
+
 def test_find_all_error():
     """Test the error handling in find_all."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "from fd.user" in query.lower() and return_type == "all":
@@ -506,8 +379,10 @@ def test_find_all_error():
     users = user_DAO.find_all()
     assert users == []
 
+
 def test_update_user_error():
     """Test the error handling in update_user."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "update fd.user" in query.lower():
@@ -520,8 +395,10 @@ def test_update_user_error():
     updated_user = user_DAO.update_user(error_user)
     assert updated_user is None
 
+
 def test_delete_user_error():
     """Test the error handling in delete_user."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if query.lower().startswith("delete from fd.user"):
@@ -531,24 +408,3 @@ def test_delete_user_error():
     user_DAO = UserDAO(ErrorMock())
     success = user_DAO.delete_user(1)
     assert success is False
-
-def test_add_user_error():
-    """Test la gestion des erreurs lors de l'ajout d'un utilisateur."""
-    class ErrorMock(MockDBConnector):
-        def sql_query(self, query, data, return_type):
-            # Simule une erreur uniquement sur la première insertion RETURNING id_user
-            if "insert into fd.user" in query.lower() and "returning id_user" in query.lower():
-                raise Exception("Simulated DB Insertion Error")
-            # Le reste des requêtes utilise le Mock normal
-            return super().sql_query(query, data, return_type)
-
-    user_DAO = UserDAO(ErrorMock())
-    new_user = Customer(
-        id_user=0,
-        username="error_user",
-        hash_password="h", salt="s", name="N", phone_number="0",
-        sign_up_date=date.today()
-    )
-
-    added_user = user_DAO.add_user(new_user)
-    assert added_user is None

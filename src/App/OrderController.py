@@ -1,11 +1,9 @@
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
+from .auth import admin_required
 from .init_app import order_dao
 
-order_router = APIRouter(prefix="/orders", tags=["Orders"])
+order_router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[Depends(admin_required)])
 
 
 @order_router.get("/{id_order}", status_code=status.HTTP_200_OK)

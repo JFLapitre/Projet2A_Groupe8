@@ -2,8 +2,9 @@ import os
 from typing import Literal, Optional, Union
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+
 
 class DBConnector:
     def __init__(self, config=None):
@@ -47,5 +48,9 @@ class DBConnector:
                         return cursor.fetchall()
         except Exception as e:
             print("ERROR")
+            print(f"PostgreSQL Error Code: {getattr(e, 'pgcode', 'N/A')}")  # Ceci affichera 23505
+            print(
+                f"PostgreSQL Constraint: {getattr(e, 'diag', 'N/A').constraint_name if hasattr(e, 'diag') and e.diag else 'N/A'}"
+            )
             print(e)
             raise e

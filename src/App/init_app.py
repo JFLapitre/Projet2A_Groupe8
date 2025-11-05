@@ -7,10 +7,10 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
-
-# from src.Service.JWTService import JwtService
-
-# from src.Service.UserService import UserService
+from src.Service.admin_user_service import AdminUserService
+from src.Service.authentication_service import AuthenticationService
+from src.Service.JWTService import JwtService
+from src.Service.password_service import PasswordService
 
 load_dotenv()
 db_connector = DBConnector()
@@ -21,5 +21,7 @@ bundle_dao = BundleDAO(db_connector=db_connector, item_dao=item_dao)
 order_dao = OrderDAO(db_connector=db_connector, user_dao=user_dao, address_dao=address_dao, bundle_dao=bundle_dao)
 delivery_dao = DeliveryDAO(db_connector=db_connector, user_dao=user_dao, order_dao=order_dao)
 
-# jwt_service = JwtService()
-# user_service = UserService(user_dao)
+jwt_service = JwtService()
+password_service = PasswordService()
+auth_service = AuthenticationService(db_connector=db_connector, password_service=password_service)
+admin_user_service = AdminUserService(db_connector=db_connector, password_service=password_service)

@@ -5,15 +5,17 @@ from src.DAO.userDAO import UserDAO
 from src.Model.admin import Admin
 from src.Model.customer import Customer
 from src.Model.driver import Driver
+from src.Service.password_service import PasswordService
 
 
 class AdminUserService:
-    def __init__(self, db_connector: DBConnector):
+    def __init__(self, db_connector: DBConnector, password_service=PasswordService):
         """
         Initializes the service and injects dependencies into the UserDAO.
         """
         # UserDAO is the single DAO responsible for all user types
         self.user_dao = UserDAO(db_connector=db_connector)
+        self.password_service = password_service
 
     def create_admin_account(self, username: str, password: str, name: str, phone_number: str) -> Admin:
         """
@@ -23,18 +25,22 @@ class AdminUserService:
         if not username or not password or not name:
             raise ValueError("Username, password, and name are required.")
 
-        if self.user_dao.find_user_by_username(username):
+        existing_user = self.user_dao.find_user_by_username(username)
+
+        if existing_user:
             raise ValueError(f"Username '{username}' already exists.")
 
-        # Assumes the Admin model can be instantiated without id or sign_up_date
-        # The DAO's add_user handles those fields.
+        self.password_service.check_password_strength(password)
+        salt = self.password_service.create_salt()
+        hash_password = self.password_service.hash_password(password, salt)
+
         new_admin = Admin(
             username=username,
-            password=password,  # In a real app, hash this password
+            hash_password=hash_password,
             name=name,
+            salt=salt,
             phone_number=phone_number,
         )
-
         created_user = self.user_dao.add_user(new_admin)
 
         if not created_user or not isinstance(created_user, Admin):
@@ -60,7 +66,7 @@ class AdminUserService:
         # The DAO's add_user for drivers sets default availability
         new_driver = Driver(
             username=username,
-            password=password,  # In a real app, hash this password
+            password=password,
             name=name,
             phone_number=phone_number,
             vehicle_type=vehicle_type,

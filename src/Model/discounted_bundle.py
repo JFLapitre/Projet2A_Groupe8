@@ -7,7 +7,7 @@ from src.Model.item import Item
 class DiscountedBundle(AbstractBundle):
     required_item_types: list[str]
     discount: float
-    composition: list[Item]
+    composition: Optional[list[Item]] = []
 
     def compute_price(self) -> float:
         """Sum the price of all items and apply discount."""
