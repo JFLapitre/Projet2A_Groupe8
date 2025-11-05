@@ -15,9 +15,9 @@ class AddressService:
     def create_address(
         self,
         street_name: str,
-        street_number: int = None,
         city: str,
         postal_code: int,
+        street_number: int = None,
         extra_info: str = None,
     ) -> Optional[Address]:
         """

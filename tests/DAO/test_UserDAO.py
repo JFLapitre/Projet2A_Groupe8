@@ -1,18 +1,16 @@
 from datetime import date
 from typing import TYPE_CHECKING, Literal, Optional, Union
-
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
 from src.Model.driver import Driver
 from src.Model.admin import Admin
+
 
 if TYPE_CHECKING:
     from src.Model.abstract_user import AbstractUser
 
 
 class MockDBConnector:
-    from datetime import date
-
     def __init__(self):
         self.users = [
             {
@@ -76,162 +74,162 @@ class MockDBConnector:
         data: Optional[Union[tuple, list, dict]] = None,
         return_type: Union[Literal["one"], Literal["all"], None] = "one",
     ):
-        q = " ".join(query.lower().split())
+                q = " ".join(query.lower().split())
 
-        # to find user by id
-        if "from fd.user" in q and "where u.id_user" in q:
-            id_user = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == id_user:
-                    return u
-            return None
+                # to find user by id
+                if "from fd.user" in q and "where u.id_user" in q:
+                    id_user = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == id_user:
+                            return u
+                    return None
 
-        # to find user by username
-        if "from fd.user" in q and "where u.username" in q:
-            username = data.get("username")
-            for u in self.users:
-                if u["username"] == username:
-                    return u
-            return None
+                # to find user by username
+                if "from fd.user" in q and "where u.username" in q:
+                    username = data.get("username")
+                    for u in self.users:
+                        if u["username"] == username:
+                            return u
+                    return None
 
-        # to find all users
-        if "from fd.user" in q and "left join" in q and "where" not in q:
-            if return_type == "all":
-                return self.users
-            else:
-                return self.users[0]
+                # to find all users
+                if "from fd.user" in q and "left join" in q and "where" not in q:
+                    if return_type == "all":
+                        return self.users
+                    else:
+                        return self.users[0]
 
-        if "from fd.user" in q and "left join" in q and "where u.user_type" in q:
-            user_type = data.get("user_type")
-            filtered_users = [u for u in self.users if u["user_type"] == user_type]
-            if return_type == "all":
-                return filtered_users
-            else:
-                return filtered_users[0] if filtered_users else None
+                if "from fd.user" in q and "left join" in q and "where u.user_type" in q:
+                    user_type = data.get("user_type")
+                    filtered_users = [u for u in self.users if u["user_type"] == user_type]
+                    if return_type == "all":
+                        return filtered_users
+                    else:
+                        return filtered_users[0] if filtered_users else None
 
-        # to add user
-        if q.startswith("insert into fd.user"):
-            new_id = self.next_id
-            user_type = data.get("user_type")
+                # to add user
+                if q.startswith("insert into fd.user"):
+                    new_id = self.next_id
+                    user_type = data.get("user_type")
 
-            new_user = {
-                "id_user": new_id,
-                "user_type": user_type,
-                "username": data.get("username"),
-                "password": data.get("password"),
-                "sign_up_date": date.today(),
-                "salt": "random_salt",
-                "hash_password": "random_hash",
-                "customer_name": None, "customer_phone": None,
-                "driver_name": None, "driver_phone": None, "vehicle_type": None, "availability": False,
-                "admin_name": None, "admin_phone": None,
-            }
+                    new_user = {
+                        "id_user": new_id,
+                        "user_type": user_type,
+                        "username": data.get("username"),
+                        "password": data.get("password"),
+                        "sign_up_date": date.today(),
+                        "salt": "random_salt",
+                        "hash_password": "random_hash",
+                        "customer_name": None, "customer_phone": None,
+                        "driver_name": None, "driver_phone": None, "vehicle_type": None, "availability": False,
+                        "admin_name": None, "admin_phone": None,
+                    }
 
-            if user_type == "driver":
-                new_user["driver_name"] = "Default Driver Name"
-                new_user["driver_phone"] = "0000000000"
-                new_user["vehicle_type"] = "Car"
-            if user_type == "customer":
-                new_user["customer_name"] = "Default Customer Name"
-                new_user["customer_phone"] = "0000000000"
-            if user_type == "admin":
-                new_user["admin_name"] = "Default Admin Name"
-                new_user["admin_phone"] = "0000000000"
+                    if user_type == "driver":
+                        new_user["driver_name"] = "Default Driver Name"
+                        new_user["driver_phone"] = "0000000000"
+                        new_user["vehicle_type"] = "Car"
+                    if user_type == "customer":
+                        new_user["customer_name"] = "Default Customer Name"
+                        new_user["customer_phone"] = "0000000000"
+                    if user_type == "admin":
+                        new_user["admin_name"] = "Default Admin Name"
+                        new_user["admin_phone"] = "0000000000"
 
-            self.users.append(new_user)
-            self.next_id += 1
+                    self.users.append(new_user)
+                    self.next_id += 1
 
-            return {"id_user": new_user["id_user"]}
+                    return {"id_user": new_user["id_user"]}
 
-        if q.startswith("insert into fd.driver"):
-            id_user = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == id_user:
-                    u["driver_name"] = data.get("name")
-                    u["driver_phone"] = data.get("phone_number")
-                    u["vehicle_type"] = data.get("vehicle_type")
-                    u["availability"] = data.get("availability") 
-            return None
+                if q.startswith("insert into fd.driver"):
+                    id_user = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == id_user:
+                            u["driver_name"] = data.get("name")
+                            u["driver_phone"] = data.get("phone_number")
+                            u["vehicle_type"] = data.get("vehicle_type")
+                            u["availability"] = data.get("availability") 
+                    return None
 
-        if q.startswith("insert into fd.customer"):
-            id_user = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == id_user:
-                    u["customer_name"] = data.get("name")
-                    u["customer_phone"] = data.get("phone_number")
-            return None
+                if q.startswith("insert into fd.customer"):
+                    id_user = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == id_user:
+                            u["customer_name"] = data.get("name")
+                            u["customer_phone"] = data.get("phone_number")
+                    return None
 
-        if q.startswith("insert into fd.admin"):
-            id_user = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == id_user:
-                    u["admin_name"] = data.get("name")
-                    u["admin_phone"] = data.get("phone_number")
-            return None
+                if q.startswith("insert into fd.admin"):
+                    id_user = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == id_user:
+                            u["admin_name"] = data.get("name")
+                            u["admin_phone"] = data.get("phone_number")
+                    return None
 
-        # to update user
-        if "update fd.user" in q:
-            if not data:
-                raise Exception("no data provided")
-            user_id = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == user_id:
-                    u.update(data)
-            return None
-        # to update customer
-        if "update fd.customer" in q:
-            if not data:
-                raise Exception("no data provided")
-            user_id = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == user_id:
-                    u["customer_name"] = data.get("name")
-                    u["customer_phone"] = data.get("phone_number")
-            return None
-        # to update driver
-        if "update fd.driver" in q:
-            if not data:
-                raise Exception("no data provided")
-            user_id = data.get("id_user")
-            for u in self.users:
-                if u["id_user"] == user_id:
-                    u["driver_name"] = data.get("name")
-                    u["driver_phone"] = data.get("phone_number")
-                    u["vehicle_type"] = data.get("vehicle_type")
-                    u["availability"] = data.get("availability")
-            return None
-        # to update admin
-        if "update fd.admin" in q:
-            if not data:
-                raise Exception("no data provided")
-            user_id = data.get("id_user")
+                # to update user
+                if "update fd.user" in q:
+                    if not data:
+                        raise Exception("no data provided")
+                    user_id = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == user_id:
+                            u.update(data)
+                    return None
+                # to update customer
+                if "update fd.customer" in q:
+                    if not data:
+                        raise Exception("no data provided")
+                    user_id = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == user_id:
+                            u["customer_name"] = data.get("name")
+                            u["customer_phone"] = data.get("phone_number")
+                    return None
+                # to update driver
+                if "update fd.driver" in q:
+                    if not data:
+                        raise Exception("no data provided")
+                    user_id = data.get("id_user")
+                    for u in self.users:
+                        if u["id_user"] == user_id:
+                            u["driver_name"] = data.get("name")
+                            u["driver_phone"] = data.get("phone_number")
+                            u["vehicle_type"] = data.get("vehicle_type")
+                            u["availability"] = data.get("availability")
+                    return None
+                # to update admin
+                if "update fd.admin" in q:
+                    if not data:
+                        raise Exception("no data provided")
+                    user_id = data.get("id_user")
 
-            if user_id is not None:
-                user_id = int(user_id)
+                    if user_id is not None:
+                        user_id = int(user_id)
 
-            for u in self.users:
-                if u["id_user"] == user_id:
-                    u["admin_name"] = data.get("name")
-                    u["admin_phone"] = data.get("phone_number")
-            return None
+                    for u in self.users:
+                        if u["id_user"] == user_id:
+                            u["admin_name"] = data.get("name")
+                            u["admin_phone"] = data.get("phone_number")
+                    return None
 
-        # to delete user
-        if q.startswith("delete from fd.customer"):
-            return None
-        elif q.startswith("delete from fd.driver"):
-            return None
-        elif q.startswith("delete from fd.admin"):
-            return None
+                # to delete user
+                if q.startswith("delete from fd.customer"):
+                    return None
+                elif q.startswith("delete from fd.driver"):
+                    return None
+                elif q.startswith("delete from fd.admin"):
+                    return None
 
-        if q.startswith("delete from fd.user"):
-            id_user_to_delete = data.get("id_user")
+                if q.startswith("delete from fd.user"):
+                    id_user_to_delete = data.get("id_user")
 
-            if id_user_to_delete is not None:
-                id_user_to_delete = int(id_user_to_delete)
+                    if id_user_to_delete is not None:
+                        id_user_to_delete = int(id_user_to_delete)
 
-                self.users = [u for u in self.users if u["id_user"] != id_user_to_delete]
+                        self.users = [u for u in self.users if u["id_user"] != id_user_to_delete]
 
-        return None
+                return None
 
 def test_find_user_by_id():
     user_DAO = UserDAO(MockDBConnector())
@@ -408,3 +406,59 @@ def test_delete_user_error():
     user_DAO = UserDAO(ErrorMock())
     success = user_DAO.delete_user(1)
     assert success is False
+
+# test none
+
+def test_find_user_by_id_not_found():
+    """Vérifie que find_user_by_id retourne None pour un ID inexistant."""
+    user_DAO = UserDAO(MockDBConnector())
+    user = user_DAO.find_user_by_id(999) # ID non présent
+    assert user is None
+
+def test_find_user_by_username_not_found():
+    """Vérifie que find_user_by_username retourne None pour un nom inexistant."""
+    user_DAO = UserDAO(MockDBConnector())
+    user = user_DAO.find_user_by_username("non_existent")
+    assert user is None
+
+def test_find_all_filtered_empty():
+    """Vérifie que find_all avec un filtre retourne une liste vide si aucun résultat."""
+    # Créons un Mock temporaire sans Admin (ID 3) pour simuler un cas où le type serait absent
+    class EmptyAdminMock(MockDBConnector):
+        def __init__(self):
+            super().__init__()
+            # Simule une DB sans le type 'admin'
+            self.users = [u for u in self.users if u["user_type"] != "admin"]
+            
+    user_DAO = UserDAO(EmptyAdminMock())
+    admins = user_DAO.find_all(user_type="admin")
+    
+    assert admins == []
+    assert len(admins) == 0
+
+def test_update_driver_error_on_child_query():
+    """
+    Test la gestion d'erreur si la requête UPDATE fd.user réussit 
+    mais la requête UPDATE fd.driver/customer/admin échoue.
+    """
+    class ErrorMock(MockDBConnector):
+        def sql_query(self, query, data, return_type):
+            # Simule une erreur sur la table enfant (driver)
+            if "update fd.driver" in query.lower():
+                raise Exception("Simulated Child DB Update Error")
+            # Toutes les autres requêtes utilisent le Mock normal, y compris update fd.user
+            return super().sql_query(query, data, return_type)
+
+    user_DAO = UserDAO(ErrorMock())
+    
+    # Données à jour pour le Driver (ID 2)
+    updated_driver_data = Driver(
+        id_user=2, username="bob_fail_update", hash_password="h", salt="s", 
+        password="p", sign_up_date=date.today(), name="Bob", phone_number="1", 
+        vehicle_type="Van", availability=True
+    )
+
+    updated_user = user_DAO.update_user(updated_driver_data)
+    
+    # L'update complet doit échouer, donc la méthode doit retourner None.
+    assert updated_user is None

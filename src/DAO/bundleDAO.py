@@ -31,12 +31,7 @@ class BundleDAO(BaseModel):
         """
         try:
             raw_bundle = self.db_connector.sql_query(
-                """
-                SELECT * FROM fd.bundle
-                WHERE id_bundle = %(bundle_id)s
-                """,
-                {"bundle_id": bundle_id},
-                "one",
+                "SELECT * FROM fd.bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, "one"
             )
 
             if not raw_bundle:
@@ -84,7 +79,7 @@ class BundleDAO(BaseModel):
                     name=raw_bundle["name"],
                     description=raw_bundle["description"],
                     price=raw_bundle["price"],
-                    composition=composition,
+                    composition=composition,  # composition must be a list
                 )
             else:
                 logging.warning(f"Unknown bundle type: {bundle_type}")

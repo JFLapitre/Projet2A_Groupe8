@@ -1,3 +1,4 @@
+# src/CLI/customer_main.py
 from typing import TYPE_CHECKING, Dict, List
 
 from src.CLI.session import Session
@@ -15,7 +16,6 @@ class CustomerMainView:
         self.services = services or {}
         self.item_service = self.services.get("item")
         self.order_service = self.services.get("order")
-        self.available_items: List["Item"] = []
         self.cart: List = []
 
     def display(self):
@@ -27,20 +27,19 @@ class CustomerMainView:
             print("4) Logout")
 
             choice = input("Choice: ").strip().lower()
-
             if choice == "1":
                 self.add_item_to_order()
             elif choice == "2":
                 self.check_order()
             elif choice == "3":
                 self.validate_order()
-            elif choice == "4" or choice == "q":
+            elif choice in ("4", "q"):
                 print("Logging out...")
                 break
             else:
                 print("Invalid choice.")
 
-    # === 1) Add Item to Order ===
+    # === Add Item ===
     def add_item_to_order(self):
         while True:
             print("\n1) Regular Bundle")
@@ -60,97 +59,112 @@ class CustomerMainView:
             else:
                 print("Invalid choice.")
 
-    # === Regular Bundle = DiscountedBundle ===
+    # === Regular Bundle ===
     def _choose_regular_bundle(self):
         try:
-            bundles = self.item_service.list_bundles()
-            regular_bundles = [b for b in bundles if isinstance(b, DiscountedBundle)]
+            bundles = [
+                b
+                for b in self.item_service.list_bundles()
+                if isinstance(b, DiscountedBundle) and getattr(b, "required_item_types", None)
+            ]
         except Exception as e:
             print(f"[ERROR] Cannot fetch bundles: {e}")
             return
-
-        if not regular_bundles:
+        if not bundles:
             print("No regular bundles available.")
             return
 
-        print("\n=== Regular Bundles ===")
-        for idx, b in enumerate(regular_bundles, start=1):
-            print(f"{idx}) {b.name} — {b.discount * 100:.0f}% off")
+        while True:
+            print("\n=== Regular Bundles ===")
+            for idx, b in enumerate(bundles, start=1):
+                print(f"{idx}) {b.name} — {b.discount * 100:.0f}% off")
 
-        try:
-            idx = int(input("Select bundle number: ").strip()) - 1
-            selected_bundle = regular_bundles[idx]
+            choice = input("Select bundle number, q to back: ").strip().lower()
+            if choice == "q":
+                return
 
-            # L'utilisateur choisit un item pour chaque type requis
-            chosen_items = []
-            for req_type in selected_bundle.required_item_types:
-                items_of_type = [i for i in self.item_service.list_items() if i.item_type == req_type]
-                if not items_of_type:
-                    print(f"No items available for type '{req_type}'")
-                    return
-                print(f"\nChoose an item of type '{req_type}':")
-                for j, it in enumerate(items_of_type, start=1):
-                    print(f"{j}) {it.name} — {it.price:.2f}€")
-                choice = int(input("Choice: ").strip()) - 1
-                chosen_items.append(items_of_type[choice])
+            try:
+                idx = int(choice) - 1
+                selected_bundle = bundles[idx]
+                user_bundle = DiscountedBundle(
+                    id_bundle=len(self.cart) + 1,
+                    name=selected_bundle.name,
+                    discount=selected_bundle.discount,
+                    required_item_types=selected_bundle.required_item_types,
+                    composition=[],
+                )
 
-            new_bundle = DiscountedBundle(
-                id_bundle=len(self.cart) + 1,
-                name=selected_bundle.name,
-                composition=chosen_items,
-                required_item_types=selected_bundle.required_item_types,
-                discount=selected_bundle.discount,
-            )
-            self.cart.append(new_bundle)
-            print(f"[SUCCESS] Added '{new_bundle.name}' to cart ({new_bundle.compute_price():.2f}€).")
-        except Exception as e:
-            print(f"[ERROR] {e}")
+                for typ in user_bundle.required_item_types:
+                    while True:
+                        items_of_type = [i for i in self.item_service.list_items() if i.item_type == typ]
+                        if not items_of_type:
+                            print(f"No items available for type '{typ}'")
+                            break
+                        print(f"\nChoose an item of type '{typ}':")
+                        for j, it in enumerate(items_of_type, start=1):
+                            print(f"{j}) {it.name} — {it.price:.2f}€")
+                        item_choice = input("Select item number or num+d for description: ").strip().lower()
+                        if item_choice.endswith("+d"):
+                            idx_item = int(item_choice[:-2]) - 1
+                            it = items_of_type[idx_item]
+                            if getattr(it, "description", None):
+                                print(f"Description: {it.description}")
+                            else:
+                                print("No description available.")
+                            continue
+                        idx_item = int(item_choice) - 1
+                        user_bundle.composition.append(items_of_type[idx_item])
+                        break
 
-    # === Special Bundle = PredefinedBundle ===
+                self.cart.append(user_bundle)
+                print(f"[SUCCESS] Added '{user_bundle.name}' to cart ({user_bundle.compute_price():.2f}€).")
+                return
+            except Exception as e:
+                print(f"[ERROR] {e}")
+
+    # === Special Bundle ===
     def _choose_special_bundle(self):
         try:
-            bundles = self.item_service.list_bundles()
-            special_bundles = [b for b in bundles if isinstance(b, PredefinedBundle)]
+            bundles = [
+                b
+                for b in self.item_service.list_bundles()
+                if isinstance(b, PredefinedBundle) and getattr(b, "composition", None)
+            ]
         except Exception as e:
             print(f"[ERROR] Cannot fetch bundles: {e}")
             return
-
-        if not special_bundles:
+        if not bundles:
             print("No special bundles available.")
             return
 
-        print("\n=== Special Bundles ===")
-        for idx, b in enumerate(special_bundles, start=1):
-            price = getattr(b, "price", 0)
-            print(f"{idx}) {b.name} — {price:.2f}€")
+        while True:
+            print("\n=== Special Bundles ===")
+            for idx, b in enumerate(bundles, start=1):
+                print(f"{idx}) {b.name} — {b.price:.2f}€")
 
-        try:
-            idx = int(input("Select bundle number: ").strip()) - 1
-            selected_bundle = special_bundles[idx]
+            choice = input("Select bundle number or num+d for description, q to back: ").strip().lower()
+            if choice == "q":
+                return
 
-            # Choix des items selon item_type dans le bundle
-            chosen_items = []
-            for req_type in [i.item_type for i in selected_bundle.composition]:
-                items_of_type = [i for i in self.item_service.list_items() if i.item_type == req_type]
-                print(f"\nChoose an item of type '{req_type}':")
-                for j, it in enumerate(items_of_type, start=1):
-                    print(f"{j}) {it.name} — {it.price:.2f}€")
-                choice = int(input("Choice: ").strip()) - 1
-                chosen_items.append(items_of_type[choice])
+            if choice.endswith("+d"):
+                try:
+                    idx = int(choice[:-2]) - 1
+                    bundle = bundles[idx]
+                    print("Descriptions:", bundle.compute_description())
+                except Exception as e:
+                    print(f"[ERROR] {e}")
+                continue
 
-            new_bundle = PredefinedBundle(
-                id_bundle=len(self.cart) + 1,
-                name=selected_bundle.name,
-                composition=chosen_items,
-                price=sum(i.price for i in chosen_items),
-                availability=True,
-            )
-            self.cart.append(new_bundle)
-            print(f"[SUCCESS] Added '{new_bundle.name}' to cart ({new_bundle.compute_price():.2f}€).")
-        except Exception as e:
-            print(f"[ERROR] {e}")
+            try:
+                idx = int(choice) - 1
+                selected_bundle = bundles[idx]
+                self.cart.append(selected_bundle)
+                print(f"[SUCCESS] Added '{selected_bundle.name}' to cart ({selected_bundle.compute_price():.2f}€).")
+                return
+            except Exception as e:
+                print(f"[ERROR] {e}")
 
-    # === Single Item = OneItemBundle ===
+    # === Single Item ===
     def _choose_single_item(self):
         try:
             items = self.item_service.list_items()
@@ -159,60 +173,81 @@ class CustomerMainView:
             print(f"[ERROR] Cannot fetch items: {e}")
             return
 
-        print("\n=== Item Types ===")
-        for idx, t in enumerate(item_types, start=1):
-            print(f"{idx}) {t}")
-        try:
-            idx = int(input("Select item type: ").strip()) - 1
-            chosen_type = item_types[idx]
-            filtered_items = [i for i in items if i.item_type == chosen_type]
+        while True:
+            print("\n=== Item Types ===")
+            for idx, t in enumerate(item_types, start=1):
+                print(f"{idx}) {t}")
+            choice = input("Select item type, q to back: ").strip().lower()
+            if choice == "q":
+                return
+            try:
+                idx = int(choice) - 1
+                chosen_type = item_types[idx]
+                filtered_items = [i for i in items if i.item_type == chosen_type]
 
-            print(f"\n=== Items ({chosen_type}) ===")
-            for j, it in enumerate(filtered_items, start=1):
-                print(f"{j}) {it.name} — {it.price:.2f}€")
-            item_idx = int(input("Select item: ").strip()) - 1
-            item = filtered_items[item_idx]
+                print(f"\n=== Items ({chosen_type}) ===")
+                for j, it in enumerate(filtered_items, start=1):
+                    print(f"{j}) {it.name} — {it.price:.2f}€")
 
-            bundle = OneItemBundle(id_bundle=len(self.cart) + 1, name=item.name, composition=item)
-            self.cart.append(bundle)
-            print(f"[SUCCESS] Added '{item.name}' to cart ({bundle.compute_price():.2f}€).")
-        except Exception as e:
-            print(f"[ERROR] {e}")
+                while True:
+                    item_choice = input("Select item number or num+d for description: ").strip().lower()
+                    if item_choice.endswith("+d"):
+                        idx_item = int(item_choice[:-2]) - 1
+                        it = filtered_items[idx_item]
+                        if getattr(it, "description", None):
+                            print(f"Description: {it.description}")
+                        else:
+                            print("No description available.")
+                        continue
+                    idx_item = int(item_choice) - 1
+                    item = filtered_items[idx_item]
+                    bundle = OneItemBundle(
+                        id_bundle=len(self.cart) + 1,
+                        name=item.name,
+                        composition=[item],  # <- important: doit être une liste
+                    )
+                    self.cart.append(bundle)
+                    print(f"[SUCCESS] Added '{item.name}' to cart ({bundle.compute_price():.2f}€).")
+                    break
+                return
+            except Exception as e:
+                print(f"[ERROR] {e}")
 
-    # === 2) Check Order ===
+    # === Check Order ===
     def check_order(self):
         if not self.cart:
             print("Your cart is empty.")
             return
-
         print("\n=== Your Order ===")
-        total = 0
         for idx, b in enumerate(self.cart, start=1):
-            price = b.compute_price()
-            total += price
-            print(f"{idx}) {b.name} — {price:.2f}€ ({b.__class__.__name__})")
-
-        print("Enter number to remove item, or press Enter to return.")
-        choice = input("Choice: ").strip()
+            print(f"{idx}) {b.name} — {b.compute_price():.2f}€ ({b.__class__.__name__})")
+        choice = input("Enter number to remove item, or press Enter to return: ").strip()
         if choice.isdigit():
             idx = int(choice) - 1
             if 0 <= idx < len(self.cart):
                 removed = self.cart.pop(idx)
                 print(f"[INFO] Removed '{removed.name}' from order.")
 
-    # === 3) Validate Order ===
+    # === Validate Order ===
     def validate_order(self):
         if not self.cart:
             print("Your cart is empty.")
             return
 
-        address = input("Enter delivery address: ").strip()
-        if not address:
-            print("[ERROR] Address required.")
+        print("\nEnter new delivery address details:")
+        street = input("Street: ").strip()
+        city = input("City: ").strip()
+        postal_code = input("Postal code: ").strip()
+        if not street or not city or not postal_code:
+            print("[ERROR] All address fields are required.")
             return
 
         try:
-            self.order_service.create_order(self.session.user_id, self.cart, address)
+            # Créer l'adresse et récupérer son id
+            address = self.order_service.user_dao.create_address(
+                self.session.user_id, street=street, city=city, postal_code=postal_code
+            )
+            self.order_service.create_order(self.session.user_id, address.id_address, self.cart)
             print("[SUCCESS] Order confirmed.")
             self.cart.clear()
         except Exception as e:

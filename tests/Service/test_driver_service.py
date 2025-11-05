@@ -109,20 +109,20 @@ def sample_driver_unavailable():
 
 
 @pytest.fixture
-def sample_order_validated():
-    """Provides a mock Order with 'validated' status."""
+def sample_order_pending():
+    """Provides a mock Order with 'pending' status."""
     order = MagicMock(spec=Order)
     order.id = 101
-    order.status = "validated"
+    order.status = "pending"
     return order
 
 
 @pytest.fixture
-def sample_order_pending():
-    """Provides a mock Order with 'pending' status."""
+def sample_order_validated():
+    """Provides a mock Order with 'validated' status."""
     order = MagicMock(spec=Order)
     order.id = 102
-    order.status = "pending"
+    order.status = "validated"
     return order
 
 
@@ -180,7 +180,7 @@ def test_create_and_assign_delivery_success(
     mock_delivery_dao.add_delivery.assert_called_once_with(ANY)
     called_delivery = mock_delivery_dao.add_delivery.call_args[0][0]
     assert isinstance(called_delivery, Delivery)
-    assert called_delivery.driver == sample_driver_available
+    assert called_delivery.id_driver == driver_id
     assert called_delivery.orders == [sample_order_validated]
     assert called_delivery.status == "in_progress"
 
