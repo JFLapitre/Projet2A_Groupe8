@@ -2,7 +2,6 @@ from datetime import datetime
 from unittest.mock import ANY, MagicMock
 
 import pytest
-from src.Model.user import User
 
 from src.DAO.addressDAO import AddressDAO
 from src.DAO.bundleDAO import BundleDAO
@@ -11,6 +10,7 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
+from src.Model.customer import Customer
 from src.Model.delivery import Delivery
 from src.Model.driver import Driver
 from src.Model.order import Order
@@ -202,7 +202,7 @@ def test_create_delivery_validation_driver_not_found(service: DriverService, moc
 
 def test_create_delivery_validation_user_is_not_driver(service: DriverService, mock_user_dao: MagicMock):
     """Tests that a ValueError is raised if the found user is not a Driver instance."""
-    not_a_driver = MagicMock(spec=User)  # Is a User, but not a Driver
+    not_a_driver = MagicMock(spec=Customer)  # Is a User, but not a Driver
     mock_user_dao.find_user_by_id.return_value = not_a_driver
     with pytest.raises(ValueError, match="No valid driver found with ID 3"):
         service.create_and_assign_delivery(order_ids=[101], driver_id=3)
@@ -275,7 +275,7 @@ def test_complete_delivery_success(
 
     # Mock datetime.now()
     mock_now = datetime(2025, 11, 5, 12, 30, 0)
-    mocker.patch("src.driver_service.datetime").now.return_value = mock_now
+    mocker.patch("src.Service.driver_service.datetime").now.return_value = mock_now
 
     # Act
     result = service.complete_delivery(sample_delivery_inprogress.id)
