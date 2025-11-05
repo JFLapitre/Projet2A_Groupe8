@@ -63,7 +63,7 @@ class DriverService:
             self.order_dao.update_order(o)
 
         new_delivery = Delivery(
-            id_driver=driver_id,
+            driver=driver,
             orders=orders,
             status="in_progress",
             delivery_time=None,

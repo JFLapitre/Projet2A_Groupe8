@@ -150,7 +150,7 @@ class DeliveryDAO:
             Delivery: The created delivery with its ID, or None if failed.
         """
         try:
-            id_driver = delivery.id_driver.id_user
+            id_driver = delivery.driver.id_user
 
             raw_created_delivery = self.db_connector.sql_query(
                 """
