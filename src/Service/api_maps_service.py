@@ -77,5 +77,5 @@ addresses = [
 ]
 db_connector = DBConnector()
 service = DriverService(db_connector)
-service.create_and_assign_delivery([3], 3)
+service.create_and_assign_delivery([3],3)
 
