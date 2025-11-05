@@ -133,7 +133,7 @@ def test_login_incorrect_password(
 # --- Tests for register() method ---
 
 
-def test_register_successful(
+def test_register_customer_successful(
     service: AuthenticationService, mock_user_dao: MagicMock, mock_password_service: MagicMock
 ):
     """
@@ -144,7 +144,7 @@ def test_register_successful(
     phone = "555-0123"
 
     try:
-        new_user = service.register(username, password, phone)
+        new_user = service.register_customer(username, password, phone)
 
         mock_user_dao.find_user_by_username.assert_called_with(username)
         mock_password_service.check_password_strength.assert_called_with(password)
@@ -157,10 +157,12 @@ def test_register_successful(
         assert new_user is created_user_arg
 
     except Exception as e:
-        pytest.fail(f"register raised an unexpected exception: {e}")
+        pytest.fail(f"register_customer raised an unexpected exception: {e}")
 
 
-def test_register_username_exists(service: AuthenticationService, mock_user_dao: MagicMock, dummy_customer: Customer):
+def test_register_customer_username_exists(
+    service: AuthenticationService, mock_user_dao: MagicMock, dummy_customer: Customer
+):
     """
     Tests that register raises a ValueError if the username is already taken.
     """
@@ -169,7 +171,7 @@ def test_register_username_exists(service: AuthenticationService, mock_user_dao:
     existing_username = "existing_user"
 
     with pytest.raises(ValueError) as e:
-        service.register(existing_username, "any_password", "any_phone")
+        service.register_customer(existing_username, "any_password", "any_phone")
 
     assert f"Username '{existing_username}' already exists" in str(e.value)
     mock_user_dao.find_user_by_username.assert_called_with(existing_username)
@@ -188,7 +190,7 @@ def test_register_weak_password(
     mock_password_service.check_password_strength.side_effect = Exception(error_message)
 
     with pytest.raises(Exception) as e:
-        service.register("another_user", weak_password, "any_phone")
+        service.register_customer("another_user", weak_password, "any_phone")
 
     assert error_message in str(e.value)
 

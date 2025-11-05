@@ -5,9 +5,9 @@ from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
-from src.Service.PasswordService import check_password_strength, validate_username_password
 
-from .init_app import jwt_service, user_dao, user_service
+from .auth import admin_required
+from .init_app import admin_user_service, auth_service, jwt_service, password_service, user_dao
 from .JWTBearer import JWTBearer
 
 if TYPE_CHECKING:
@@ -16,34 +16,45 @@ if TYPE_CHECKING:
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@user_router.post("/", status_code=status.HTTP_201_CREATED)
-def create_user(username: str, password: str) -> APIUser:
+@user_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
+def create_user(username: str, password: str, name: str, phone_number: str) -> APIUser:
     """
     Performs validation on the username and password
     """
     try:
-        check_password_strength(password=password)
+        password_service.check_password_strength(password=password)
     except Exception:
         raise HTTPException(status_code=400, detail="Password too weak") from Exception
-    try:
-        user: User = user_service.create_user(username=username, password=password)
-    except Exception as error:
-        raise HTTPException(status_code=409, detail="Username already exists") from error
 
-    return APIUser(id=user.id, username=user.username)
+    try:
+        user: User = admin_user_service.create_admin_account(
+            username=username, password=password, name=name, phone_number=phone_number
+        )
+
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=f"Conflict: {error}") from error
+
+    except Exception as e:
+        print(f"An unintended error occured: {type(e).__name__}: {e}")
+        import traceback
+
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal Server Error, check logs") from e
+
+    return APIUser(id_user=user.id_user, username=user.username)
 
 
 @user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
-def login(username: str, password: str) -> JWTResponse:
+def APIlogin(username: str, password: str) -> JWTResponse:
     """
     Authenticate with username and password and obtain a token
     """
     try:
-        user = validate_username_password(username=username, password=password, user_dao=user_dao)
+        user = auth_service.login(username=username, password=password)
     except Exception as error:
         raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
 
-    return jwt_service.encode_jwt(user.id)
+    return jwt_service.encode_jwt(user.id_user)
 
 
 @user_router.get("/me", dependencies=[Depends(JWTBearer())])
@@ -56,8 +67,8 @@ def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, De
 
 def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
     token = credentials.credentials
-    user_id = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_dao.get_by_id(user_id)
+    id_user = int(jwt_service.validate_user_jwt(token))
+    user: User | None = user_dao.find_user_by_id(id_user)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return APIUser(id=user.id, username=user.username)
+    return APIUser(id_user=user.id_user, username=user.username)

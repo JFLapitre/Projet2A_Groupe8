@@ -8,8 +8,8 @@ from src.Model.order import Order
 
 
 class Delivery(BaseModel):
-    id_delivery: int
-    driver: Optional[Driver]
+    id_delivery: Optional[int] = None
+    id_driver: int
     orders: list[Order]
     status: str
     delivery_time: Optional[datetime] = None
