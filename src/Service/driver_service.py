@@ -58,13 +58,16 @@ class DriverService:
                 raise ValueError(f"Order {order_id} is not in 'pending' status. Current status: {order.status}")
             orders.append(order)
 
-        try:
-            new_delivery = Delivery(
-                driver=driver,
-                orders=orders,
-                status="in_progress",
-                delivery_time=None,
-            )
+        for o in orders:
+            o.status = "in_progress"
+            self.order_dao.update_order(o)
+
+        new_delivery = Delivery(
+            driver=driver,
+            orders=orders,
+            status="in_progress",
+            delivery_time=None,
+        )
 
             created_delivery = self.delivery_dao.add_delivery(new_delivery)
             if not created_delivery:

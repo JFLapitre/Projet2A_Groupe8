@@ -16,6 +16,7 @@ class CustomerMainView:
         self.services = services or {}
         self.item_service = self.services.get("item")
         self.order_service = self.services.get("order")
+        self.address_service = self.services.get("address")  # ✅ ajout du service adresse
         self.cart: List = []
 
     def display(self):
@@ -204,7 +205,7 @@ class CustomerMainView:
                     bundle = OneItemBundle(
                         id_bundle=len(self.cart) + 1,
                         name=item.name,
-                        composition=[item],  # <- important: doit être une liste
+                        composition=[item],
                     )
                     self.cart.append(bundle)
                     print(f"[SUCCESS] Added '{item.name}' to cart ({bundle.compute_price():.2f}€).")
@@ -234,21 +235,32 @@ class CustomerMainView:
             print("Your cart is empty.")
             return
 
-        print("\nEnter new delivery address details:")
-        street = input("Street: ").strip()
+        print("\nEnter delivery address details:")
+        street_name = input("Street name: ").strip()
         city = input("City: ").strip()
         postal_code = input("Postal code: ").strip()
-        if not street or not city or not postal_code:
-            print("[ERROR] All address fields are required.")
+        street_number = input("Street number: ").strip()
+
+        if not street_name or not city or not postal_code:
+            print("[ERROR] Street name, city, and postal code are required.")
             return
 
         try:
-            # Créer l'adresse et récupérer son id
-            address = self.order_service.user_dao.create_address(
-                self.session.user_id, street=street, city=city, postal_code=postal_code
+            street_number_int = int(street_number) if street_number else None
+            postal_code_int = int(postal_code)
+
+            # ✅ Création correcte de l’adresse avec AddressService
+            address = self.address_service.create_address(
+                street_name=street_name,
+                city=city,
+                postal_code=postal_code_int,
+                street_number=street_number_int,
             )
+
+            # ✅ Création de la commande avec l’adresse créée
             self.order_service.create_order(self.session.user_id, address.id_address, self.cart)
             print("[SUCCESS] Order confirmed.")
             self.cart.clear()
+
         except Exception as e:
             print(f"[ERROR] Cannot confirm order: {e}")
