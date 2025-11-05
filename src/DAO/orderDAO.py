@@ -204,9 +204,6 @@ class OrderDAO(BaseModel):
             bool: True if update succeeded, False otherwise.
         """
         try:
-            id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
-            id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
-
             res = self.db_connector.sql_query(
                 """
                 UPDATE fd.order
@@ -219,9 +216,9 @@ class OrderDAO(BaseModel):
                 """,
                 {
                     "id_order": order.id_order,
-                    "id_user": id_user,
+                    "id_user": order.customer.id_user,
                     "status": order.status,
-                    "id_address": id_address,
+                    "id_address": order.address.id_address,
                     "order_date": order.order_date,
                 },
                 "one",
@@ -232,7 +229,7 @@ class OrderDAO(BaseModel):
             )
 
             for bundle in order.bundles:
-                bundle_id = bundle.id_bundle if hasattr(bundle, "id_bundle") else bundle
+                bundle_id = bundle.id_bundle
                 self.db_connector.sql_query(
                     """
                     INSERT INTO fd.order_bundle (id_order, id_bundle)

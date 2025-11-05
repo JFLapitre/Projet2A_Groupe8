@@ -2,6 +2,7 @@
 from dotenv import load_dotenv
 
 from src.DAO.DBConnector import DBConnector
+from src.Service.address_service import AddressService
 from src.Service.admin_menu_service import AdminMenuService
 from src.Service.admin_user_service import AdminUserService
 from src.Service.authentication_service import AuthenticationService
@@ -24,7 +25,7 @@ order_service = OrderService(db_connector=db_connector)
 delivery_service = DeliveryService(db_connector=db_connector)
 admin_user_service = AdminUserService(db_connector=db_connector)
 jwt_service = JwtService()
-
+address_service = AddressService(db_connector=db_connector)
 # Dictionnaire des services
 services = {
     "auth": auth_service,
@@ -33,4 +34,5 @@ services = {
     "delivery": delivery_service,
     "user": admin_user_service,
     "jwt": jwt_service,
+    "address": address_service,
 }
