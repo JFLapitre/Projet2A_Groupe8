@@ -2,7 +2,6 @@ import logging
 from datetime import date
 from typing import List, Optional, Union
 
-from src.Model.abstract_user import AbstractUser
 from src.Model.admin import Admin
 from src.Model.customer import Customer
 from src.Model.driver import Driver
@@ -198,13 +197,14 @@ class UserDAO:
 
         result = self.db_connector.sql_query(
             """
-        INSERT INTO fd.user (id_user, username, hash_password, user_type, sign_up_date)
-        VALUES (DEFAULT, %(username)s, %(hash_password)s, %(user_type)s, %(sign_up_date)s)
+        INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date)
+        VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
         RETURNING id_user;
         """,
             {
                 "username": user.username,
                 "hash_password": user.hash_password,
+                "salt": user.salt,
                 "user_type": user_type,
                 "sign_up_date": date.today(),
             },

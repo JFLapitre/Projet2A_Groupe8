@@ -1,8 +1,7 @@
-from src.Services.password_service import PasswordService
-
 from src.DAO.DBConnector import DBConnector
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
+from src.Service.password_service import PasswordService
 
 
 class AuthenticationService:
@@ -16,7 +15,7 @@ class AuthenticationService:
 
     def login(self, username: str, password: str) -> Customer:
         """
-        Authenticates a user (Customer) with username/password using manual salt verification.
+        Authenticates a user with username/password using manual salt verification.
         """
         user = self.user_dao.find_user_by_username(username)
         if not user:
