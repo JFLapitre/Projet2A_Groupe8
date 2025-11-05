@@ -45,6 +45,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "I", "A", "C90", "PERF", "TCH", "TID"]
+ignore = ["B008"]
 
 [tool.pyrefly]
 project-includes = ["src/**/*"]

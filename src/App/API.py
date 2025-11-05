@@ -13,7 +13,7 @@ def run_app():
     )
 
     # Enregistrement des routers
-    #app.include_router(auth_router, prefix="/auth")
+    # app.include_router(auth_router, prefix="/auth")
     app.include_router(user_router, prefix="/users")
     app.include_router(order_router, prefix="/orders")
     # app.include_router(menu_router, prefix="/menus")
