@@ -5,7 +5,7 @@ from src.DAO.DBConnector import DBConnector
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.delivery import Delivery
-
+from src.Model.order import Order
 
 class DeliveryDAO:
     db_connector: DBConnector
@@ -105,6 +105,43 @@ class DeliveryDAO:
         except Exception as e:
             logging.error(f"Failed to fetch all deliveries: {e}")
             return []
+
+    def find_in_progress_deliveries_by_driver(self, driver_id: int) -> List[Delivery]:
+        """Retrieve all deliveries assigned to a given driver
+        that are currently 'in_progress'.
+        Args:
+            driver_id (int): The driver's ID.
+
+        Returns:
+            List[Delivery]: A list of deliveries in progress for that driver.
+        """
+        try:
+            raw_deliveries = self.db_connector.sql_query(
+                """
+                SELECT *
+                FROM fd.delivery
+                WHERE id_driver = %(driver_id)s
+                AND status = 'in_progress';
+                """,
+                {"driver_id": driver_id},
+                "all",
+            )
+
+            deliveries = []
+            for raw_delivery in raw_deliveries:
+                delivery = self.find_delivery_by_id(raw_delivery["id_delivery"])
+                if delivery:
+                    deliveries.append(delivery)
+
+            return deliveries
+
+        except Exception as e:
+            logging.error(f"Failed to fetch in-progress deliveries for driver {driver_id}: {e}")
+            return []
+
+
+
+
 
     def update_delivery(self, delivery: Delivery) -> bool:
         """Update an existing delivery.

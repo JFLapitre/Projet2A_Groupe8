@@ -11,7 +11,7 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
-from src.Service.driver_service import DriverService
+
 
 # Initialisations
 db = DBConnector()
@@ -75,7 +75,3 @@ addresses = [
     for order in delivery.orders
 
 ]
-db_connector = DBConnector()
-service = DriverService(db_connector)
-service.create_and_assign_delivery([3],3)
-
