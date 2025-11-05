@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -8,7 +9,7 @@ from src.Model.customer import Customer
 
 
 class Order(BaseModel):
-    id_order: int
+    id_order: Optional[int] = None
     customer: Customer
     address: Address
     bundles: list[AbstractBundle]

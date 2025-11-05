@@ -54,9 +54,12 @@ class DriverService:
             order = self.order_dao.find_order_by_id(order_id)
             if not order:
                 raise ValueError(f"Order with ID {order_id} not found.")
-            if order.status != "validated":
-                raise ValueError(f"Order {order_id} is not validated. Current status: {order.status}")
+            if order.status != "pending":
+                raise ValueError(f"Order {order_id} has not the pending status. Current status: {order.status}")
             orders.append(order)
+
+        for o in orders:
+            o.status = "in_progress"
 
         new_delivery = Delivery(
             driver=driver,
@@ -89,7 +92,7 @@ class DriverService:
 
         try:
             for order in delivery.orders:
-                order.status = "delivered"  # Assuming "delivered" is a valid status
+                order.status = "delivered"
                 self.order_dao.update_order(order)
         except Exception as e:
             logging.warning(f"Could not update status for orders in delivery {delivery_id}: {e}")
