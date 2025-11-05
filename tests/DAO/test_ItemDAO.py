@@ -23,6 +23,15 @@ class MockDBConnector:
                 "stock": 50,
                 "availability": True,
             },
+            {
+                "id_item": 2,
+                "name": "Item Existant B",
+                "item_type": "main",
+                "price": 12.00,
+                "description": "Un autre item de base",
+                "stock": 25,
+                "availability": True,
+            },
         ]
         self.next_item_id = 2
 
