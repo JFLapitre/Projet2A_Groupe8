@@ -83,7 +83,7 @@ class AuthView:
         phone_number = input("Phone number: ").strip()
 
         try:
-            user = self.auth_service.register(username, password, phone_number)
+            user = self.auth_service.register_customer(username, password, phone_number)
         except ValueError as e:
             print(f"[ERROR] {e}")
             return False
