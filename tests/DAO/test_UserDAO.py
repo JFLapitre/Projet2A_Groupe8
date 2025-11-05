@@ -84,19 +84,22 @@ class MockDBConnector:
             return {"id_user": new_user["id_user"]}
 
         if "update fd.user" in q:
-            id_user = data.get("id_user")
+            if not data:
+                raise Exception("no data provided")
+            user_id = data.get("id_user")
             for u in self.users:
-                if u["id_user"] == id_user:
-                    u.update(
-                        {
-                            "username": data.get("username"),
-                            "name": data.get("customer_name") or data.get("name"),
-                            "phone_number": data.get("phone_number"),
-                            "password": data.get("password"),
-                            "salt": data.get("salt"),
-                            "hash_password": data.get("hash_password"),
-                        }
-                    )
+                if u["id_user"] == user_id:
+                    u.update(data)
+            return None
+        
+        if "update fd.customer" in q:
+            if not data:
+                raise Exception("no data provided")
+            user_id = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == user_id:
+                    u["customer_name"] = data.get("name") 
+                    u["customer_phone"] = data.get("phone_number")
             return None
 
         if q.startswith("delete from fd.user"):
@@ -166,20 +169,21 @@ def test_update_user():
     updated_user = Customer(
         id_user=1,
         username="janjak_updated",
+        hash_password="newSecret",
+        salt="random_salt",
         password="newSecret",
         sign_up_date=date.today(),
-        customer_name="Jean Updated",
-        phone_number="0000000001",
-        salt="random_salt",
-        hash_password="random_hash",
+        name="Jean Updated",
+        phone_number="0000000001"
     )
 
     user_DAO.update_user(updated_user)
 
     modified_user = user_DAO.find_user_by_id(1)
+
     assert modified_user is not None
     assert modified_user.username == "janjak_updated"
-    assert modified_user.customer_name == "Jean Updated"
+    assert modified_user.name == "Jean Updated"
     assert modified_user.phone_number == "0000000001"
     assert modified_user.salt == "random_salt"
-    assert modified_user.hash_password == "random_hash"
+    assert modified_user.hash_password == "newSecret"

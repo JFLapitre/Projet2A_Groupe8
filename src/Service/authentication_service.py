@@ -28,9 +28,9 @@ class AuthenticationService:
 
         return user
 
-    def register(self, username: str, password: str, phone_number: str) -> Customer:
+    def register(self, username: str, password: str, phone_number: str, user_type: str) -> Customer:
         """
-        Registers a new user (Customer).
+        Registers a new user.
         The password is first checked for strength, then securely hashed and salted before storage.
         """
         if self.user_dao.find_user_by_username(username):
