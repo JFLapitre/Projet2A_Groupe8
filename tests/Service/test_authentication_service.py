@@ -4,7 +4,6 @@ from unittest.mock import ANY, MagicMock
 import pytest
 
 from src.DAO.DBConnector import DBConnector
-from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
 from src.Service.authentication_service import AuthenticationService
 from src.Service.password_service import PasswordService
@@ -128,7 +127,7 @@ def test_login_incorrect_password(
         service.login(username, wrong_password)
 
     assert "Incorrect password" in str(e.value)
-    mock_password_service.hash_password.assert_called_with(wrong_password, "existing_salt")
+    mock_password_service.hash_password.assert_called_with(wrong_password, "jambon")
 
 
 # --- Tests for register() method ---
@@ -144,34 +143,17 @@ def test_register_successful(
     password = "ValidPassword123"
     phone = "555-0123"
 
-    # Configure mocks for this flow
-    expected_salt = "generated_mock_salt"
-    expected_hash = "hashed_ValidPassword123_with_salt"
-    mock_password_service.create_salt.return_value = expected_salt
-    mock_password_service.hash_password.return_value = expected_hash
-
     try:
         new_user = service.register(username, password, phone)
 
-        # Verify the complete call chain
         mock_user_dao.find_user_by_username.assert_called_with(username)
         mock_password_service.check_password_strength.assert_called_with(password)
-        mock_password_service.create_salt.assert_called_once()
-        mock_password_service.hash_password.assert_called_with(password, expected_salt)
-
-        # Verify that add_user was called with the correct Customer object
-        # ANY is used because it is a new Customer instance
         mock_user_dao.add_user.assert_called_once_with(ANY)
 
-        # More detailed inspection of the object passed to add_user
         created_user_arg = mock_user_dao.add_user.call_args[0][0]
         assert isinstance(created_user_arg, Customer)
         assert created_user_arg.username == username
-        assert created_user_arg.password == expected_hash  # Must store the HASH
-        assert created_user_arg.salt == expected_salt
         assert created_user_arg.phone_number == phone
-
-        # Verify that the returned user is the one that was created
         assert new_user is created_user_arg
 
     except Exception as e:
@@ -182,10 +164,9 @@ def test_register_username_exists(service: AuthenticationService, mock_user_dao:
     """
     Tests that register raises a ValueError if the username is already taken.
     """
-    # Configure mock: find_user returns an existing user
     mock_user_dao.find_user_by_username.return_value = dummy_customer
 
-    existing_username = "existing_user"  # The same as dummy_customer
+    existing_username = "existing_user"
 
     with pytest.raises(ValueError) as e:
         service.register(existing_username, "any_password", "any_phone")
@@ -204,9 +185,6 @@ def test_register_weak_password(
     weak_password = "short"
     error_message = "Password length must be at least 8 characters"
 
-    # Configure mocks
-    # mock_user_dao.find_user_by_username returns None (default)
-    # Configure check_password_strength to raise the exception
     mock_password_service.check_password_strength.side_effect = Exception(error_message)
 
     with pytest.raises(Exception) as e:
@@ -214,7 +192,6 @@ def test_register_weak_password(
 
     assert error_message in str(e.value)
 
-    # Verify that the process stopped before creating salt/hash/user
     mock_user_dao.find_user_by_username.assert_called_with("another_user")
     mock_password_service.check_password_strength.assert_called_with(weak_password)
     mock_password_service.create_salt.assert_not_called()

@@ -4,23 +4,33 @@ from dotenv import load_dotenv
 from src.DAO.DBConnector import DBConnector
 from src.Service.admin_menu_service import AdminMenuService
 from src.Service.admin_user_service import AdminUserService
-
-# Import de tous les services nécessaires
 from src.Service.authentication_service import AuthenticationService
 from src.Service.delivery_service import DeliveryService
 from src.Service.JWTService import JwtService
 from src.Service.order_service import OrderService
+from src.Service.password_service import PasswordService
 
-# Charger les variables d'environnement (.env)
+# Charger les variables d'environnement
 load_dotenv()
 
-# Initialisation du connecteur DB
+# Connecteur DB
 db_connector = DBConnector()
 
-# Services principaux
-auth_service = AuthenticationService(db_connector)
-item_service = AdminMenuService(db_connector)
-order_service = OrderService(db_connector)
-delivery_service = DeliveryService(db_connector)
-admin_user_service = AdminUserService(db_connector)
+# Services
+password_service = PasswordService()
+auth_service = AuthenticationService(db_connector=db_connector, password_service=password_service)
+item_service = AdminMenuService(db_connector=db_connector)
+order_service = OrderService(db_connector=db_connector)
+delivery_service = DeliveryService(db_connector=db_connector)
+admin_user_service = AdminUserService(db_connector=db_connector)
 jwt_service = JwtService()
+
+# Dictionnaire des services
+services = {
+    "auth": auth_service,
+    "item": item_service,
+    "order": order_service,
+    "delivery": delivery_service,
+    "user": admin_user_service,
+    "jwt": jwt_service,
+}
