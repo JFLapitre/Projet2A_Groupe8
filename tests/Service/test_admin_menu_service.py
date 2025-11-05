@@ -1,4 +1,4 @@
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -64,6 +64,12 @@ def sample_item_list(sample_item):
 
 
 @pytest.fixture
+def sample_item_types():
+    """Provides a reusable list of item types for discounted bundles."""
+    return ["Boisson", "Plat", "Dessert"]
+
+
+@pytest.fixture
 def sample_bundle():
     """Provides a mock bundle for deletion/find tests."""
     return MagicMock(spec=AbstractBundle)
@@ -74,7 +80,7 @@ def sample_bundle():
 
 def test_create_item_success(service: AdminMenuService, mock_item_dao: MagicMock):
     """Tests successful creation of a valid item."""
-    mock_item_dao.add_item.return_value = MagicMock(spec=Item) 
+    mock_item_dao.add_item.return_value = MagicMock(spec=Item)
 
     service.create_item("New Item", "Desc", 15.0, 10, True, "TypeB")
 
@@ -244,7 +250,7 @@ def test_create_one_item_bundle_success(service: AdminMenuService, mock_bundle_d
     called_bundle = mock_bundle_dao.add_one_item_bundle.call_args[0][0]
     assert isinstance(called_bundle, OneItemBundle)
     assert called_bundle.name == "Solo Deal"
-    assert called_bundle.composition == [sample_item]
+    assert called_bundle.composition == sample_item
 
 
 def test_create_one_item_bundle_validation_price(service: AdminMenuService, sample_item: Item):
@@ -260,30 +266,40 @@ def test_create_one_item_bundle_validation_item(service: AdminMenuService):
 
 
 def test_create_discounted_bundle_success(
-    service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_list: list
+    service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_types: list
 ):
-    """Tests successful creation of a discounted bundle."""
+    """Tests successful creation of a discounted bundle with item types."""
     mock_bundle_dao.add_discounted_bundle.return_value = MagicMock(spec=DiscountedBundle)
 
-    service.create_discounted_bundle("Happy Hour", "Desc", sample_item_list, 20.0)
+    service.create_discounted_bundle("Menu Complet", "Desc", sample_item_types, 25.0)
 
+    # Check that the DAO was called correctly
     mock_bundle_dao.add_discounted_bundle.assert_called_once_with(ANY)
+
+    # Check the attributes of the DiscountedBundle object passed to the DAO
     called_bundle = mock_bundle_dao.add_discounted_bundle.call_args[0][0]
     assert isinstance(called_bundle, DiscountedBundle)
-    assert called_bundle.name == "Happy Hour"
-    assert called_bundle.discount == 20.0
+    assert called_bundle.name == "Menu Complet"
+    assert called_bundle.discount == 25.0
+    assert called_bundle.required_item_types == sample_item_types
 
 
-def test_create_discounted_bundle_validation_discount_low(service: AdminMenuService, sample_item_list: list):
+def test_create_discounted_bundle_validation_discount_low(service: AdminMenuService, sample_item_types: list):
     """Tests that a discount <= 0 raises a ValueError."""
     with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
-        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_list, 0)
+        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_types, 0)
 
 
-def test_create_discounted_bundle_validation_discount_high(service: AdminMenuService, sample_item_list: list):
+def test_create_discounted_bundle_validation_discount_high(service: AdminMenuService, sample_item_types: list):
     """Tests that a discount >= 100 raises a ValueError."""
     with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
-        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_list, 100)
+        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_types, 100)
+
+
+def test_create_discounted_bundle_validation_item_types_empty(service: AdminMenuService):
+    """Tests that an empty required_item_types list raises a ValueError."""
+    with pytest.raises(ValueError, match="Item types cannot be empty."):
+        service.create_discounted_bundle("Bad Discount", "Desc", [], 20.0)
 
 
 def test_delete_bundle_success(service: AdminMenuService, mock_bundle_dao: MagicMock, sample_bundle: MagicMock):
