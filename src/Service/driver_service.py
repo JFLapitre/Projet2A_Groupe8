@@ -68,7 +68,7 @@ class DriverService:
             status="in_progress",
             delivery_time=None,
         )
-
+        try:
             created_delivery = self.delivery_dao.add_delivery(new_delivery)
             if not created_delivery:
                 raise Exception("Failed to create the delivery in the database.")
