@@ -13,7 +13,7 @@ from src.Model.delivery import Delivery
 from src.Model.driver import Driver
 
 
-class DeliveryService:
+class DriverService:
     def __init__(self, db_connector: DBConnector):
         """
         Initializes the service and injects dependencies into the DAOs.
@@ -33,13 +33,21 @@ class DeliveryService:
 
         self.delivery_dao = DeliveryDAO(db_connector=db_connector, user_dao=self.user_dao, order_dao=self.order_dao)
 
-    def create_delivery(self, order_ids: List[int]) -> Optional[Delivery]:
+    def create_and_assign_delivery(self, order_ids: List[int], driver_id: int) -> Optional[Delivery]:
         """
-        Creates a new delivery run from a list of 'validated' order IDs.
-        The delivery is created with a 'pending' status, awaiting a driver.
+        Creates a new delivery run from a list of 'validated' order IDs and
+        immediately assigns it to the specified available driver.
+        The delivery status is set directly to 'in_progress'.
         """
         if not order_ids:
             raise ValueError("Cannot create a delivery with no orders.")
+
+        driver = self.user_dao.find_user_by_id(driver_id)
+        if not driver or not isinstance(driver, Driver):
+            raise ValueError(f"No valid driver found with ID {driver_id}")
+
+        if not driver.availability:
+            raise ValueError(f"Driver {driver.name} is not available to start a new delivery.")
 
         orders = []
         for order_id in order_ids:
@@ -50,39 +58,19 @@ class DeliveryService:
                 raise ValueError(f"Order {order_id} is not validated. Current status: {order.status}")
             orders.append(order)
 
-        # The delivery is created without a driver and awaits assignment
-        new_delivery = Delivery(driver=None, orders=orders, status="pending", delivery_time=None)
+        new_delivery = Delivery(
+            driver=driver,
+            orders=orders,
+            status="in_progress",
+            delivery_time=None,
+        )
 
         created_delivery = self.delivery_dao.add_delivery(new_delivery)
+
         if not created_delivery:
-            raise Exception("Failed to create the delivery in the database.")
+            raise Exception("Failed to create and assign the delivery in the database.")
+
         return created_delivery
-
-    def assign_driver_to_delivery(self, delivery_id: int, driver_id: int) -> Optional[Delivery]:
-        """
-        Assigns an available driver to a pending delivery and sets its status to 'in_progress'.
-        """
-        delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
-        if not delivery:
-            raise ValueError(f"No delivery found with ID {delivery_id}.")
-
-        if delivery.status != "pending":
-            raise ValueError(f"Delivery is not pending. Current status: {delivery.status}")
-
-        driver = self.user_dao.find_user_by_id(driver_id)
-        if not driver or not isinstance(driver, Driver):
-            raise ValueError(f"No valid driver found with ID {driver_id}")
-
-        if not driver.availability:
-            raise ValueError(f"Driver {driver.name} is not available.")
-
-        delivery.driver = driver
-        delivery.status = "in_progress"
-
-        if not self.delivery_dao.update_delivery(delivery):
-            raise Exception("Failed to update delivery with new driver.")
-
-        return delivery
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """

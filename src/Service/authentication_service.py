@@ -15,7 +15,7 @@ class AuthenticationService:
 
     def login(self, username: str, password: str) -> Customer:
         """
-        Authenticates a user (Customer) with username/password using manual salt verification.
+        Authenticates a user with username/password using manual salt verification.
         """
         user = self.user_dao.find_user_by_username(username)
         if not user:
@@ -42,7 +42,7 @@ class AuthenticationService:
 
         hashed_password = self.password_service.hash_password(password, salt)
 
-        new_user = Customer(username=username, password=hashed_password, salt=salt, phone_number=phone_number)
+        new_user = Customer(username=username, hash_password=hashed_password, salt=salt, phone_number=phone_number)
         self.user_dao.add_user(new_user)
 
         return new_user
