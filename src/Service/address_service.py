@@ -17,7 +17,7 @@ class AddressService:
         street_name: str,
         street_number: int = None,
         city: str,
-        postal_code: str,
+        postal_code: int,
         extra_info: str = None,
     ) -> Optional[Address]:
         """
