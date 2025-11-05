@@ -1,4 +1,5 @@
 import urllib
+import urllib.parse
 
 import requests
 from dotenv import load_dotenv
@@ -29,60 +30,41 @@ class ApiMapsService:
     def __init__(self) -> None:
         self.delivery_dao = DeliveryDAO()
 
-        
-
-    def Driveritinerary(destination, waypoints=[]):
+    def Driveritinerary(waypoints=[]):
+        """
+        Give an itinerary that starts and finishes at ENSAI and goes through all the waypoints.
+        """
         API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
         origin = "51 Rue Blaise Pascal, Bruz, France"
-        if waypoints != []:
-            url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={API_KEY}"
+        destination = "51 Rue Blaise Pascal, Bruz, France"
 
-            response = requests.get(url)
-            data = response.json()
-            if data["status"] == "OK":
-                route = data["routes"][0]
-                legs = route.get("legs", [])
-                maps_url = (
-                    "https://www.google.com/maps/dir/?api=1"
-                    f"&origin={urllib.parse.quote(origin)}"
-                    f"&destination={urllib.parse.quote(destination)}"
-                    f"&waypoints={'|'.join([urllib.parse.quote(w) for w in waypoints])}"
-                )
-                total_distance_m = sum(leg["distance"]["value"] for leg in legs)
-                total_duration_s = sum(leg["duration"]["value"] for leg in legs)
-                total_distance_km = total_distance_m / 1000
-                hours, remainder = divmod(total_duration_s, 3600)
-                minutes, seconds = divmod(remainder, 60)
+        encoded_origin = urllib.parse.quote_plus(origin)
+        encoded_destination = urllib.parse.quote_plus(destination)
+        encoded_waypoints = "%7C".join(urllib.parse.quote_plus(w) for w in waypoints)
 
-                print(f"Distance totale : {total_distance_km:.2f} km")
-                print(f"Durée totale : {hours}h {minutes}min {seconds}s")
-                print("Lien Google Maps :", maps_url)
-            else:
-                print("Erreur :", data["status"])
+        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={API_KEY}"
 
+        response = requests.get(url)
+        data = response.json()
+        if data["status"] == "OK":
+            route = data["routes"][0]
+            legs = route.get("legs", [])
+            maps_url = (
+                "https://www.google.com/maps/dir/?api=1"
+                f"&origin={encoded_origin}"
+                f"&destination={encoded_destination}"
+                f"&waypoints={encoded_waypoints}"
+            )
+            total_distance_m = sum(leg["distance"]["value"] for leg in legs)
+            total_duration_s = sum(leg["duration"]["value"] for leg in legs)
+            total_distance_km = total_distance_m / 1000
+            hours, remainder = divmod(total_duration_s, 3600)
+            minutes, seconds = divmod(remainder, 60)
+
+            print(f"Distance totale : {total_distance_km:.2f} km")
+            print(f"Durée totale : {hours}h {minutes}min {seconds}s")
+            print("Lien Google Maps :", maps_url)
         else:
-            url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key={API_KEY}"
+            print("Erreur :", data["status"])
 
-            response = requests.get(url)
-            data = response.json()
-            if data["status"] == "OK":
-                route = data["routes"][0]
-                legs = route.get("legs", [])
-                maps_url = (
-                    "https://www.google.com/maps/dir/?api=1"
-                    f"&origin={urllib.parse.quote(origin)}"
-                    f"&destination={urllib.parse.quote(destination)}"
-                )
-                total_distance_m = sum(leg["distance"]["value"] for leg in legs)
-                total_duration_s = sum(leg["duration"]["value"] for leg in legs)
-                total_distance_km = total_distance_m / 1000
-                hours, remainder = divmod(total_duration_s, 3600)
-                minutes, seconds = divmod(remainder, 60)
-
-                print(f"Distance totale : {total_distance_km:.2f} km")
-                print(f"Durée totale : {hours}h {minutes}min {seconds}s")
-                print("Lien Google Maps :", maps_url)
-            else:
-                print("Erreur :", data["status"])
-
-    Driveritinerary("18 Rue Charles Coudé, Bruz, France", waypoints=["17 Rue Jules lallemand, Rennes, France"])
+    Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France","18 Rue Charles Coudé, Bruz, France"])
