@@ -40,19 +40,19 @@ class CustomerMainView:
             else:
                 print("Invalid choice.")
 
-    # === 1) Add item to order ===
+    # === 1) Add Item to Order ===
     def add_item_to_order(self):
         while True:
-            print("\n1) Discounted Bundle")
+            print("\n1) Regular Bundle")
             print("2) Special Bundle")
             print("3) Single Item")
             print("q) Back")
             choice = input("Choice: ").strip().lower()
 
             if choice == "1":
-                self._choose_discounted_bundle()
+                self._choose_regular_bundle()
             elif choice == "2":
-                self._choose_predefined_bundle()
+                self._choose_special_bundle()
             elif choice == "3":
                 self._choose_single_item()
             elif choice == "q":
@@ -60,10 +60,11 @@ class CustomerMainView:
             else:
                 print("Invalid choice.")
 
-    def _choose_predefined_bundle(self):
+    # === Regular Bundle = DiscountedBundle ===
+    def _choose_regular_bundle(self):
         try:
             bundles = self.item_service.list_bundles()
-            regular_bundles = [b for b in bundles if isinstance(b, PredefinedBundle)]
+            regular_bundles = [b for b in bundles if isinstance(b, DiscountedBundle)]
         except Exception as e:
             print(f"[ERROR] Cannot fetch bundles: {e}")
             return
@@ -74,15 +75,62 @@ class CustomerMainView:
 
         print("\n=== Regular Bundles ===")
         for idx, b in enumerate(regular_bundles, start=1):
-            print(f"{idx}) {b.name} — {b.price:.2f}€")
+            print(f"{idx}) {b.name} — {b.discount * 100:.0f}% off")
 
         try:
             idx = int(input("Select bundle number: ").strip()) - 1
             selected_bundle = regular_bundles[idx]
 
-            # User chooses items matching required types
+            # L'utilisateur choisit un item pour chaque type requis
             chosen_items = []
-            for req_type in {i.item_type for i in selected_bundle.composition}:
+            for req_type in selected_bundle.required_item_types:
+                items_of_type = [i for i in self.item_service.list_items() if i.item_type == req_type]
+                if not items_of_type:
+                    print(f"No items available for type '{req_type}'")
+                    return
+                print(f"\nChoose an item of type '{req_type}':")
+                for j, it in enumerate(items_of_type, start=1):
+                    print(f"{j}) {it.name} — {it.price:.2f}€")
+                choice = int(input("Choice: ").strip()) - 1
+                chosen_items.append(items_of_type[choice])
+
+            new_bundle = DiscountedBundle(
+                id_bundle=len(self.cart) + 1,
+                name=selected_bundle.name,
+                composition=chosen_items,
+                required_item_types=selected_bundle.required_item_types,
+                discount=selected_bundle.discount,
+            )
+            self.cart.append(new_bundle)
+            print(f"[SUCCESS] Added '{new_bundle.name}' to cart ({new_bundle.compute_price():.2f}€).")
+        except Exception as e:
+            print(f"[ERROR] {e}")
+
+    # === Special Bundle = PredefinedBundle ===
+    def _choose_special_bundle(self):
+        try:
+            bundles = self.item_service.list_bundles()
+            special_bundles = [b for b in bundles if isinstance(b, PredefinedBundle)]
+        except Exception as e:
+            print(f"[ERROR] Cannot fetch bundles: {e}")
+            return
+
+        if not special_bundles:
+            print("No special bundles available.")
+            return
+
+        print("\n=== Special Bundles ===")
+        for idx, b in enumerate(special_bundles, start=1):
+            price = getattr(b, "price", 0)
+            print(f"{idx}) {b.name} — {price:.2f}€")
+
+        try:
+            idx = int(input("Select bundle number: ").strip()) - 1
+            selected_bundle = special_bundles[idx]
+
+            # Choix des items selon item_type dans le bundle
+            chosen_items = []
+            for req_type in [i.item_type for i in selected_bundle.composition]:
                 items_of_type = [i for i in self.item_service.list_items() if i.item_type == req_type]
                 print(f"\nChoose an item of type '{req_type}':")
                 for j, it in enumerate(items_of_type, start=1):
@@ -98,34 +146,11 @@ class CustomerMainView:
                 availability=True,
             )
             self.cart.append(new_bundle)
-            print(f"[SUCCESS] Added '{new_bundle.name}' to cart.")
+            print(f"[SUCCESS] Added '{new_bundle.name}' to cart ({new_bundle.compute_price():.2f}€).")
         except Exception as e:
             print(f"[ERROR] {e}")
 
-    def _choose_discounted_bundle(self):
-        try:
-            bundles = self.item_service.list_bundles()
-            special_bundles = [b for b in bundles if isinstance(b, DiscountedBundle)]
-        except Exception as e:
-            print(f"[ERROR] Cannot fetch bundles: {e}")
-            return
-
-        if not special_bundles:
-            print("No special bundles available.")
-            return
-
-        print("\n=== Special Bundles ===")
-        for idx, b in enumerate(special_bundles, start=1):
-            print(f"{idx}) {b.name} — -({b.discount * 100}%)")
-
-        try:
-            idx = int(input("Select bundle number: ").strip()) - 1
-            bundle = special_bundles[idx]
-            self.cart.append(bundle)
-            print(f"[SUCCESS] Added '{bundle.name}' to cart.")
-        except Exception as e:
-            print(f"[ERROR] {e}")
-
+    # === Single Item = OneItemBundle ===
     def _choose_single_item(self):
         try:
             items = self.item_service.list_items()
@@ -154,7 +179,7 @@ class CustomerMainView:
         except Exception as e:
             print(f"[ERROR] {e}")
 
-    # === 2) Check order ===
+    # === 2) Check Order ===
     def check_order(self):
         if not self.cart:
             print("Your cart is empty.")
@@ -167,7 +192,6 @@ class CustomerMainView:
             total += price
             print(f"{idx}) {b.name} — {price:.2f}€ ({b.__class__.__name__})")
 
-        print(f"Total: {total:.2f}€")
         print("Enter number to remove item, or press Enter to return.")
         choice = input("Choice: ").strip()
         if choice.isdigit():
@@ -176,7 +200,7 @@ class CustomerMainView:
                 removed = self.cart.pop(idx)
                 print(f"[INFO] Removed '{removed.name}' from order.")
 
-    # === 3) Validate order ===
+    # === 3) Validate Order ===
     def validate_order(self):
         if not self.cart:
             print("Your cart is empty.")
