@@ -51,23 +51,24 @@ class AdminUserService:
     def create_driver_account(
         self, username: str, password: str, name: str, phone_number: str, vehicle_type: str
     ) -> Driver:
-        """
-        Validates and creates a new Driver account.
-        'mail' from skeleton is 'username'. 'phone_number' and 'vehicle_type' are required.
-        """
-        if not username or not password or not name:
-            raise ValueError("Username, password, and name are required.")
+        if not username or not password or not name or not phone_number:
+            raise ValueError("Username, password, name, and phone number are required.")
         if not vehicle_type:
             raise ValueError("Vehicle type is required for a driver.")
 
-        if self.user_dao.find_user_by_username(username):
+        existing_user = self.user_dao.find_user_by_username(username)
+        if existing_user:
             raise ValueError(f"Username '{username}' already exists.")
 
-        # The DAO's add_user for drivers sets default availability
+        self.password_service.check_password_strength(password)
+        salt = self.password_service.create_salt()
+        hash_password = self.password_service.hash_password(password, salt)
+
         new_driver = Driver(
             username=username,
-            password=password,
+            hash_password=hash_password,
             name=name,
+            salt=salt,
             phone_number=phone_number,
             vehicle_type=vehicle_type,
         )
