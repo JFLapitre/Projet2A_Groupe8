@@ -68,13 +68,8 @@ class ApiMapsService:
         else:
             print("Erreur :", data["status"])
 
-<<<<<<< HEAD
 
 ApiMapsService. Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France","18 Rue Charles Coudé, Bruz, France"])
-=======
-    Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France", "18 Rue Charles Coudé, Bruz, France"])
-
->>>>>>> 344fcd7c3bfd1ff5d0a8323fbd7b6de863677f39
 
 delivery = delivery_dao.find_delivery_by_id(1)
 
@@ -84,12 +79,8 @@ addresses = [
 
 ]
 
-<<<<<<< HEAD
 print(addresses) 
 
 db_connector = DBConnector()
 service = DriverService(db_connector)
 service.create_and_assign_delivery([3], 3)
-=======
-print(addresses)
->>>>>>> 344fcd7c3bfd1ff5d0a8323fbd7b6de863677f39
