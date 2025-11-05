@@ -9,4 +9,3 @@ class Address(BaseModel):
     postal_code: int
     street_name: str
     street_number: Optional[int] = None
-    extra_info: Optional[str] = None
