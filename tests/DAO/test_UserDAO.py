@@ -77,6 +77,7 @@ class MockDBConnector:
         return_type: Union[Literal["one"], Literal["all"], None] = "one",
     ):
         q = " ".join(query.lower().split())
+
         # to find user by id
         if "from fd.user" in q and "where u.id_user" in q:
             id_user = data.get("id_user")
@@ -84,6 +85,7 @@ class MockDBConnector:
                 if u["id_user"] == id_user:
                     return u
             return None
+
         # to find user by username
         if "from fd.user" in q and "where u.username" in q:
             username = data.get("username")
@@ -91,6 +93,7 @@ class MockDBConnector:
                 if u["username"] == username:
                     return u
             return None
+
         # to find all users
         if "from fd.user" in q and "left join" in q and "where" not in q:
             if return_type == "all":
@@ -108,27 +111,64 @@ class MockDBConnector:
 
         # to add user
         if q.startswith("insert into fd.user"):
+            new_id = self.next_id
+            user_type = data.get("user_type")
+
             new_user = {
-                "id_user": self.next_id,
-                "user_type": data.get("user_type"),
+                "id_user": new_id,
+                "user_type": user_type,
                 "username": data.get("username"),
                 "password": data.get("password"),
-                "customer_name": data.get("username"),
                 "sign_up_date": date.today(),
-                "name": data.get("username"),
-                "customer_phone": "0000000000",
-                "driver_name": None,
-                "driver_phone": None,
-                "vehicle_type": None,
-                "availability": None,
-                "admin_name": None,
-                "admin_phone": None,
                 "salt": "random_salt",
                 "hash_password": "random_hash",
+                "customer_name": None, "customer_phone": None,
+                "driver_name": None, "driver_phone": None, "vehicle_type": None, "availability": False,
+                "admin_name": None, "admin_phone": None,
             }
+
+            if user_type == "driver":
+                new_user["driver_name"] = "Default Driver Name"
+                new_user["driver_phone"] = "0000000000"
+                new_user["vehicle_type"] = "Car"
+            if user_type == "customer":
+                new_user["customer_name"] = "Default Customer Name"
+                new_user["customer_phone"] = "0000000000"
+            if user_type == "admin":
+                new_user["admin_name"] = "Default Admin Name"
+                new_user["admin_phone"] = "0000000000"
+
             self.users.append(new_user)
             self.next_id += 1
+
             return {"id_user": new_user["id_user"]}
+
+        if q.startswith("insert into fd.driver"):
+            id_user = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == id_user:
+                    u["driver_name"] = data.get("name")
+                    u["driver_phone"] = data.get("phone_number")
+                    u["vehicle_type"] = data.get("vehicle_type")
+                    u["availability"] = data.get("availability") 
+            return None
+
+        if q.startswith("insert into fd.customer"):
+            id_user = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == id_user:
+                    u["customer_name"] = data.get("name")
+                    u["customer_phone"] = data.get("phone_number")
+            return None
+
+        if q.startswith("insert into fd.admin"):
+            id_user = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == id_user:
+                    u["admin_name"] = data.get("name")
+                    u["admin_phone"] = data.get("phone_number")
+            return None
+
         # to update user
         if "update fd.user" in q:
             if not data:
@@ -148,14 +188,50 @@ class MockDBConnector:
                     u["customer_name"] = data.get("name")
                     u["customer_phone"] = data.get("phone_number")
             return None
+        # to update driver
+        if "update fd.driver" in q:
+            if not data:
+                raise Exception("no data provided")
+            user_id = data.get("id_user")
+            for u in self.users:
+                if u["id_user"] == user_id:
+                    u["driver_name"] = data.get("name")
+                    u["driver_phone"] = data.get("phone_number")
+                    u["vehicle_type"] = data.get("vehicle_type")
+                    u["availability"] = data.get("availability")
+            return None
+        # to update admin
+        if "update fd.admin" in q:
+            if not data:
+                raise Exception("no data provided")
+            user_id = data.get("id_user")
 
-        if q.startswith("delete from fd.user"):
-            id_user = data.get("id_user")
-            self.users = [u for u in self.users if u["id_user"] != id_user]
+            if user_id is not None:
+                user_id = int(user_id)
+
+            for u in self.users:
+                if u["id_user"] == user_id:
+                    u["admin_name"] = data.get("name")
+                    u["admin_phone"] = data.get("phone_number")
             return None
 
-        return None
+        # to delete user
+        if q.startswith("delete from fd.customer"):
+            return None
+        elif q.startswith("delete from fd.driver"):
+            return None
+        elif q.startswith("delete from fd.admin"):
+            return None
 
+        if q.startswith("delete from fd.user"):
+            id_user_to_delete = data.get("id_user")
+
+            if id_user_to_delete is not None:
+                id_user_to_delete = int(id_user_to_delete)
+
+                self.users = [u for u in self.users if u["id_user"] != id_user_to_delete]
+
+        return None
 
 def test_find_user_by_id():
     user_DAO = UserDAO(MockDBConnector())
@@ -177,7 +253,7 @@ def test_find_all():
     user_DAO = UserDAO(MockDBConnector())
     users: list[AbstractUser] = user_DAO.find_all()
     assert users is not None
-    assert isinstance(users, list)  # Vérifie que le résultat est une liste
+    assert isinstance(users, list)
     assert len(users) > 0
 
 
@@ -262,8 +338,7 @@ def test_find_all_filtered_drivers():
     assert drivers[0].username == "driver_bob"
     assert isinstance(drivers[0], Driver)
 
-
-# Error tests
+#Error tests
 def test_find_user_by_id_error():
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
