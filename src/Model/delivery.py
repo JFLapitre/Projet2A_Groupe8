@@ -9,7 +9,7 @@ from src.Model.order import Order
 
 class Delivery(BaseModel):
     id_delivery: Optional[int] = None
-    driver: Driver
+    driver: Optional[Driver]
     orders: list[Order]
     status: str
     delivery_time: Optional[datetime] = None
