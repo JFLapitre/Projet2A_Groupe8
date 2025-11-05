@@ -26,21 +26,32 @@ class ItemDAO:
         raw_all_items = self.db_connector.sql_query("SELECT * FROM fd.item", {}, "all")
         return [Item(**item) for item in raw_all_items]
 
-    def update_item(self, item: Item):
-        self.db_connector.sql_query(
-            "UPDATE fd.item                                      "
-            "   SET name = %(name)s,                             "
-            "       item_type = %(item_type)s,                   "
-            "       price = %(price)s                            "
-            "       description = %(description)s                "
-            "       stock = %(stock)s                            "
-            "       availability = %(availability)s              "
-            " WHERE id_item = %(id_item)s                        "
-            " RETURNING id_item;                                 ",
-            {"id_item": item.id_item, "name": item.name, "item_type": item.item_type, "price": item.price},
-            "one",
+    def update_item(self, item: Item) -> bool:
+        success_indicator = self.db_connector.sql_query(
+            """
+            UPDATE fd.item
+            SET name = %(name)s,
+                item_type = %(item_type)s,
+                price = %(price)s,
+                description = %(description)s,
+                stock = %(stock)s,
+                availability = %(availability)s
+            WHERE id_item = %(id_item)s; 
+            """,
+            {
+                "id_item": item.id_item, 
+                "name": item.name, 
+                "item_type": item.item_type, 
+                "price": item.price,
+                "description": item.description,
+                "stock": item.stock,
+                "availability": item.availability,
+            },
+            return_type=None, 
         )
-        return self.find_item_by_id(item.id_item)
+        if success_indicator is True or success_indicator is False:
+            return success_indicator
+        return True
 
     def add_item(self, item: Item) -> Item:
         raw_created_item = self.db_connector.sql_query(
@@ -61,16 +72,18 @@ class ItemDAO:
         )
         return Item(**raw_created_item)
 
+
     def delete_item(self, id_item: int) -> bool:
-        """Delete an item from the database.
-
-        Args:
-            id_item: The id of the item to delete.
-
-        Returns:
-            bool: True if the deletion suceeded, False otherwise.
-        """
-        res = self.db_connector.sql_query(
-            "DELETE FROM fd.item WHERE id_item = %(id_item)s RETURNING id_item;", {"id_item": id_item}, "one"
+        success_indicator = self.db_connector.sql_query(
+            """
+            DELETE FROM fd.item
+            WHERE id_item = %s;
+            """,
+            (id_item,),
+            return_type=None,
         )
-        return res is not None
+
+        if success_indicator is True or success_indicator is False:
+            return success_indicator
+
+        return True
