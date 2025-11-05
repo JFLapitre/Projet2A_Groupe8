@@ -229,12 +229,13 @@ class CustomerMainView:
                 removed = self.cart.pop(idx)
                 print(f"[INFO] Removed '{removed.name}' from order.")
 
-    # === Validate Order ===
+   # === Validate Order ===
     def validate_order(self):
         if not self.cart:
             print("Your cart is empty.")
             return
 
+        # Demander l'adresse pour chaque commande
         print("\nEnter delivery address details:")
         street_name = input("Street name: ").strip()
         city = input("City: ").strip()
@@ -249,7 +250,7 @@ class CustomerMainView:
             street_number_int = int(street_number) if street_number else None
             postal_code_int = int(postal_code)
 
-            # ✅ Création correcte de l’adresse avec AddressService
+            # Création de l’adresse via AddressService
             address = self.address_service.create_address(
                 street_name=street_name,
                 city=city,
@@ -257,10 +258,22 @@ class CustomerMainView:
                 street_number=street_number_int,
             )
 
-            # ✅ Création de la commande avec l’adresse créée
-            self.order_service.create_order(self.session.user_id, address.id_address, self.cart)
-            print("[SUCCESS] Order confirmed.")
+            # Création de la commande avec cette adresse
+            created_order = self.order_service.create_order(
+                self.session.user_id,
+                address.id_address
+            )
+
+            # Ajouter tous les bundles du panier à la commande
+            for bundle in self.cart:
+                self.order_service.add_bundle_to_order(
+                    created_order.id_order,
+                    bundle.id_bundle
+                )
+
+            print(f"[SUCCESS] Order #{created_order.id_order} confirmed with {len(self.cart)} items.")
             self.cart.clear()
 
         except Exception as e:
             print(f"[ERROR] Cannot confirm order: {e}")
+
