@@ -199,56 +199,62 @@ class UserDAO:
         elif isinstance(user, Admin):
             user_type = "admin"
 
-        result = self.db_connector.sql_query(
-            """
-        INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date)
-        VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
-        RETURNING id_user;
-        """,
-            {
-                "username": user.username,
-                "hash_password": user.hash_password,
-                "salt": user.salt,
-                "user_type": user_type,
-                "sign_up_date": date.today(),
-            },
-            "one",
-        )
-        id_user = result["id_user"]
-        if user_type == "customer":
-            self.db_connector.sql_query(
+        try:
+            result = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.customer (id_user, name, phone_number)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
-                """,
-                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
-                None,
-            )
-        elif user_type == "driver":
-            self.db_connector.sql_query(
-                """
-                INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s, %(vehicle_type)s)
-                """,
+            INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date)
+            VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
+            RETURNING id_user;
+            """,
                 {
-                    "id_user": id_user,
-                    "name": user.name,
-                    "phone_number": user.phone_number,
-                    "vehicle_type": user.vehicle_type,
+                    "username": user.username,
+                    "hash_password": user.hash_password,
+                    "salt": user.salt,
+                    "user_type": user_type,
+                    "sign_up_date": date.today(),
                 },
-                None,
+                "one",
             )
-        elif user_type == "admin":
-            self.db_connector.sql_query(
-                """
-                INSERT INTO fd.admin (id_user, name, phone_number)
-                VALUES (%(id_user)s, %(name)s, %(phone_number)s)
-                """,
-                {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
-                None,
-            )
+            id_user = result["id_user"]
 
-        return self.find_user_by_id(id_user)
+            if user_type == "customer":
+                self.db_connector.sql_query(
+                    """
+                    INSERT INTO fd.customer (id_user, name, phone_number)
+                    VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+                    """,
+                    {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                    None,
+                )
+            elif user_type == "driver":
+                self.db_connector.sql_query(
+                    """
+                    INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability)
+                    VALUES (%(id_user)s, %(name)s, %(phone_number)s, %(vehicle_type)s, %(availability)s)
+                    """,
+                    {
+                        "id_user": id_user,
+                        "name": user.name,
+                        "phone_number": user.phone_number,
+                        "vehicle_type": user.vehicle_type,
+                        "availability": user.availability,
+                    },
+                    None,
+                )
+            elif user_type == "admin":
+                self.db_connector.sql_query(
+                    """
+                    INSERT INTO fd.admin (id_user, name, phone_number)
+                    VALUES (%(id_user)s, %(name)s, %(phone_number)s)
+                    """,
+                    {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
+                    None,
+                )
+
+            return self.find_user_by_id(id_user)
+        except Exception as e:
+            logging.error(f"Failed to add user {user.username}: {e}")
+            return None
 
     def update_user(self, user: Union[Customer, Driver, Admin]) -> Optional[Union[Customer, Driver, Admin]]:
         """Update an existing user"""
