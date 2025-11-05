@@ -1,4 +1,4 @@
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import ANY, MagicMock
 
 import pytest
 
@@ -10,7 +10,7 @@ from src.Model.customer import Customer
 from src.Model.driver import Driver
 
 # Import the service to test
-from src.Service.admin_user_service import AdminUserService  # Adjust this import if needed
+from src.Service.admin_user_service import AdminUserService
 from src.Service.password_service import PasswordService
 
 # --- Fixtures ---
