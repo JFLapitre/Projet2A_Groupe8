@@ -28,9 +28,9 @@ class AuthenticationService:
 
         return user
 
-    def register(self, username: str, password: str, phone_number: str, user_type: str) -> Customer:
+    def register_customer(self, username: str, password: str, phone_number: str) -> Customer:
         """
-        Registers a new user.
+        Registers a new customer.
         The password is first checked for strength, then securely hashed and salted before storage.
         """
         if self.user_dao.find_user_by_username(username):
@@ -39,16 +39,16 @@ class AuthenticationService:
         self.password_service.check_password_strength(password)
 
         salt = self.password_service.create_salt()
-
         hashed_password = self.password_service.hash_password(password, salt)
 
-        new_user = self.user_dao.add_user_raw(
+        new_customer = Customer(
             username=username,
-            password=hashed_password,
-            phone_number=phone_number,
-            user_type=user_type,
+            hash_password=hashed_password,
             salt=salt,
+            phone_number=phone_number,
         )
-        self.user_dao.add_user(new_user)
 
-        return new_user
+        # Enregistre le customer en base
+        created_customer = self.user_dao.add_user(new_customer)
+
+        return created_customer
