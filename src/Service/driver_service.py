@@ -17,8 +17,9 @@ class DriverService:
     def __init__(self, db_connector: DBConnector):
         """
         Initializes the service and injects dependencies into the DAOs.
+        (This part is unchanged, it is well-structured)
         """
-        # Initialisation dans l'ordre de dépendance
+        self.db_connector = db_connector  # Store the connector for transactions
         self.item_dao = ItemDAO(db_connector=db_connector)
         self.user_dao = UserDAO(db_connector=db_connector)
         self.address_dao = AddressDAO(db_connector=db_connector)
@@ -35,9 +36,8 @@ class DriverService:
 
     def create_and_assign_delivery(self, order_ids: List[int], driver_id: int) -> Optional[Delivery]:
         """
-        Creates a new delivery run from a list of 'validated' order IDs and
+        Creates a new delivery run from a list of 'pending' order IDs and
         immediately assigns it to the specified available driver.
-        The delivery status is set directly to 'in_progress'.
         """
         if not order_ids:
             raise ValueError("Cannot create a delivery with no orders.")
@@ -53,9 +53,9 @@ class DriverService:
         for order_id in order_ids:
             order = self.order_dao.find_order_by_id(order_id)
             if not order:
-                raise ValueError(f"Order with ID {order_id} not found.")
+                raise ValueError(f"Order {order_id} not found.")
             if order.status != "pending":
-                raise ValueError(f"Order {order_id} has not the pending status. Current status: {order.status}")
+                raise ValueError(f"Order {order_id} is not in 'pending' status. Current status: {order.status}")
             orders.append(order)
 
         for o in orders:
@@ -69,17 +69,30 @@ class DriverService:
             delivery_time=None,
         )
 
-        created_delivery = self.delivery_dao.add_delivery(new_delivery)
+            created_delivery = self.delivery_dao.add_delivery(new_delivery)
+            if not created_delivery:
+                raise Exception("Failed to create the delivery in the database.")
 
-        if not created_delivery:
-            raise Exception("Failed to create and assign the delivery in the database.")
+            for o in created_delivery.orders:
+                o.status = "in_progress"
+                if not self.order_dao.update_order(o):
+                    raise Exception(f"Failed to update status for order {o.id_order}")
 
-        return created_delivery
+            self.db_connector.commit()
+            logging.info(f"Delivery {created_delivery.id_delivery} created and assigned to driver {driver_id}.")
+            return created_delivery
+
+        except Exception as e:
+            logging.error(f"Failed to create delivery for driver {driver_id}: {e}")
+            self.db_connector.rollback()
+            raise e
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """
-        Marks a delivery as 'completed' and sets the delivery time.
-        This replaces the skeleton 'validate_delivery' method.
+        Marks a delivery as 'completed' and updates the status
+        of all associated orders to 'delivered'.
+
+        This operation is transactional.
         """
         delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
         if not delivery:
@@ -88,24 +101,30 @@ class DriverService:
         if delivery.status != "in_progress":
             raise ValueError(f"Only 'in_progress' deliveries can be completed. Current status: {delivery.status}")
 
-        delivery.status = "completed"
-        delivery.delivery_time = datetime.now()
-
         try:
+            delivery.status = "completed"
+            delivery.delivery_time = datetime.now()
+
+            if not self.delivery_dao.update_delivery(delivery):
+                raise Exception("Failed to update the delivery status.")
             for order in delivery.orders:
                 order.status = "delivered"
-                self.order_dao.update_order(order)
+                if not self.order_dao.update_order(order):
+                    # If one order fails, the whole transaction is rolled back
+                    raise Exception(f"Failed to update status for order {order.id_order}")
+            self.db_connector.commit()
+            logging.info(f"Delivery {delivery_id} completed successfully.")
+            return delivery
+
         except Exception as e:
-            logging.warning(f"Could not update status for orders in delivery {delivery_id}: {e}")
-
-        if not self.delivery_dao.update_delivery(delivery):
-            raise Exception("Failed to update delivery status to completed.")
-
-        return delivery
+            logging.error(f"Failed to complete delivery {delivery_id}: {e}")
+            self.db_connector.rollback()
+            raise e
 
     def get_delivery_details(self, delivery_id: int) -> Optional[Delivery]:
         """
         Retrieves all details for a single delivery.
+        (Logic unchanged, it is simple and correct)
         """
         delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
         if not delivery:
@@ -114,7 +133,7 @@ class DriverService:
 
     def list_pending_deliveries(self) -> List[Delivery]:
         """
-        Returns a list of all deliveries with 'pending' status (awaiting a driver).
+        Returns a list of all deliveries with 'pending' status.
         """
         all_deliveries = self.delivery_dao.find_all_deliveries()
         return [d for d in all_deliveries if d.status == "pending"]

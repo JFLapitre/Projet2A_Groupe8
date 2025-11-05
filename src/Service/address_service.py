@@ -13,12 +13,7 @@ class AddressService:
         self.address_dao = AddressDAO(db_connector=db_connector)
 
     def create_address(
-        self,
-        street_name: str,
-        city: str,
-        postal_code: int,
-        street_number: int = None,
-        extra_info: str = None,
+        self, street_name: str, city: str, postal_code: int, street_number: int = None
     ) -> Optional[Address]:
         """
         Validates the data and creates a new address in the database.
@@ -37,7 +32,6 @@ class AddressService:
             street_number=street_number,
             city=city,
             postal_code=postal_code,
-            extra_info=extra_info,
         )
 
         created_address = self.address_dao.add_address(new_address)

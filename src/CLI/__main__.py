@@ -20,13 +20,16 @@ def _build_services() -> Dict:
             "delivery": getattr(init_app, "delivery_service", None),
             "user": getattr(init_app, "admin_user_service", None),
             "jwt": getattr(init_app, "jwt_service", None),
+            "address": getattr(init_app, "address_service", None),  # ✅ manquant avant
         }
 
+        # Vérifie s’il en manque
         missing = [k for k, v in services.items() if v is None]
         if missing:
             print(f"[WARN] Some services missing: {', '.join(missing)}")
 
         return services
+
     except Exception as e:
         print(f"[ERROR] Failed to import real services: {e}")
         raise
