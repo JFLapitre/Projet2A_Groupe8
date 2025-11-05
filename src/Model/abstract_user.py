@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 
 class AbstractUser(BaseModel, ABC):
-    id_user: int
+    id_user: Optional[int] = None
     username: str
     hash_password: str
     salt: str

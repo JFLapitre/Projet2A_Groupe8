@@ -1,6 +1,7 @@
 # src/CLI/__main__.py
 from typing import Dict
 
+from src.CLI.auth_view import AuthView
 from src.CLI.customer_main import CustomerMainView
 from src.CLI.session import Session
 
@@ -32,8 +33,18 @@ def _build_services() -> Dict:
 
 
 def run_cli():
+    """Lance le CLI complet (auth + menus)."""
     session = Session()
     services = _build_services()
+
+    # Étape 1 — Authentification
+    auth_view = AuthView(session, services)
+    authenticated = auth_view.display()
+    if not authenticated:
+        print("Goodbye.")
+        return
+
+    # Étape 2 — Menu principal (Customer)
     view = CustomerMainView(session, services)
     view.display()
 

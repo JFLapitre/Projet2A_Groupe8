@@ -15,7 +15,7 @@ class AuthenticationService:
 
     def login(self, username: str, password: str) -> Customer:
         """
-        Authenticates a user (Customer) with username/password using manual salt verification.
+        Authenticates a user with username/password using manual salt verification.
         """
         user = self.user_dao.find_user_by_username(username)
         if not user:
@@ -36,11 +36,14 @@ class AuthenticationService:
         if self.user_dao.find_user_by_username(username):
             raise ValueError(f"Username '{username}' already exists.")
 
+        # Vérifie la solidité du mot de passe
         self.password_service.check_password_strength(password)
 
+        # Crée le salt et le hash
         salt = self.password_service.create_salt()
         hashed_password = self.password_service.hash_password(password, salt)
 
+        # Crée l’objet Customer
         new_customer = Customer(
             username=username,
             hash_password=hashed_password,

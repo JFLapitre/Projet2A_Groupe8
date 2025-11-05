@@ -1,7 +1,12 @@
+# src/CLI/auth_view.py
+
 import logging
+from typing import TYPE_CHECKING
 
 from src.CLI.session import Session
-from src.Service.authentication_service import AuthenticationService
+
+if TYPE_CHECKING:
+    from src.Service.authentication_service import AuthenticationService
 
 
 class AuthView:
@@ -12,12 +17,15 @@ class AuthView:
         :param services: dictionnaire optionnel de services, doit contenir 'auth'
         """
         self.session = session
-        self.auth_service = services["auth"] if services and "auth" in services else AuthenticationService()
+        if services and "auth" in services:
+            self.auth_service: AuthenticationService = services["auth"]
+        else:
+            raise ValueError("Auth service must be provided in services dictionary.")
 
-    def display(self):
+    def display(self) -> bool:
         """
-        Affiche l'interface d'authentification.
-        Retourne True si l'utilisateur est maintenant authentifié, False sinon.
+        Affiche le menu d'authentification.
+        Retourne True si l'utilisateur est connecté, False sinon.
         """
         while True:
             print("\n=== EJR Eats — Authentication ===")
@@ -25,17 +33,19 @@ class AuthView:
             print("2) Create a Customer account")
             print("q) Back")
 
-            choice = input("Choice: ").strip()
+            choice = input("Choice: ").strip().lower()
             if choice == "1":
                 if self._login():
                     return True
             elif choice == "2":
                 if self._register():
                     return True
-            elif choice.lower() == "q":
+            elif choice == "q":
                 return False
             else:
                 print("Invalid choice.")
+
+    # -------------------- LOGIN --------------------
 
     def _login(self) -> bool:
         username = input("Username: ").strip()
@@ -46,18 +56,25 @@ class AuthView:
         except ValueError as e:
             print(f"[ERROR] {e}")
             return False
-
-        if user.__class__.__name__.lower() == "admin":
-            print("[INFO] Admins must use the web API interface (not CLI).")
+        except Exception as e:
+            logging.exception("Unexpected error during login:")
+            print(f"[ERROR] Unexpected error: {e}")
             return False
 
-        # Met à jour la session
+        if user.__class__.__name__.lower() == "admin":
+            print("[INFO] Admins must use the web interface.")
+            return False
+
+        # Mise à jour de la session
         self.session.user_id = user.id_user
         self.session.username = user.username
-        self.session.role = user.__class__.__name__
+        self.session.role = user.__class__.__name__.lower()
+        self.session.user = user
 
-        print(f"[SUCCESS] Logged in as {user.username} ({user.__class__.__name__})")
+        print(f"[SUCCESS] Logged in as {user.username} ({self.session.role})")
         return True
+
+    # -------------------- REGISTER --------------------
 
     def _register(self) -> bool:
         print("\n=== Registration ===")
@@ -66,45 +83,19 @@ class AuthView:
         phone_number = input("Phone number: ").strip()
 
         try:
-            # Utilisation générique avec user_type='customer'
-            user = self.auth_service.user_dao.add_user_raw(
-                username=username,
-                password=self.auth_service._hash_function(password),
-                phone_number=phone_number,
-                user_type="customer",
-            )
+            user = self.auth_service.register(username, password, phone_number)
         except ValueError as e:
             print(f"[ERROR] {e}")
             return False
         except Exception as e:
+            logging.exception("Unexpected error during registration:")
             print(f"[ERROR] Registration failed: {e}")
             return False
 
-        # Met à jour la session
         self.session.user_id = user.id_user
         self.session.username = user.username
-        self.session.role = user.__class__.__name__
+        self.session.role = user.__class__.__name__.lower()
+        self.session.user = user
 
         print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
         return True
-
-        print("\n=== Registration ===")
-        username = input("Username: ").strip()
-        password = input("Password: ").strip()
-
-        try:
-            user = self.auth_service.register(username=username, password=password)
-        except ValueError as e:
-            print(f"[ERROR] {e}")
-            return False
-        except Exception as e:
-            print(f"[ERROR] Registration failed: {e}")
-            return False
-
-            # Met à jour la session avec le nouvel utilisateur
-            self.session.user_id = user.id_user
-            self.session.username = user.username
-            self.session.role = user.__class__.__name__
-
-            print(f"[SUCCESS] Customer '{user.username}' registered successfully.")
-            return True
