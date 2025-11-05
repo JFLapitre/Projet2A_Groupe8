@@ -46,7 +46,7 @@ class OrderService:
         new_order = Order(
             customer=customer,
             address=address,
-            bundles=[],  # Starts empty
+            bundles=[],
             status="pending",
             order_date=datetime.now(),
         )
@@ -86,10 +86,12 @@ class OrderService:
         if not bundle:
             raise ValueError(f"No bundle found with ID {bundle_id}.")
 
+        not_available = []
         for item in bundle.composition:
-            not_available = []
             if not item.availability:
                 not_available.append(item.name)
+
+        if not_available:
             raise ValueError(
                 f"Bundle '{bundle.name}' is unavailable because items in the list '{not_available}' are not available."
             )
