@@ -7,6 +7,7 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
+from src.Service.admin_order_service import AdminOrderService
 from src.Service.admin_user_service import AdminUserService
 from src.Service.authentication_service import AuthenticationService
 from src.Service.JWTService import JwtService
@@ -25,3 +26,4 @@ jwt_service = JwtService()
 password_service = PasswordService()
 auth_service = AuthenticationService(db_connector=db_connector, password_service=password_service)
 admin_user_service = AdminUserService(db_connector=db_connector, password_service=password_service)
+admin_order_service = AdminOrderService(delivery_dao=delivery_dao, order_dao=order_dao)

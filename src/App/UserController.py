@@ -17,7 +17,7 @@ user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
-def create_user(username: str, password: str, name: str, phone_number: str) -> APIUser:
+def create_admin_user(username: str, password: str, name: str, phone_number: str) -> APIUser:
     """
     Performs validation on the username and password
     """
@@ -71,4 +71,40 @@ def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIU
     user: User | None = user_dao.find_user_by_id(id_user)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return APIUser(id_user=user.id_user, username=user.username)
+
+@user_router.post("/driver", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
+def create_driver_user(
+    username: str, password: str, name: str, phone_number: str, vehicle_type: str
+) -> APIUser:
+    """
+    Performs validation and creates a new Driver account.
+    This route requires an existing Admin to be authenticated.
+    """
+    try:
+        password_service.check_password_strength(password=password)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Password too weak") from Exception
+
+    try:
+        user: User = admin_user_service.create_driver_account(
+            username=username,
+            password=password,
+            name=name,
+            phone_number=phone_number,
+            vehicle_type=vehicle_type,
+        )
+
+    except ValueError as error:
+        # Attrape l'erreur si le nom d'utilisateur est déjà pris ou si un champ requis est manquant
+        raise HTTPException(status_code=409, detail=f"Conflict: {error}") from error
+
+    except Exception as e:
+        print(f"An unintended error occured: {type(e).__name__}: {e}")
+        import traceback
+
+        traceback.print_exc()
+        # Lève une erreur 500 et inclut le traceback pour le diagnostic (bonne pratique de débogage)
+        raise HTTPException(status_code=500, detail="Internal Server Error, check logs") from e
+
     return APIUser(id_user=user.id_user, username=user.username)
