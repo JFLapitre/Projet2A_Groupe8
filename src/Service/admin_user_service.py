@@ -26,7 +26,6 @@ class AdminUserService:
             raise ValueError("Username, password, and name are required.")
 
         existing_user = self.user_dao.find_user_by_username(username)
-        print(f"DEBUG: Résultat de la recherche pour '{username}': {existing_user}")
 
         if existing_user:
             raise ValueError(f"Username '{username}' already exists.")
@@ -42,9 +41,7 @@ class AdminUserService:
             salt=salt,
             phone_number=phone_number,
         )
-        print(f"DEBUG: L'admin qui va être ajouté est {new_admin.username}")
         created_user = self.user_dao.add_user(new_admin)
-        print(f"DEBUG: L'admin qui a été ajouté est {created_user.username}")
 
         if not created_user or not isinstance(created_user, Admin):
             raise Exception("Failed to create admin account in the database.")
