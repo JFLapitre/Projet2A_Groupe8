@@ -67,7 +67,8 @@ class ApiMapsService:
         else:
             print("Erreur :", data["status"])
 
-    Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France","18 Rue Charles Coudé, Bruz, France"])
+    Driveritinerary(waypoints=["17 Rue Jules lallemand, Rennes, France", "18 Rue Charles Coudé, Bruz, France"])
+
 
 delivery = delivery_dao.find_delivery_by_id(1)
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Literal, Optional, Union
 
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
-from src.Model.driver import Driver 
+from src.Model.driver import Driver
 from src.Model.admin import Admin
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class MockDBConnector:
                 "salt": "random_salt",
             },
             {
-                "id_user": 2, # Assurez-vous d'utiliser un nouvel ID
+                "id_user": 2,  # Assurez-vous d'utiliser un nouvel ID
                 "user_type": "driver",
                 "username": "driver_bob",
                 "password": "driverHashedPassword",
@@ -66,8 +66,8 @@ class MockDBConnector:
                 "admin_phone": "9999999999",
                 "hash_password": "random_admin_hash",
                 "salt": "random_admin_salt",
-            }
-]
+            },
+        ]
         self.next_id = 4
 
     def sql_query(
@@ -97,7 +97,7 @@ class MockDBConnector:
                 return self.users
             else:
                 return self.users[0]
-        
+
         if "from fd.user" in q and "left join" in q and "where u.user_type" in q:
             user_type = data.get("user_type")
             filtered_users = [u for u in self.users if u["user_type"] == user_type]
@@ -202,6 +202,7 @@ def test_add_user():
     assert added_user.id_user != 0
     assert any(u["username"] == "alice" for u in mock_db.users)
 
+
 def test_update_user():
     mock_db = MockDBConnector()
     user_DAO = UserDAO(mock_db)
@@ -217,7 +218,7 @@ def test_update_user():
         password="newSecret",
         sign_up_date=date.today(),
         name="Jean Updated",
-        phone_number="0000000001"
+        phone_number="0000000001",
     )
 
     user_DAO.update_user(updated_user)
@@ -230,6 +231,7 @@ def test_update_user():
     assert modified_user.phone_number == "0000000001"
     assert modified_user.salt == "random_salt"
     assert modified_user.hash_password == "newSecret"
+
 
 def test_delete_user():
     mock_db = MockDBConnector()
@@ -251,15 +253,17 @@ def test_delete_user():
     final_count = len(mock_db.users)
     assert final_count == initial_count - 1
 
+
 def test_find_all_filtered_drivers():
     user_DAO = UserDAO(MockDBConnector())
     drivers = user_DAO.find_all(user_type="driver")
-    
+
     assert len(drivers) == 1
     assert drivers[0].username == "driver_bob"
     assert isinstance(drivers[0], Driver)
 
-#Error tests
+
+# Error tests
 def test_find_user_by_id_error():
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
@@ -271,8 +275,10 @@ def test_find_user_by_id_error():
     user = user_DAO.find_user_by_id(1)
     assert user is None
 
+
 def test_find_user_by_username_error():
     """Test the error handling in find_user_by_username."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "where u.username" in query.lower():
@@ -283,8 +289,10 @@ def test_find_user_by_username_error():
     user = user_DAO.find_user_by_username("janjak")
     assert user is None
 
+
 def test_find_all_error():
     """Test the error handling in find_all."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "from fd.user" in query.lower() and return_type == "all":
@@ -296,8 +304,10 @@ def test_find_all_error():
     users = user_DAO.find_all()
     assert users == []
 
+
 def test_update_user_error():
     """Test the error handling in update_user."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if "update fd.user" in query.lower():
@@ -310,8 +320,10 @@ def test_update_user_error():
     updated_user = user_DAO.update_user(error_user)
     assert updated_user is None
 
+
 def test_delete_user_error():
     """Test the error handling in delete_user."""
+
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
             if query.lower().startswith("delete from fd.user"):

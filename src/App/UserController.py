@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 
+from .auth import admin_required
 from .init_app import admin_user_service, auth_service, jwt_service, password_service, user_dao
 from .JWTBearer import JWTBearer
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@user_router.post("/", status_code=status.HTTP_201_CREATED)
+@user_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
 def create_user(username: str, password: str, name: str, phone_number: str) -> APIUser:
     """
     Performs validation on the username and password
@@ -31,17 +32,13 @@ def create_user(username: str, password: str, name: str, phone_number: str) -> A
         )
 
     except ValueError as error:
-        # N'attrape QUE la ValueError (levée si l'utilisateur existe)
         raise HTTPException(status_code=409, detail=f"Conflict: {error}") from error
 
     except Exception as e:
-        # ATTRAPE LA VRAIE ERREUR (TypeError, etc.) ET LA LOGGE
-        print(f"UNE ERREUR INATTENDUE EST SURVENUE: {type(e).__name__}: {e}")
-        # Affiche le traceback complet dans la console
+        print(f"An unintended error occured: {type(e).__name__}: {e}")
         import traceback
 
         traceback.print_exc()
-        # Renvoie une erreur 500 (Erreur Interne)
         raise HTTPException(status_code=500, detail="Internal Server Error, check logs") from e
 
     return APIUser(id_user=user.id_user, username=user.username)
@@ -74,4 +71,4 @@ def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIU
     user: User | None = user_dao.find_user_by_id(id_user)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return APIUser(id=user.id, username=user.username)
+    return APIUser(id_user=user.id_user, username=user.username)
