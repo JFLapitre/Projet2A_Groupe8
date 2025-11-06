@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from src.DAO.addressDAO import AddressDAO
+from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.userDAO import UserDAO
@@ -13,9 +14,10 @@ from src.Model.order import Order
 
 class OrderDAO(BaseModel):
     db_connector: DBConnector
+    item_dao: ItemDAO
     user_dao: UserDAO
     address_dao: AddressDAO
-    item_dao: ItemDAO
+    bundle_dao: BundleDAO
 
     class Config:
         arbitrary_types_allowed = True

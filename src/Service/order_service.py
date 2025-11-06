@@ -27,6 +27,7 @@ class OrderService:
             db_connector=db_connector,
             user_dao=self.user_dao,
             address_dao=self.address_dao,
+            item_dao=self.item_dao,
             bundle_dao=self.bundle_dao,
         )
 
