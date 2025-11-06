@@ -17,17 +17,24 @@ class DriverMainView(AbstractView):
 
         while True:
             print("\n=== EJR Eats — Driver Menu ===")
-            print("1) View pending deliveries")
-            print("2) Assign myself to a delivery")
-            print("3) Mark delivery as completed")
+            print("1) View pending order")
+            print("2) Create delivery")
+            print("3) Get itinerary")
+            print("4) Get delivery details")
+            print("5) Mark delivery as completed")
+
             print("q) Logout")
             choice = self.prompt("Choice: ")
 
             if choice == "1":
-                self._view_pending_deliveries()
+                self._view_pending_order()
             elif choice == "2":
                 self._assign_delivery()
             elif choice == "3":
+                self._get_itinerary()
+            elif choice == "4":
+                self._get_delivery_details()
+            elif choice == "5":
                 self._complete_delivery()
             elif choice.lower() == "q":
                 self.session.logout()
@@ -36,26 +43,36 @@ class DriverMainView(AbstractView):
             else:
                 self.print_error("Invalid choice.")
 
-    def _view_pending_deliveries(self):
-        delivery_service = self.services.get("delivery")
+    def _view_pending_order(self):
+        driver_service = self.services.get("driver")
         try:
-            deliveries = delivery_service.list_pending_deliveries()
-            if not deliveries:
-                print("No pending deliveries.")
+            orders = driver_service.list_pending_orders()
+            if not orders:
+                print("No pending orders.")
                 return
-            for d in deliveries:
-                print(f"Delivery #{d.id_delivery} - Status: {d.status} - Orders: {[o.id_order for o in d.orders]}")
+            for o in orders:
+                print(f"Order #{o.id_order} - Status: {o.status}")
         except Exception as e:
-            self.print_error(f"Error retrieving deliveries: {e}")
+            self.print_error(f"Error retrieving orders: {e}")
 
     def _assign_delivery(self):
-        delivery_service = self.services.get("delivery")
-        delivery_id = int(self.prompt("Delivery ID to take: "))
+        driver_service = self.services.get("driver")
+        order_ids= list(self.prompt("Orders ID to take: "))
         try:
-            delivery_service.assign_driver_to_delivery(delivery_id, self.session.user_id)
-            self.print_info(f"Assigned to delivery #{delivery_id}.")
+            new_del=driver_service.create_and_assign_delivery(order_ids, self.session.user_id)
+            self.print_info(f"Assigned to delivery #{new_del.id_delivery}.")
         except Exception as e:
             self.print_error(f"Assignment failed: {e}")
+            new_del=driver_service.create_and_assign_delivery(order_ids, self.session.user_id)
+
+    def _get_itinerary(self):
+        driver_service = self.services.get("driver")
+        driver_service.get_itinerary(self.session.user_id)
+
+    def _get_delivery_details(self):
+        driver_service = self.services.get("driver")
+        delivery_id= int(self.prompt("Which Delivery ID :"))
+        print(driver_service.get_delivery_details(delivery_id))
 
     def _complete_delivery(self):
         delivery_service = self.services.get("delivery")

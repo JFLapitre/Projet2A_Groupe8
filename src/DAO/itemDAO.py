@@ -56,7 +56,7 @@ class ItemDAO:
     def add_item(self, item: Item) -> Item:
         raw_created_item = self.db_connector.sql_query(
             """
-        INSERT INTO item (id_item, name, item_type, price, description, stock, availability)
+        INSERT INTO "item" (id_item, name, item_type, price, description, stock, availability)
         VALUES (DEFAULT, %(name)s, %(item_type)s, %(price)s, %(description)s, %(stock)s, %(availability)s)
         RETURNING *;
         """,

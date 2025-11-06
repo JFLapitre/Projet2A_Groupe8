@@ -1,10 +1,11 @@
 # src/CLI/__main__.py
+
 from typing import Dict
 
 from src.CLI.auth_view import AuthView
 from src.CLI.customer_main import CustomerMainView
 from src.CLI.session import Session
-
+from src.CLI.driver_main import DriverMainView
 
 def _build_services() -> Dict:
     """Charge les vrais services depuis src.init_app"""
@@ -21,6 +22,7 @@ def _build_services() -> Dict:
             "user": getattr(init_app, "admin_user_service", None),
             "jwt": getattr(init_app, "jwt_service", None),
             "address": getattr(init_app, "address_service", None),
+            "driver": getattr(init_app, "driver_service", None),
         }
 
         # Vérifie s’il en manque
@@ -47,9 +49,14 @@ def run_cli():
         print("Goodbye.")
         return
 
-    # Étape 2 — Menu principal (Customer)
-    view = CustomerMainView(session, services)
-    view.display()
+    if session.role == "customer":
+        view = CustomerMainView(session, services)
+        view.display()
+
+    if session.role == "driver":
+        view = DriverMainView(session, services)
+        view.display()
+
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ CREATE TABLE fd.address (
     city VARCHAR(20) NOT NULL,
     postal_code VARCHAR(5) NOT NULL,
     street_name VARCHAR(50) NOT NULL,
-    street_number VARCHAR(5) NOT NULL
+    street_number VARCHAR(10) NOT NULL
 );
 
 

@@ -94,10 +94,7 @@ class AdminMenuService:
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")
 
-    def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
-        """
-        ValidTates and creates a new bundle containing only one item.
-        """
+    """def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
         if price <= 0:
             raise ValueError("Price must be positive.")
         if not item:
@@ -106,7 +103,7 @@ class AdminMenuService:
         new_bundle = OneItemBundle(name=name, description=description, price=price, composition=item)
         created_bundle = self.bundle_dao.add_one_item_bundle(new_bundle)
         if not created_bundle:
-            raise Exception(f"Failed to create one-item bundle: {name}")
+            raise Exception(f"Failed to create one-item bundle: {name}")"""
 
     def create_discounted_bundle(self, name: str, description: str, required_item_types: list, discount: float) -> None:
         """

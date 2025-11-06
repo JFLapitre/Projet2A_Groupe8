@@ -13,6 +13,6 @@ class Order(BaseModel):
     customer: Customer
     address: Address
     items: list[Item]
-    price: float
+    price: Optional[float] = None
     status: str
     order_date: datetime = Field(default_factory=datetime.now)
