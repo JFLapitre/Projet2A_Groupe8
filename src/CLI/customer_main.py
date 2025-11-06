@@ -39,7 +39,7 @@ class CustomerMainView:
                 print("👋 Logging out...")
                 break
             else:
-                print("⚠️ Invalid choice, please try again.")
+                print("⚠️  Invalid choice, please try again.")
 
     # === ADD ITEM MENU ===
     def add_item_to_order(self):
@@ -261,10 +261,10 @@ class CustomerMainView:
             return
 
         print("\n📦 Enter delivery address:")
+        street_number_input = input("Street number (if exists): ").strip()
         street_name = input("Street name: ").strip()
         city = input("City: ").strip()
         postal_code_input = input("Postal code: ").strip()
-        street_number_input = input("Street number: ").strip()
 
         if not street_name or not city or not postal_code_input:
             print("[ERROR] Street name, city, and postal code are required.")
