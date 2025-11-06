@@ -105,21 +105,28 @@ def create_item(
         handle_service_error(e)
 
 
-"""@menu_router.put("/items/{item_id}")
-def update_item(item_id: int, item_data: ItemUpdate, service=Depends(get_service)):
+@menu_router.put("/items/{item_id}")
+def update_item(
+    name: str,
+    price: float,
+    stock: int,
+    availability: bool,
+    item_type: str,
+    service=Depends(get_service),
+    desc: str = None,
+):
     try:
         service.update_item(
-            id=item_id,
-            name=item_data.name,
-            desc=item_data.description,
-            price=item_data.price,
-            stock=item_data.stock,
-            availability=item_data.availability,
-            item_type=item_data.item_type,
+            name=name,
+            desc=desc,
+            price=price,
+            stock=stock,
+            availability=availability,
+            item_type=item_type,
         )
         return {"message": "Item updated successfully"}
     except Exception as e:
-        handle_service_error(e)"""
+        handle_service_error(e)
 
 
 @menu_router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -155,7 +162,7 @@ def delete_bundle(bundle_id: int, service=Depends(get_service)):
 
 
 """@menu_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
-def create_predefined_bundle(data: PredefinedBundleCreate, service=Depends(get_service)):
+def create_predefined_bundle(name : str, service=Depends(get_service)):
     try:
         service.create_predefined_bundle(
             name=data.name,
