@@ -13,7 +13,6 @@ class AdminUserService:
         """
         Initializes the service and injects dependencies into the UserDAO.
         """
-        # UserDAO is the single DAO responsible for all user types
         self.user_dao = UserDAO(db_connector=db_connector)
         self.password_service = password_service
 
