@@ -229,33 +229,32 @@ class CustomerMainView:
                 removed = self.cart.pop(idx)
                 print(f"[INFO] Removed '{removed.name}' from order.")
 
-   # === Validate Order ===
+    # === Validate Order ===
     def validate_order(self):
         if not self.cart:
             print("Your cart is empty.")
             return
 
-        # Demander l'adresse pour chaque commande
         print("\nEnter delivery address details:")
         street_name = input("Street name: ").strip()
         city = input("City: ").strip()
-        postal_code = input("Postal code: ").strip()
-        street_number = input("Street number: ").strip()
+        postal_code_input = input("Postal code: ").strip()
+        street_number_input = input("Street number: ").strip()
 
-        if not street_name or not city or not postal_code:
+        if not street_name or not city or not postal_code_input:
             print("[ERROR] Street name, city, and postal code are required.")
             return
 
         try:
-            street_number_int = int(street_number) if street_number else None
-            postal_code_int = int(postal_code)
+            postal_code = int(postal_code_input)
+            street_number = street_number_input if street_number_input else None
 
             # Création de l’adresse via AddressService
             address = self.address_service.create_address(
                 street_name=street_name,
                 city=city,
-                postal_code=postal_code_int,
-                street_number=street_number_int,
+                postal_code=postal_code,
+                street_number=street_number,
             )
 
             # Création de la commande avec cette adresse

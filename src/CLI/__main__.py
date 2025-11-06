@@ -20,7 +20,7 @@ def _build_services() -> Dict:
             "delivery": getattr(init_app, "delivery_service", None),
             "user": getattr(init_app, "admin_user_service", None),
             "jwt": getattr(init_app, "jwt_service", None),
-            "address": getattr(init_app, "address_service", None),  # ✅ manquant avant
+            "address": getattr(init_app, "address_service", None),
         }
 
         # Vérifie s’il en manque

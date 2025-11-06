@@ -20,7 +20,7 @@ CREATE TABLE fd.address (
     city VARCHAR(20) NOT NULL,
     postal_code VARCHAR(5) NOT NULL,
     street_name VARCHAR(50) NOT NULL,
-    street_number INT NOT NULL
+    street_number VARCHAR(5) NOT NULL
 );
 
 
@@ -88,6 +88,7 @@ CREATE TABLE fd.order (
     id_order SERIAL PRIMARY KEY,
     id_user INT REFERENCES fd.user(id_user) ON DELETE CASCADE,
     status VARCHAR(20) NOT NULL,
+    price FLOAT,
     id_address INT REFERENCES fd.address(id_address),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
