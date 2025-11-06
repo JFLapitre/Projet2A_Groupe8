@@ -65,11 +65,3 @@ class ApiMapsService:
             print("Lien Google Maps :", maps_url)
         else:
             print("Erreur :", data["status"])
-
-
-delivery = delivery_dao.find_delivery_by_id(1)
-
-addresses = [
-    f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
-    for order in delivery.orders
-]
