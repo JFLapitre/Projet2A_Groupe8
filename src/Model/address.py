@@ -8,4 +8,4 @@ class Address(BaseModel):
     city: str
     postal_code: int
     street_name: str
-    street_number: Optional[int] = None
+    street_number: Optional[str] = None
