@@ -16,14 +16,14 @@ class CustomerMainView:
         self.services = services or {}
         self.item_service = self.services.get("item")
         self.order_service = self.services.get("order")
-        self.address_service = self.services.get("address")  # ✅ ajout du service adresse
+        self.address_service = self.services.get("address")
         self.cart: List = []
 
     def display(self):
         while True:
             print("\n=== EJR Eats — Customer Menu ===")
             print("1) Add Item to Order")
-            print("2) Check Order")
+            print("2) See Order")
             print("3) Validate Order")
             print("4) Logout")
 
@@ -43,14 +43,14 @@ class CustomerMainView:
     # === Add Item ===
     def add_item_to_order(self):
         while True:
-            print("\n1) Regular Bundle")
+            print("\n1) Discounted Bundle")
             print("2) Special Bundle")
             print("3) Single Item")
             print("q) Back")
             choice = input("Choice: ").strip().lower()
 
             if choice == "1":
-                self._choose_regular_bundle()
+                self._choose_Discounted_bundle()
             elif choice == "2":
                 self._choose_special_bundle()
             elif choice == "3":
@@ -60,8 +60,8 @@ class CustomerMainView:
             else:
                 print("Invalid choice.")
 
-    # === Regular Bundle ===
-    def _choose_regular_bundle(self):
+    # === Discounted Bundle ===
+    def _choose_Discounted_bundle(self):
         try:
             bundles = [
                 b
@@ -72,11 +72,11 @@ class CustomerMainView:
             print(f"[ERROR] Cannot fetch bundles: {e}")
             return
         if not bundles:
-            print("No regular bundles available.")
+            print("No Discounted bundles available.")
             return
 
         while True:
-            print("\n=== Regular Bundles ===")
+            print("\n=== Discounted Bundles ===")
             for idx, b in enumerate(bundles, start=1):
                 print(f"{idx}) {b.name} — {b.discount * 100:.0f}% off")
 
@@ -258,21 +258,14 @@ class CustomerMainView:
             )
 
             # Création de la commande avec cette adresse
-            created_order = self.order_service.create_order(
-                self.session.user_id,
-                address.id_address
-            )
+            created_order = self.order_service.create_order(self.session.user_id, address.id_address)
 
             # Ajouter tous les bundles du panier à la commande
             for bundle in self.cart:
-                self.order_service.add_bundle_to_order(
-                    created_order.id_order,
-                    bundle.id_bundle
-                )
+                self.order_service.add_bundle_to_order(created_order.id_order, bundle)
 
             print(f"[SUCCESS] Order #{created_order.id_order} confirmed with {len(self.cart)} items.")
             self.cart.clear()
 
         except Exception as e:
             print(f"[ERROR] Cannot confirm order: {e}")
-

@@ -59,9 +59,10 @@ class OrderService:
             raise ValueError(f"No order found with ID {order_id}.")
         return self.order_dao.delete_order(order_id)
 
-    def add_bundle_to_order(self, order_id: int, bundle_id: int) -> Optional[Order]:
+    def add_bundle_to_order(self, order_id: int, bundle) -> Optional[Order]:
         """
-        Adds a bundle to an existing 'pending' order and updates the order price.
+        Adds all items from a bundle to an existing 'pending' order.
+        'bundle' can be a PredefinedBundle, DiscountedBundle, or OneItemBundle from the cart.
         """
         order = self.order_dao.find_order_by_id(order_id)
         if not order:
@@ -69,18 +70,14 @@ class OrderService:
         if order.status != "pending":
             raise ValueError(f"Cannot modify an order with status '{order.status}'.")
 
-        bundle = self.bundle_dao.find_bundle_by_id(bundle_id)
-        if not bundle:
-            raise ValueError(f"No bundle found with ID {bundle_id}.")
-
-        # Vérifier disponibilité
+        # Vérifier disponibilité des items
         not_available = [item.name for item in bundle.composition if not item.availability]
         if not_available:
             raise ValueError(
-                f"Bundle '{bundle.name}' is unavailable because items in the list '{not_available}' are not available."
+                f"Bundle '{getattr(bundle, 'name', 'unknown')}' is unavailable because items {not_available} are not available."
             )
 
-        # Ajouter les items de la bundle
+        # Ajouter les items à la commande
         for item in bundle.composition:
             order.items.append(item)
 

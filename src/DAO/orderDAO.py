@@ -32,7 +32,6 @@ class OrderDAO(BaseModel):
             Order object if found, None otherwise.
         """
         try:
-            # CORRIGÉ: "order" au lieu de fd.order
             raw_order = self.db_connector.sql_query(
                 'SELECT * FROM "order" WHERE id_order = %(id_order)s',
                 {"id_order": id_order},
@@ -49,7 +48,6 @@ class OrderDAO(BaseModel):
             if raw_order["id_address"] is not None:
                 address = self.address_dao.find_address_by_id(raw_order["id_address"])
 
-            # CORRIGÉ: item et order_item au lieu de fd.item et fd.order_item
             raw_items = self.db_connector.sql_query(
                 """
                 SELECT i.*
@@ -73,6 +71,7 @@ class OrderDAO(BaseModel):
                 address=address,
                 items=items,
                 status=raw_order["status"],
+                price=raw_order.get("price", sum(item.price for item in items)),  # price inclus
                 order_date=raw_order["order_date"],
             )
         except Exception as e:
@@ -86,7 +85,6 @@ class OrderDAO(BaseModel):
             List[Order]: A list of Order objects (empty if no orders exist).
         """
         try:
-            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             raw_orders = self.db_connector.sql_query('SELECT * FROM "order"', {}, "all")
 
             orders = []
@@ -110,7 +108,6 @@ class OrderDAO(BaseModel):
             List[Order]: List of orders for this customer.
         """
         try:
-            # CORRIGÉ: "order" au lieu de fd.order
             raw_orders = self.db_connector.sql_query(
                 'SELECT * FROM "order" WHERE id_user = %(id_user)s',
                 {"id_user": id_user},
@@ -141,16 +138,16 @@ class OrderDAO(BaseModel):
             id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
             id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
 
-            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             raw_created_order = self.db_connector.sql_query(
                 """
-                INSERT INTO "order" (id_user, status, id_address, order_date)
-                VALUES (%(id_user)s, %(status)s, %(id_address)s, %(order_date)s)
+                INSERT INTO "order" (id_user, status, price, id_address, order_date)
+                VALUES (%(id_user)s, %(status)s, %(price)s, %(id_address)s, %(order_date)s)
                 RETURNING *;
                 """,
                 {
                     "id_user": id_user,
                     "status": order.status,
+                    "price": order.price,
                     "id_address": id_address,
                     "order_date": order.order_date if hasattr(order, "order_date") else datetime.now(),
                 },
@@ -160,7 +157,6 @@ class OrderDAO(BaseModel):
             id_order = raw_created_order["id_order"]
 
             for item in order.items:
-                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
                     INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
@@ -189,12 +185,12 @@ class OrderDAO(BaseModel):
             bool: True if update succeeded, False otherwise.
         """
         try:
-            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             res = self.db_connector.sql_query(
                 """
                 UPDATE "order"
                 SET id_user = %(id_user)s,
                     status = %(status)s,
+                    price = %(price)s,
                     id_address = %(id_address)s,
                     order_date = %(order_date)s
                 WHERE id_order = %(id_order)s
@@ -204,13 +200,13 @@ class OrderDAO(BaseModel):
                     "id_order": order.id_order,
                     "id_user": order.customer.id_user,
                     "status": order.status,
+                    "price": order.price,
                     "id_address": order.address.id_address,
                     "order_date": order.order_date,
                 },
                 "one",
             )
 
-            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
                 "DELETE FROM order_item WHERE id_order = %(id_order)s",
                 {"id_order": order.id_order},
@@ -218,7 +214,6 @@ class OrderDAO(BaseModel):
             )
 
             for item in order.items:
-                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
                     INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
@@ -247,21 +242,18 @@ class OrderDAO(BaseModel):
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
-            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
                 "DELETE FROM order_item WHERE id_order = %(id_order)s",
                 {"id_order": id_order},
                 None,
             )
 
-            # CORRIGÉ: delivery_order au lieu de fd.delivery_order
             self.db_connector.sql_query(
                 "DELETE FROM delivery_order WHERE id_order = %(id_order)s",
                 {"id_order": id_order},
                 None,
             )
 
-            # CORRIGÉ: "order" au lieu de fd.order
             res = self.db_connector.sql_query(
                 'DELETE FROM "order" WHERE id_order = %(id_order)s RETURNING id_order;',
                 {"id_order": id_order},
