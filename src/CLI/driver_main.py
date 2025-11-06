@@ -27,7 +27,7 @@ class DriverMainView(AbstractView):
             choice = self.prompt("Choice: ")
 
             if choice == "1":
-                self._view_pending_deliveries()
+                self._view_pending_order()
             elif choice == "2":
                 self._assign_delivery()
             elif choice == "3":

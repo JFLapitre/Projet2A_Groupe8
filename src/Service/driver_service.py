@@ -35,7 +35,7 @@ class DriverService:
 
         self.delivery_dao = DeliveryDAO(db_connector=db_connector, user_dao=self.user_dao, order_dao=self.order_dao)
 
-    def create_and_assign_delivery(self, order_ids: List[int], driver_id: int) -> Optional[Delivery]:
+    def create_and_assign_delivery(self, order_ids: List[int], user_id: int) -> Optional[Delivery]:
         """
         Creates a new delivery run from a list of 'validated' order IDs and
         immediately assigns it to the specified available driver.
@@ -44,9 +44,9 @@ class DriverService:
         if not order_ids:
             raise ValueError("Cannot create a delivery with no orders.")
 
-        driver = self.user_dao.find_user_by_id(driver_id)
+        driver = self.user_dao.find_user_by_id(user_id)
         if not driver or not isinstance(driver, Driver):
-            raise ValueError(f"No valid driver found with ID {driver_id}")
+            raise ValueError(f"No valid driver found with ID {user_id}")
 
         if not driver.availability:
             raise ValueError(f"Driver {driver.name} is not available to start a new delivery.")
@@ -81,20 +81,20 @@ class DriverService:
 
         return created_delivery
 
-    def get_itinerary(self, driver_id: int):
+    def get_itinerary(self, user_id: int):
         """
         Retrieves the ongoing delivery for a given driver.
         """
-        deliveries = self.delivery_dao.find_in_progress_deliveries_by_driver(driver_id)
+        deliveries = self.delivery_dao.find_in_progress_deliveries_by_driver(user_id)
         if not deliveries:
             print("Aucune livraison en cours pour ce chauffeur.")
             return None
         delivery = deliveries[0]
         print(delivery)
 
-        driver = self.user_dao.find_user_by_id(driver_id)
+        driver = self.user_dao.find_user_by_id(user_id)
         if not driver or not isinstance(driver, Driver):
-            raise ValueError(f"No valid driver found with ID {driver_id}")
+            raise ValueError(f"No valid driver found with ID {user_id}")
         print(driver)
 
         adresses = [
