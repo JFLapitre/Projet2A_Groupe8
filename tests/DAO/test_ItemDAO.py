@@ -1,6 +1,8 @@
-import pytest
-from typing import Optional, Union, Literal, Dict, Any, List
 from datetime import date
+from typing import Any, Dict, List, Literal, Optional, Union
+
+import pytest
+
 from src.DAO.itemDAO import ItemDAO
 from src.Model.item import Item
 
@@ -10,8 +12,9 @@ class MockDBConnector:
     Mock de DBConnector pour simuler les opérations CRUD de ItemDAO
     directement dans le fichier de test.
     """
+
     def __init__(self):
-        self.users = [{ "id_user": 1, "username": "janjak", "user_type": "customer", "sign_up_date": date.today() }]
+        self.users = [{"id_user": 1, "username": "janjak", "user_type": "customer", "sign_up_date": date.today()}]
 
         self.items = [
             {
@@ -35,21 +38,21 @@ class MockDBConnector:
         ]
         self.next_item_id = 2
 
-    def sql_query(self, 
-                  query: str, 
-                  data: Optional[Union[tuple, list, dict]] = None, 
-                  return_type: Optional[Union[Literal["one"], Literal["all"], None]] = "one"
+    def sql_query(
+        self,
+        query: str,
+        data: Optional[Union[tuple, list, dict]] = None,
+        return_type: Optional[Union[Literal["one"], Literal["all"], None]] = "one",
     ) -> Union[Dict[str, Any], List[Dict[str, Any]], bool, None]:
+        q = " ".join(query.lower().split())
 
-            q = " ".join(query.lower().split())
+        # add item
+        if "insert into fd.item" in q:
+            if not isinstance(data, dict):
+                return False
 
-            # add item
-            if "insert into fd.item" in q:
-                if not isinstance(data, dict):
-                    return False 
-
-                new_id = self.next_item_id
-                self.next_item_id += 1
+            new_id = self.next_item_id
+            self.next_item_id += 1
 
                 created_item = {
                     "id_item": new_id,
@@ -61,53 +64,53 @@ class MockDBConnector:
                     "availability": data.get("availability") if data.get("availability") is not None else True,
                 }
 
-                self.items.append(created_item) 
-                return created_item
+            self.items.append(created_item)
+            return created_item
 
-            # find all items
-            if "select * from fd.item" in q and return_type == "all":
-                return list(self.items)
+        # find all items
+        if "select * from fd.item" in q and return_type == "all":
+            return list(self.items)
 
-            # find item by id
-            if "from fd.item" in q and "where id_item" in q and return_type == "one":
-                    item_id = None
-                    if isinstance(data, dict):
-                        item_id = data.get("id_item")
-                    elif isinstance(data, (list, tuple)):
-                        if data:
-                            item_id = data[0]
-                    if item_id:
-                        for item in self.items:
-                            if item["id_item"] == item_id:
-                                return item.copy() 
-                    return None
-
-            # update item
-            if "update fd.item" in q and "where id_item" in q:
-                item_id_to_update = data.get("id_item")
+        # find item by id
+        if "from fd.item" in q and "where id_item" in q and return_type == "one":
+            item_id = None
+            if isinstance(data, dict):
+                item_id = data.get("id_item")
+            elif isinstance(data, (list, tuple)):
+                if data:
+                    item_id = data[0]
+            if item_id:
                 for item in self.items:
-                    if item["id_item"] == item_id_to_update:
-                        for key, value in data.items():
-                            if key != "id_item":
-                                item[key] = value
-                        return True
+                    if item["id_item"] == item_id:
+                        return item.copy()
+            return None
+
+        # update item
+        if "update fd.item" in q and "where id_item" in q:
+            item_id_to_update = data.get("id_item")
+            for item in self.items:
+                if item["id_item"] == item_id_to_update:
+                    for key, value in data.items():
+                        if key != "id_item":
+                            item[key] = value
+                    return True
+            return False
+
+        # delete item
+        if "delete from fd.item" in q and "where id_item" in q:
+            item_id_to_delete = None
+            if isinstance(data, dict):
+                item_id_to_delete = data.get("id_item")
+            elif isinstance(data, (list, tuple)):
+                if data:
+                    item_id_to_delete = data[0]
+            if item_id_to_delete is None:
                 return False
+            initial_count = len(self.items)
+            self.items = [item for item in self.items if item["id_item"] != item_id_to_delete]
+            return len(self.items) < initial_count
 
-            # delete item
-            if "delete from fd.item" in q and "where id_item" in q:
-                item_id_to_delete = None
-                if isinstance(data, dict):
-                    item_id_to_delete = data.get("id_item")
-                elif isinstance(data, (list, tuple)):
-                    if data:
-                        item_id_to_delete = data[0]
-                if item_id_to_delete is None:
-                    return False
-                initial_count = len(self.items)
-                self.items = [item for item in self.items if item["id_item"] != item_id_to_delete]
-                return len(self.items) < initial_count
-
-            return None 
+        return None
 
 
 @pytest.fixture
@@ -115,11 +118,12 @@ def item_dao():
     mock_connector = MockDBConnector() 
     return ItemDAO(mock_connector) 
 
+
 def test_find_all_items(item_dao):
     """Test finding all item"""
     items = item_dao.find_all_items()
     assert isinstance(items, list)
-    assert len(items) == 2 
+    assert len(items) == 2
     assert all(isinstance(item, Item) for item in items)
 
 
@@ -148,6 +152,7 @@ def test_add_item(item_dao):
     assert created_item.price == 15.00
 
     item_dao.delete_item(created_item.id_item)
+
 
 def test_update_item(item_dao):
     """Test the update of one item"""

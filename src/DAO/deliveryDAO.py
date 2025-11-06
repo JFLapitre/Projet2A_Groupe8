@@ -7,6 +7,7 @@ from src.DAO.userDAO import UserDAO
 from src.Model.delivery import Delivery
 from src.Model.order import Order
 
+
 class DeliveryDAO:
     db_connector: DBConnector
     user_dao: UserDAO
@@ -138,10 +139,6 @@ class DeliveryDAO:
         except Exception as e:
             logging.error(f"Failed to fetch in-progress deliveries for driver {driver_id}: {e}")
             return []
-
-
-
-
 
     def update_delivery(self, delivery: Delivery) -> bool:
         """Update an existing delivery.
