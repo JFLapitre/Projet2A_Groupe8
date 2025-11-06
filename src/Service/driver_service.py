@@ -80,7 +80,9 @@ class DriverService:
         return created_delivery
 
     def get_itinerary(self, driver_id:int ):
-
+        """
+        Retrieves the ongoing delivery for a given driver.
+        """
         deliveries = self.delivery_dao.find_in_progress_deliveries_by_driver(driver_id)
         if not deliveries:
             print("Aucune livraison en cours pour ce chauffeur.")
