@@ -43,17 +43,17 @@ class DriverMainView(AbstractView):
             else:
                 self.print_error("Invalid choice.")
 
-    def _view_pending_deliveries(self):
-        delivery_service = self.services.get("delivery")
+    def _view_pending_order(self):
+        driver_service = self.services.get("driver")
         try:
-            deliveries = delivery_service.list_pending_deliveries()
-            if not deliveries:
-                print("No pending deliveries.")
+            orders = driver_service.list_pending_orders()
+            if not orders:
+                print("No pending orders.")
                 return
-            for d in deliveries:
-                print(f"Delivery #{d.id_delivery} - Status: {d.status} - Orders: {[o.id_order for o in d.orders]}")
+            for o in orders:
+                print(f"Order #{o.id_order} - Status: {o.status}")
         except Exception as e:
-            self.print_error(f"Error retrieving deliveries: {e}")
+            self.print_error(f"Error retrieving orders: {e}")
 
     def _assign_delivery(self):
         delivery_service = self.services.get("delivery")
