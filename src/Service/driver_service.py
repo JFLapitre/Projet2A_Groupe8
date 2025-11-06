@@ -82,6 +82,10 @@ class DriverService:
 
         return created_delivery
 
+    def get_assigned_delivery(self, user_id: int):
+        delivery = self.delivery_dao.find_in_progress_deliveries_by_driver(user_id)
+        return delivery
+
     def get_itinerary(self, user_id: int):
         """
         Retrieves the ongoing delivery for a given driver.
@@ -138,11 +142,10 @@ class DriverService:
             raise ValueError(f"No delivery found with ID {delivery_id}.")
         addresses_list = {}
         customer_list = {}
-        for o_id in delivery.orders:
-            order = self.order_dao.find_order_by_id(o_id)
-            addresses_list[o_id] = order.address
+        for order in delivery.orders:
+            addresses_list[order.id_order] = order.address
             user = self.user_dao.find_user_by_id(order.customer.name)
-            customer_list[o_id] = user
+            customer_list[order.id_order] = user
         return addresses_list, customer_list
 
     def list_pending_orders(self) -> List[Order]:
