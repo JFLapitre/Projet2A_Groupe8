@@ -24,9 +24,6 @@ order_dao = OrderDAO(db_connector=db, user_dao=user_dao, address_dao=address_dao
 delivery_dao = DeliveryDAO(db_connector=db, user_dao=user_dao, order_dao=order_dao)
 
 
-API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
-
-
 class ApiMapsService:
     def __init__(self) -> None:
         self.delivery_dao = DeliveryDAO()

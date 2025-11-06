@@ -7,7 +7,7 @@ from psycopg2.extras import RealDictCursor
 
 
 class DBConnector:
-    def __init__(self, config=None):
+    def __init__(self, config=None, test=False):
         if config is not None:
             self.host = config["host"]
             self.port = config["post"]
@@ -22,7 +22,10 @@ class DBConnector:
             self.database = os.environ["POSTGRES_DATABASE"]
             self.user = os.environ["POSTGRES_USER"]
             self.password = os.environ["POSTGRES_PASSWORD"]
-            self.schema = os.environ["POSTGRES_SCHEMA"]
+            if test:
+                self.schema = os.environ["POSTGRES_SCHEMA_TEST"]
+            else:
+                self.schema = os.environ["POSTGRES_SCHEMA"]
 
     def sql_query(
         self,
