@@ -74,6 +74,9 @@ class DriverService:
         if not created_delivery:
             raise Exception("Failed to create and assign the delivery in the database.")
 
+        driver.availability = False
+        self.user_dao.update_user(driver)
+
         return created_delivery
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
