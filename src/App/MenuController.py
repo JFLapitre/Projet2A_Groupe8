@@ -3,7 +3,6 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-# --- Imports des Modèles ---
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
@@ -11,18 +10,12 @@ from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
 
 from .auth import admin_required
-from .init_app import admin_menu_service, bundle_dao, item_dao
+from .init_app import admin_menu_service
 
-# --- Type Union pour les réponses polymorphiques ---
-# On garde OneItemBundle ici au cas où il en existerait déjà en base et que list_bundles les renvoie.
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
-# =========================================
-# DTOs (Modèles de Validation d'Entrée)
-# =========================================
 
-
-class ItemCreate(BaseModel):
+"""class ItemCreate(BaseModel):
     name: str
     description: str
     price: float
@@ -52,26 +45,24 @@ class DiscountedBundleCreate(BaseModel):
     name: str
     description: str
     discount: float
-    required_item_types: List[str]
+    required_item_types: List[str]"""
 
-
-# =========================================
-# Contrôleur (MenuRouter)
-# =========================================
 
 menu_router = APIRouter(tags=["Admin Menu"], dependencies=[Depends(admin_required)])
 
 
-# Dépendances
 def get_service():
     return admin_menu_service
 
 
+def get_item_dao():
+    return admin_menu_service.item_dao
+
+
 def get_bundle_dao():
-    return bundle_dao
+    return admin_menu_service.bundle_dao
 
 
-# Helper pour gérer les erreurs
 def handle_service_error(e: Exception):
     msg = str(e).lower()
     if "not found" in msg:
@@ -80,11 +71,6 @@ def handle_service_error(e: Exception):
         raise HTTPException(status_code=400, detail=str(e)) from e
     print(f"Unexpected error: {e}")
     raise HTTPException(status_code=500, detail="Internal Server Error") from e
-
-
-# =========================================
-# Routes ITEMS
-# =========================================
 
 
 @menu_router.get("/items", response_model=List[Item])
@@ -119,7 +105,7 @@ def create_item(
         handle_service_error(e)
 
 
-@menu_router.put("/items/{item_id}")
+"""@menu_router.put("/items/{item_id}")
 def update_item(item_id: int, item_data: ItemUpdate, service=Depends(get_service)):
     try:
         service.update_item(
@@ -133,7 +119,7 @@ def update_item(item_id: int, item_data: ItemUpdate, service=Depends(get_service
         )
         return {"message": "Item updated successfully"}
     except Exception as e:
-        handle_service_error(e)
+        handle_service_error(e)"""
 
 
 @menu_router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -142,11 +128,6 @@ def delete_item(item_id: int, service=Depends(get_service)):
         service.delete_item(item_id)
     except Exception as e:
         handle_service_error(e)
-
-
-# =========================================
-# Routes BUNDLES
-# =========================================
 
 
 @menu_router.get("/bundles", response_model=List[AnyBundle])
@@ -173,7 +154,7 @@ def delete_bundle(bundle_id: int, service=Depends(get_service)):
         handle_service_error(e)
 
 
-@menu_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
+"""@menu_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
 def create_predefined_bundle(data: PredefinedBundleCreate, service=Depends(get_service)):
     try:
         service.create_predefined_bundle(
@@ -199,4 +180,4 @@ def create_discounted_bundle(data: DiscountedBundleCreate, service=Depends(get_s
         )
         return {"message": "Discounted bundle created"}
     except Exception as e:
-        handle_service_error(e)
+        handle_service_error(e)"""

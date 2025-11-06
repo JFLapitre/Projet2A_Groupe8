@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from src.Model.order import Order
 
 from .auth import admin_required
-from .init_app import admin_order_service, order_dao
+from .init_app import admin_order_service
 
 order_router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[Depends(admin_required)])
 
@@ -13,7 +13,7 @@ def get_admin_order_service():
     return admin_order_service
 
 def get_order_dao():
-    return order_dao
+    return admin_order_service.order_dao
 
 @order_router.get("/{id_order}", status_code=status.HTTP_200_OK)
 def find_order_by_id(id_order: int, dao = Depends(get_order_dao)):

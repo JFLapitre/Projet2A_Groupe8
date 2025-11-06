@@ -4,8 +4,12 @@ from fastapi.security import HTTPAuthorizationCredentials
 from src.Model.abstract_user import AbstractUser
 from src.Model.admin import Admin
 
-from .init_app import jwt_service, user_dao
+from .init_app import admin_user_service, jwt_service
 from .JWTBearer import JWTBearer
+
+
+def get_user_dao_from_service():
+    return admin_user_service.user_dao
 
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())) -> AbstractUser:
@@ -17,7 +21,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(JWTBear
         token = credentials.credentials
         user_id = int(jwt_service.validate_user_jwt(token))
 
-        user = user_dao.find_user_by_id(user_id)
+        user = admin_user_service.user_dao.find_user_by_id(user_id)
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
