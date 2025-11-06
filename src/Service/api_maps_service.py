@@ -1,3 +1,4 @@
+import os
 import urllib
 import urllib.parse
 
@@ -27,13 +28,17 @@ delivery_dao = DeliveryDAO(db_connector=db, user_dao=user_dao, order_dao=order_d
 
 class ApiMapsService:
     def __init__(self) -> None:
+        load_dotenv()
         self.delivery_dao = DeliveryDAO()
+        self.api_key = os.environ["GOOGLE_MAPS_API_KEY"]
 
-    def Driveritinerary(waypoints=[]):
+    def Driveritinerary(self,waypoints=list):
         """
         Give an itinerary that starts and finishes at ENSAI and goes through all the waypoints.
         """
-        API_KEY = "AIzaSyBgOvV_du58_DMUTf7O8ACDt3SQ_USfeXE"
+        if not self.api_key:
+            print("Error: Missing Google Maps API key in environment variables.")
+            return
         origin = "51 Rue Blaise Pascal, Bruz, France"
         destination = "51 Rue Blaise Pascal, Bruz, France"
 
@@ -41,7 +46,7 @@ class ApiMapsService:
         encoded_destination = urllib.parse.quote_plus(destination)
         encoded_waypoints = "%7C".join(urllib.parse.quote_plus(w) for w in waypoints)
 
-        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={API_KEY}"
+        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={self.api_key}"
 
         response = requests.get(url)
         data = response.json()

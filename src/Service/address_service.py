@@ -1,5 +1,7 @@
 from typing import List, Optional
-
+import os
+from dotenv import load_dotenv
+import requests
 from src.DAO.addressDAO import AddressDAO
 from src.DAO.DBConnector import DBConnector
 from src.Model.address import Address
@@ -10,7 +12,10 @@ class AddressService:
         """
         Initializes the service and injects the connector into the DAO.
         """
+        load_dotenv()
         self.address_dao = AddressDAO(db_connector=db_connector)
+        self.api_key = os.environ["GOOGLE_MAPS_API_KEY"]
+
 
     def create_address(
         self, street_name: str, city: str, postal_code: int, street_number: str = None
@@ -24,7 +29,22 @@ class AddressService:
             raise ValueError("City name cannot be empty.")
         if not postal_code:
             raise ValueError("Postal code cannot be empty.")
+        full_address = f"{street_number or ''} {street_name}, {postal_code} {city}".strip()
+        if not self.api_key:
+            raise EnvironmentError("Missing Google Maps API key in environment variables.")
+        response = requests.get(
+            "https://maps.googleapis.com/maps/api/geocode/json",
+            params={"address": full_address, "key": self.api_key},
+        )
 
+        data = response.json()
+        status = data.get("status")
+        ad=data.get("results")
+        print(ad)
+        if status != "OK":
+            raise ValueError(
+                f"Invalid address: {full_address}. Google Maps returned status: {status}"
+            )
         new_address = Address(
             street_name=street_name,
             street_number=street_number,
