@@ -1,13 +1,17 @@
 import hashlib
+import re
 import secrets
 
 
 class PasswordService:
     """
     Service dedicated to the secure creation, hashing, and verification
-    of passwords using manual salting (SHA-256), compatible with
-    your database schema (separate salt column).
+    of passwords using manual salting (SHA-256).
     """
+
+    COMMON_PASSWORDS = {"password", "12345678", "qwerty", "azerty", "admin", "motdepasse"}
+    MIN_LENGTH = 8
+    MIN_SCORE = 3
 
     def __init__(self):
         pass
@@ -31,8 +35,32 @@ class PasswordService:
 
     def check_password_strength(self, password: str):
         """
-        Validates minimum password strength rules (e.g., minimum length).
-        (Functionality to be expanded later.)
+        Validates minimum strength rules for a password.
+        Raises an exception with the reason for failure.
         """
-        if len(password) < 8:
-            raise Exception("Password length must be at least 8 characters")
+
+        if len(password) < self.MIN_LENGTH:
+            raise Exception(f"The password must be at least {self.MIN_LENGTH} characters long.")
+
+        if password.lower() in self.COMMON_PASSWORDS:
+            raise Exception("The password is one of the most commonly used passwords and is prohibited.")
+
+        score = 0
+
+        if re.search(r"[A-Z]", password):
+            score += 1
+
+        if re.search(r"[a-z]", password):
+            score += 1
+
+        if re.search(r"\d", password):
+            score += 1
+
+        if re.search(r"[^a-zA-Z0-9\s]", password):
+            score += 1
+
+        if score < self.MIN_SCORE:
+            raise Exception(
+                f"Le mot de passe doit contenir au moins {self.MIN_SCORE} des 4 types de caractères (majuscules, minuscules, chiffres, spéciaux). Score actuel : {score}/4."
+            )
+        return True
