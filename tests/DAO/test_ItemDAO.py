@@ -54,15 +54,15 @@ class MockDBConnector:
             new_id = self.next_item_id
             self.next_item_id += 1
 
-            created_item = {
-                "id_item": new_id,
-                "name": data["name"],
-                "item_type": data["item_type"],
-                "price": data["price"],
-                "description": data.get("description"),
-                "stock": data.get("stock"),
-                "availability": data.get("availability"),
-            }
+                created_item = {
+                    "id_item": new_id,
+                    "name": data["name"],
+                    "item_type": data["item_type"],
+                    "price": data["price"],
+                    "description": data.get("description") if data.get("description") is not None else "Pas de description.",
+                    "stock": data.get("stock") if data.get("stock") is not None else 0,
+                    "availability": data.get("availability") if data.get("availability") is not None else True,
+                }
 
             self.items.append(created_item)
             return created_item
@@ -115,13 +115,12 @@ class MockDBConnector:
 
 @pytest.fixture
 def item_dao():
-    """Fixture pour créer une instance d'ItemDAO utilisant le Mock."""
-    mock_connector = MockDBConnector()
-    return ItemDAO(mock_connector)
+    mock_connector = MockDBConnector() 
+    return ItemDAO(mock_connector) 
 
 
 def test_find_all_items(item_dao):
-    """Test la récupération de tous les items."""
+    """Test finding all item"""
     items = item_dao.find_all_items()
     assert isinstance(items, list)
     assert len(items) == 2
@@ -129,7 +128,7 @@ def test_find_all_items(item_dao):
 
 
 def test_find_item_by_id_existing(item_dao):
-    """Test la recherche d'un item existant (ID 1)."""
+    """Test the research of one item"""
     item = item_dao.find_item_by_id(1)
     assert item is not None
     assert isinstance(item, Item)
@@ -137,13 +136,13 @@ def test_find_item_by_id_existing(item_dao):
 
 
 def test_find_item_by_id_non_existing(item_dao):
-    """Test la recherche d'un item inexistant."""
+    """Test the research of one inexisting item"""
     item = item_dao.find_item_by_id(9999)
     assert item is None
 
 
 def test_add_item(item_dao):
-    """Test l'ajout d'un nouvel item."""
+    """Test adding one item"""
     new_item = Item(id_item=None, name="Test Pizza", item_type="main", price=15.00)
     created_item = item_dao.add_item(new_item)
 
@@ -156,7 +155,7 @@ def test_add_item(item_dao):
 
 
 def test_update_item(item_dao):
-    """Test la mise à jour d'un item."""
+    """Test the update of one item"""
     new_item = Item(id_item=None, name="Test Update", item_type="main", price=10.00)
     created_item = item_dao.add_item(new_item)
 
@@ -174,7 +173,7 @@ def test_update_item(item_dao):
 
 
 def test_delete_item(item_dao):
-    """Test la suppression d'un item."""
+    """Test deleting one item"""
     new_item = Item(id_item=None, name="Test Delete", item_type="main", price=10.00)
     created_item = item_dao.add_item(new_item)
 
@@ -183,3 +182,41 @@ def test_delete_item(item_dao):
 
     deleted_item = item_dao.find_item_by_id(created_item.id_item)
     assert deleted_item is None
+
+def test_add_item_minimal_data(item_dao):
+    """Test the add of one item without optionnal values"""
+    new_item = Item(
+        id_item=None, 
+        name="Minimal Side",
+        item_type="side",
+        price=3.50
+    )
+    created_item = item_dao.add_item(new_item)
+
+    assert created_item is not None
+    assert created_item.name == "Minimal Side"
+    assert created_item.price == 3.50
+
+    assert created_item.description is not None
+    assert isinstance(created_item.stock, int)
+    assert created_item.availability is True
+
+    item_dao.delete_item(created_item.id_item)
+
+
+def test_update_item_non_existing(item_dao):
+    """Test the update of an inexisting item"""
+    non_existing_item = Item(
+        id_item=9997,
+        name="Should not exist",
+        item_type="side",
+        price=1.00
+    )
+    success = item_dao.update_item(non_existing_item)
+    assert success is False
+
+
+def test_delete_item_non_existing(item_dao):
+    """Test deleting an inexisting item"""
+    success = item_dao.delete_item(9998)
+    assert success is False

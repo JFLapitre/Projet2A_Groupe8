@@ -419,14 +419,14 @@ def test_delete_user_error():
 
 
 def test_find_user_by_id_not_found():
-    """Vérifie que find_user_by_id retourne None pour un ID inexistant."""
+    """Checks that find_user_by_id returns None for a non-existent ID."""
     user_DAO = UserDAO(MockDBConnector())
-    user = user_DAO.find_user_by_id(999)  # ID non présent
+    user = user_DAO.find_user_by_id(999)
     assert user is None
 
 
 def test_find_user_by_username_not_found():
-    """Vérifie que find_user_by_username retourne None pour un nom inexistant."""
+    """Verifies that find_user_by_username returns None for a non-existent name."""
     user_DAO = UserDAO(MockDBConnector())
     user = user_DAO.find_user_by_username("non_existent")
     assert user is None
@@ -434,12 +434,10 @@ def test_find_user_by_username_not_found():
 
 def test_find_all_filtered_empty():
     """Vérifie que find_all avec un filtre retourne une liste vide si aucun résultat."""
-
     # Créons un Mock temporaire sans Admin (ID 3) pour simuler un cas où le type serait absent
     class EmptyAdminMock(MockDBConnector):
         def __init__(self):
             super().__init__()
-            # Simule une DB sans le type 'admin'
             self.users = [u for u in self.users if u["user_type"] != "admin"]
 
     user_DAO = UserDAO(EmptyAdminMock())
@@ -451,20 +449,18 @@ def test_find_all_filtered_empty():
 
 def test_update_driver_error_on_child_query():
     """
-    Test la gestion d'erreur si la requête UPDATE fd.user réussit
+    Test la gestion d'erreur si la requête UPDATE fd.user réussit 
     mais la requête UPDATE fd.driver/customer/admin échoue.
     """
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            # Simule une erreur sur la table enfant (driver)
             if "update fd.driver" in query.lower():
                 raise Exception("Simulated Child DB Update Error")
-            # Toutes les autres requêtes utilisent le Mock normal, y compris update fd.user
             return super().sql_query(query, data, return_type)
 
     user_DAO = UserDAO(ErrorMock())
-
+    
     # Données à jour pour le Driver (ID 2)
     updated_driver_data = Driver(
         id_user=2,
@@ -480,6 +476,6 @@ def test_update_driver_error_on_child_query():
     )
 
     updated_user = user_DAO.update_user(updated_driver_data)
-
+    
     # L'update complet doit échouer, donc la méthode doit retourner None.
     assert updated_user is None
