@@ -22,6 +22,7 @@ def _build_services() -> Dict:
             "user": getattr(init_app, "admin_user_service", None),
             "jwt": getattr(init_app, "jwt_service", None),
             "address": getattr(init_app, "address_service", None),
+            "driver": getattr(init_app, "driver_service", None),
         }
 
         # Vérifie s’il en manque
