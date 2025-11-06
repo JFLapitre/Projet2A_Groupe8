@@ -47,19 +47,6 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
     return APIUser(id_user=user.id_user, username=user.username)
 
 
-@user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
-def login(username: str, password: str) -> JWTResponse:
-    """
-    Authenticate with username and password and obtain a token
-    """
-    try:
-        user = auth_service.login(username=username, password=password)
-    except Exception as error:
-        raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
-
-    return jwt_service.encode_jwt(user.id_user)
-
-
 @user_router.get("/me", dependencies=[Depends(JWTBearer())])
 def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, Depends(JWTBearer())]) -> APIUser:
     """
