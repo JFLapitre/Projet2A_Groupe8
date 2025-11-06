@@ -57,9 +57,8 @@ class DriverMainView(AbstractView):
 
     def _assign_delivery(self):
         driver_service = self.services.get("driver")
-        order_ids= int(self.prompt("Orders ID to take: "))
+        order_ids= list(self.prompt("Orders ID to take: "))
         try:
-            driver_service.create_and_assign_delivery(order_ids, self.session.user_id)
             new_del=driver_service.create_and_assign_delivery(order_ids, self.session.user_id)
             self.print_info(f"Assigned to delivery #{new_del.id_delivery}.")
         except Exception as e:
