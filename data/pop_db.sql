@@ -1,10 +1,10 @@
 -- Insert users
 INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date) VALUES
-(1, 'john_doe', 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f', 'aa453f466c612b04de2e62b5501c264e462b06bac3ce18dc4bf7ad38e2d17bdf', 'customer', '2024-01-15'),
-(2, 'jane_smith', 'e34d7db48a3fb5808c8360136c07151b14b68f342a8ff87d9aef2236c405bfc8', '9faef269131b1838ab8e95af580e7c109e1de4448ba0282bdf06f19726ff55ea', 'customer', '2024-02-20'),
-(3, 'bob_driver', 'cb582b020a1f3c2cd95515946c05e719da58b7424e2d256f2ca7a5e4dc07e5d0', 'db7bdbc3bc99617b49292001145c705fdde6111d24716f0c7984ea02546231c1', 'driver', '2024-01-10'),
+(1, 'john_doe', 'aa453f466c612b04de2e62b5501c264e462b06bac3ce18dc4bf7ad38e2d17bdf', '9a7fc02853c99c560238517027351d7deb7efeb2097686bd565c59bdaf059af6', 'customer', '2024-01-15'),
+(2, 'jane_smith', '9faef269131b1838ab8e95af580e7c109e1de4448ba0282bdf06f19726ff55ea', '776e37cc088064e6aef5cd504181f07e83ab5e495e724a5a492f0b495cec3e1c', 'customer', '2024-02-20'),
+(3, 'bob_driver', 'db7bdbc3bc99617b49292001145c705fdde6111d24716f0c7984ea02546231c1', '5002971dd49c959b140e1ad3576cdd34be96c3ccab3fbc355009934f89137111', 'driver', '2024-01-10'),
 (4, 'groupe8', '05530bfc09764dcbce797ad8c1313819ea19bd932684c9b056b95d523ba3bdcf', '8759bb4e872578c20b9a835a4f78d8b46dcea0a80745c3dfcc71a9e5d8f6e35f', 'admin', '2000-01-01'),
-(5, 'charlie_customer', 'c30d262fa113f34a7fcfe07ef3c813247170e8de9e4983c8741e30066c4c3ec0', '96feb3fd1738208a82870371dc52a5def69343165bcf2789e1a53f54eda61336', 'customer', '2024-03-05');
+(5, 'charlie_customer', '96feb3fd1738208a82870371dc52a5def69343165bcf2789e1a53f54eda61336', '76b132d093f2081b52c12bf8bd9add1c857fd1a4d924093b170c8c7acad1df25', 'customer', '2024-03-05');
 
 -- Insert addresses
 INSERT INTO fd.address (city, postal_code, street_name, street_number) VALUES
