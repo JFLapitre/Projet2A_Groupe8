@@ -27,6 +27,7 @@ class OrderService:
             db_connector=db_connector,
             user_dao=self.user_dao,
             address_dao=self.address_dao,
+            item_dao=self.item_dao,
             bundle_dao=self.bundle_dao,
         )
 
@@ -46,7 +47,7 @@ class OrderService:
         new_order = Order(
             customer=customer,
             address=address,
-            bundles=[],
+            items=[],
             status="pending",
             order_date=datetime.now(),
         )
@@ -97,7 +98,8 @@ class OrderService:
                 f"Bundle '{bundle.name}' is unavailable because items in the list '{not_available}' are not available."
             )
 
-        order.bundles.append(bundle)
+        for item in bundle.composition:
+            order.items.append(item)
 
         if not self.order_dao.update_order(order):
             raise Exception("Failed to update the order.")
@@ -112,14 +114,13 @@ class OrderService:
         if order.status != "pending":
             raise ValueError(f"Only 'pending' orders can be validated. Current status: '{order.status}'.")
 
-        if not order.bundles:
+        if not order.items:
             raise ValueError("Cannot validate an empty order.")
 
         items_needed = {}
-        for bundle in order.bundles:
-            for item in bundle.composition:
-                item_id = item.id_item
-                items_needed[item_id] = items_needed.get(item_id, 0) + 1
+        for item in order.items:
+            item_id = item.id_item
+            items_needed[item_id] = items_needed.get(item_id, 0) + 1
 
         items_to_update = []
         for item_id, quantity_needed in items_needed.items():
