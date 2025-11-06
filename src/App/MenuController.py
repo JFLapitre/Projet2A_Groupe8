@@ -105,21 +105,28 @@ def create_item(
         handle_service_error(e)
 
 
-"""@menu_router.put("/items/{item_id}")
-def update_item(item_id: int, item_data: ItemUpdate, service=Depends(get_service)):
+@menu_router.put("/items/{item_id}")
+def update_item(
+    name: str,
+    price: float,
+    stock: int,
+    availability: bool,
+    item_type: str,
+    service=Depends(get_service),
+    desc: str = None,
+):
     try:
         service.update_item(
-            id=item_id,
-            name=item_data.name,
-            desc=item_data.description,
-            price=item_data.price,
-            stock=item_data.stock,
-            availability=item_data.availability,
-            item_type=item_data.item_type,
+            name=name,
+            desc=desc,
+            price=price,
+            stock=stock,
+            availability=availability,
+            item_type=item_type,
         )
         return {"message": "Item updated successfully"}
     except Exception as e:
-        handle_service_error(e)"""
+        handle_service_error(e)
 
 
 @menu_router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -144,8 +151,50 @@ def get_bundle(bundle_id: int, dao=Depends(get_bundle_dao)):
     if not bundle:
         raise HTTPException(status_code=404, detail=f"Bundle {bundle_id} not found")
     return bundle
+"""
+@menu_router.post("/bundles", status_code=status.HTTP_201_CREATED)
+def create_bundle(
+    discounted_bundle: bool,
+    name: str,
+    price: float,
+    stock: int,
+    availability: bool,
+    composition: List[Dict[str, Any]],
+    discount: float = 0.0,
+    service=Depends(get_service),
+    desc: str = None,
+):
+    try:
+        if not discounted_bundle:
+            service.create_predifined_bundle(
+                name=name,
+                desc=desc,
+                price=price,
+                stock=stock,
+                availability=availability,
+                composition=composition,
+            )
+            return {"message": "Predifined bundle created successfully"}
+        else:
+            if discount <= 0:
+                 raise HTTPException(
+                     status_code=status.HTTP_400_BAD_REQUEST,
+                     detail="Discount is required for discounted bundles and must be greater than 0.",
+                 )
 
-
+            service.create_discounted_bundle(
+                name=name,
+                desc=desc,
+                price=price,
+                discount=discount,
+                stock=stock,
+                availability=availability,
+                composition=composition,
+            )
+            return {"message": "Discounted bundle created successfully"}
+    except Exception as e:
+        handle_service_error(e)
+"""
 @menu_router.delete("/bundles/{bundle_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_bundle(bundle_id: int, service=Depends(get_service)):
     try:
@@ -155,7 +204,7 @@ def delete_bundle(bundle_id: int, service=Depends(get_service)):
 
 
 """@menu_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
-def create_predefined_bundle(data: PredefinedBundleCreate, service=Depends(get_service)):
+def create_predefined_bundle(name : str, service=Depends(get_service)):
     try:
         service.create_predefined_bundle(
             name=data.name,

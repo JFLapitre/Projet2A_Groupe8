@@ -59,6 +59,10 @@ class OrderService:
             raise ValueError(f"No order found with ID {order_id}.")
         return self.order_dao.delete_order(order_id)
 
+    def find_order_by_id(self, order_id: int) -> Optional[Order]:
+        order = self.order_dao.find_order_by_id(order_id)
+        return order
+
     def add_bundle_to_order(self, order_id: int, bundle) -> Optional[Order]:
         """
         Adds all items from a bundle to an existing 'pending' order.

@@ -71,7 +71,7 @@ class OrderDAO(BaseModel):
                 address=address,
                 items=items,
                 status=raw_order["status"],
-                price=raw_order.get("price", sum(item.price for item in items)),  # price inclus
+                price=raw_order["price"],
                 order_date=raw_order["order_date"],
             )
         except Exception as e:
@@ -159,13 +159,12 @@ class OrderDAO(BaseModel):
             for item in order.items:
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
-                    VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
+                    INSERT INTO order_item (id_order, id_item)
+                    VALUES (%(id_order)s, %(id_item)s)
                     """,
                     {
                         "id_order": id_order,
                         "id_item": item.id_item,
-                        "price": item.price,
                     },
                     None,
                 )
@@ -216,13 +215,12 @@ class OrderDAO(BaseModel):
             for item in order.items:
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
-                    VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
+                    INSERT INTO order_item (id_order, id_item)
+                    VALUES (%(id_order)s, %(id_item)s)
                     """,
                     {
                         "id_order": order.id_order,
                         "id_item": item.id_item,
-                        "price": item.price,
                     },
                     None,
                 )

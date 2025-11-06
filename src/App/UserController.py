@@ -4,16 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
 from src.Model.APIUser import APIUser
-from src.Model.JWTResponse import JWTResponse
 
 from .auth import admin_required
-from .init_app import admin_user_service, auth_service, jwt_service, password_service
+from .init_app import admin_user_service, jwt_service, password_service
 from .JWTBearer import JWTBearer
 
 if TYPE_CHECKING:
     from src.Model.User import User
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
+
 
 def get_user_dao():
     return admin_user_service.user_dao
@@ -26,8 +26,8 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
     """
     try:
         password_service.check_password_strength(password=password)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Password too weak") from Exception
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
         user: User = admin_user_service.create_admin_account(
@@ -38,11 +38,7 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
         raise HTTPException(status_code=409, detail=f"Conflict: {error}") from error
 
     except Exception as e:
-        print(f"An unintended error occured: {type(e).__name__}: {e}")
-        import traceback
-
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Internal Server Error, check logs") from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return APIUser(id_user=user.id_user, username=user.username)
 
@@ -55,7 +51,7 @@ def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, De
     return get_user_from_credentials(credentials)
 
 
-def get_user_from_credentials(credentials: HTTPAuthorizationCredentials,dao = Depends(get_user_dao)) -> APIUser:
+def get_user_from_credentials(credentials: HTTPAuthorizationCredentials, dao=Depends(get_user_dao)) -> APIUser:
     token = credentials.credentials
     id_user = int(jwt_service.validate_user_jwt(token))
     user: User | None = dao.find_user_by_id(id_user)
@@ -72,8 +68,8 @@ def create_driver_user(username: str, password: str, name: str, phone_number: st
     """
     try:
         password_service.check_password_strength(password=password)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Password too weak") from Exception
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
         user: User = admin_user_service.create_driver_account(
@@ -85,15 +81,9 @@ def create_driver_user(username: str, password: str, name: str, phone_number: st
         )
 
     except ValueError as error:
-        # Attrape l'erreur si le nom d'utilisateur est déjà pris ou si un champ requis est manquant
         raise HTTPException(status_code=409, detail=f"Conflict: {error}") from error
 
     except Exception as e:
-        print(f"An unintended error occured: {type(e).__name__}: {e}")
-        import traceback
-
-        traceback.print_exc()
-        # Lève une erreur 500 et inclut le traceback pour le diagnostic (bonne pratique de débogage)
-        raise HTTPException(status_code=500, detail="Internal Server Error, check logs") from e
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     return APIUser(id_user=user.id_user, username=user.username)
