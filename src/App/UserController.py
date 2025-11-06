@@ -7,13 +7,16 @@ from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 
 from .auth import admin_required
-from .init_app import admin_user_service, auth_service, jwt_service, password_service, user_dao
+from .init_app import admin_user_service, auth_service, jwt_service, password_service
 from .JWTBearer import JWTBearer
 
 if TYPE_CHECKING:
     from src.Model.User import User
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
+
+def get_user_dao():
+    return admin_user_service.user_dao
 
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
@@ -65,10 +68,10 @@ def get_user_own_profile(credentials: Annotated[HTTPAuthorizationCredentials, De
     return get_user_from_credentials(credentials)
 
 
-def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIUser:
+def get_user_from_credentials(credentials: HTTPAuthorizationCredentials,dao = Depends(get_user_dao)) -> APIUser:
     token = credentials.credentials
     id_user = int(jwt_service.validate_user_jwt(token))
-    user: User | None = user_dao.find_user_by_id(id_user)
+    user: User | None = dao.find_user_by_id(id_user)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return APIUser(id_user=user.id_user, username=user.username)

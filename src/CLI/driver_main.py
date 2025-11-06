@@ -65,6 +65,10 @@ class DriverMainView(AbstractView):
         except Exception as e:
             self.print_error(f"Assignment failed: {e}")
 
+    def _get_itinerary(self):
+        driver_service = self.services.get("driver")
+        driver_service.get_itinerary(self.session.user_id)
+
     def _complete_delivery(self):
         delivery_service = self.services.get("delivery")
         delivery_id = int(self.prompt("Delivery ID to mark complete: "))
