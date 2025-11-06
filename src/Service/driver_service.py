@@ -11,7 +11,6 @@ from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.delivery import Delivery
 from src.Model.driver import Driver
-from src.Service.api_maps_service import ApiMapsService
 
 
 class DriverService:
@@ -75,6 +74,9 @@ class DriverService:
         if not created_delivery:
             raise Exception("Failed to create and assign the delivery in the database.")
 
+        driver.availability = False
+        self.user_dao.update_user(driver)
+
         return created_delivery
 
     def get_itinerary(self, driver_id:int ):
@@ -132,9 +134,3 @@ class DriverService:
         """
         all_deliveries = self.delivery_dao.find_all_deliveries()
         return [d for d in all_deliveries if d.status == "pending"]
-
-
-db_connector = DBConnector()
-service = DriverService(db_connector)
-service.create_and_assign_delivery([3],3)
-service.get_itinerary(3)
