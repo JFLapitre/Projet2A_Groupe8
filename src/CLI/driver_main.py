@@ -64,6 +64,7 @@ class DriverMainView(AbstractView):
             self.print_info(f"Assigned to delivery #{new_del.id_delivery}.")
         except Exception as e:
             self.print_error(f"Assignment failed: {e}")
+            new_del=driver_service.create_and_assign_delivery(order_ids, self.session.user_id)
 
     def _get_itinerary(self):
         driver_service = self.services.get("driver")
