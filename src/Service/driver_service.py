@@ -144,5 +144,3 @@ class DriverService:
         """
         all_deliveries = self.delivery_dao.find_all_deliveries()
         return [d for d in all_deliveries if d.status == "pending"]
-
-
