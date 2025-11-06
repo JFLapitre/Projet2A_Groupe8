@@ -77,7 +77,8 @@ class MockDBConnector:
         q = " ".join(query.lower().split())
 
         # to find user by id
-        if "from fd.user" in q and "where u.id_user" in q:
+        # CORRIGÉ: "from \"user\""
+        if 'from "user"' in q and "where u.id_user" in q:
             id_user = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == id_user:
@@ -85,7 +86,8 @@ class MockDBConnector:
             return None
 
         # to find user by username
-        if "from fd.user" in q and "where u.username" in q:
+        # CORRIGÉ: "from \"user\""
+        if 'from "user"' in q and "where u.username" in q:
             username = data.get("username")
             for u in self.users:
                 if u["username"] == username:
@@ -93,13 +95,15 @@ class MockDBConnector:
             return None
 
         # to find all users
-        if "from fd.user" in q and "left join" in q and "where" not in q:
+        # CORRIGÉ: "from \"user\""
+        if 'from "user"' in q and "left join" in q and "where" not in q:
             if return_type == "all":
                 return self.users
             else:
                 return self.users[0]
 
-        if "from fd.user" in q and "left join" in q and "where u.user_type" in q:
+        # CORRIGÉ: "from \"user\""
+        if 'from "user"' in q and "left join" in q and "where u.user_type" in q:
             user_type = data.get("user_type")
             filtered_users = [u for u in self.users if u["user_type"] == user_type]
             if return_type == "all":
@@ -108,7 +112,8 @@ class MockDBConnector:
                 return filtered_users[0] if filtered_users else None
 
         # to add user
-        if q.startswith("insert into fd.user"):
+        # CORRIGÉ: "insert into \"user\""
+        if q.startswith('insert into "user"'):
             new_id = self.next_id
             user_type = data.get("user_type")
 
@@ -146,7 +151,8 @@ class MockDBConnector:
 
             return {"id_user": new_user["id_user"]}
 
-        if q.startswith("insert into fd.driver"):
+        # CORRIGÉ: "insert into driver"
+        if q.startswith("insert into driver"):
             id_user = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == id_user:
@@ -156,7 +162,8 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
 
-        if q.startswith("insert into fd.customer"):
+        # CORRIGÉ: "insert into customer"
+        if q.startswith("insert into customer"):
             id_user = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == id_user:
@@ -164,7 +171,8 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
 
-        if q.startswith("insert into fd.admin"):
+        # CORRIGÉ: "insert into admin"
+        if q.startswith("insert into admin"):
             id_user = data.get("id_user")
             for u in self.users:
                 if u["id_user"] == id_user:
@@ -173,7 +181,8 @@ class MockDBConnector:
             return None
 
         # to update user
-        if "update fd.user" in q:
+        # CORRIGÉ: "update \"user\""
+        if 'update "user"' in q:
             if not data:
                 raise Exception("no data provided")
             user_id = data.get("id_user")
@@ -182,7 +191,8 @@ class MockDBConnector:
                     u.update(data)
             return None
         # to update customer
-        if "update fd.customer" in q:
+        # CORRIGÉ: "update customer"
+        if "update customer" in q:
             if not data:
                 raise Exception("no data provided")
             user_id = data.get("id_user")
@@ -192,7 +202,8 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
         # to update driver
-        if "update fd.driver" in q:
+        # CORRIGÉ: "update driver"
+        if "update driver" in q:
             if not data:
                 raise Exception("no data provided")
             user_id = data.get("id_user")
@@ -204,7 +215,8 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
         # to update admin
-        if "update fd.admin" in q:
+        # CORRIGÉ: "update admin"
+        if "update admin" in q:
             if not data:
                 raise Exception("no data provided")
             user_id = data.get("id_user")
@@ -219,14 +231,16 @@ class MockDBConnector:
             return None
 
         # to delete user
-        if q.startswith("delete from fd.customer"):
+        # CORRIGÉ: "delete from customer/driver/admin"
+        if q.startswith("delete from customer"):
             return None
-        elif q.startswith("delete from fd.driver"):
+        elif q.startswith("delete from driver"):
             return None
-        elif q.startswith("delete from fd.admin"):
+        elif q.startswith("delete from admin"):
             return None
 
-        if q.startswith("delete from fd.user"):
+        # CORRIGÉ: "delete from \"user\""
+        if q.startswith('delete from "user"'):
             id_user_to_delete = data.get("id_user")
 
             if id_user_to_delete is not None:
@@ -375,7 +389,8 @@ def test_find_all_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            if "from fd.user" in query.lower() and return_type == "all":
+            # CORRIGÉ: "from \"user\""
+            if 'from "user"' in query.lower() and return_type == "all":
                 if "where" not in query.lower() or "where u.user_type" in query.lower():
                     raise Exception("Simulated DB Error")
             return super().sql_query(query, data, return_type)
@@ -390,7 +405,8 @@ def test_update_user_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            if "update fd.user" in query.lower():
+            # CORRIGÉ: "update \"user\""
+            if 'update "user"' in query.lower():
                 raise Exception("Simulated DB Error")
             return super().sql_query(query, data, return_type)
 
@@ -406,7 +422,8 @@ def test_delete_user_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            if query.lower().startswith("delete from fd.user"):
+            # CORRIGÉ: "delete from \"user\""
+            if query.lower().startswith('delete from "user"'):
                 raise Exception("Simulated DB Error")
             return super().sql_query(query, data, return_type)
 
@@ -421,7 +438,7 @@ def test_delete_user_error():
 def test_find_user_by_id_not_found():
     """Checks that find_user_by_id returns None for a non-existent ID."""
     user_DAO = UserDAO(MockDBConnector())
-    user = user_DAO.find_user_by_id(999)
+    user = user_DAO.find_user_by_id(999)  # ID non présent
     assert user is None
 
 
@@ -434,10 +451,12 @@ def test_find_user_by_username_not_found():
 
 def test_find_all_filtered_empty():
     """Vérifie que find_all avec un filtre retourne une liste vide si aucun résultat."""
+
     # Créons un Mock temporaire sans Admin (ID 3) pour simuler un cas où le type serait absent
     class EmptyAdminMock(MockDBConnector):
         def __init__(self):
             super().__init__()
+            # Simule une DB sans le type 'admin'
             self.users = [u for u in self.users if u["user_type"] != "admin"]
 
     user_DAO = UserDAO(EmptyAdminMock())
@@ -449,18 +468,20 @@ def test_find_all_filtered_empty():
 
 def test_update_driver_error_on_child_query():
     """
-    Test la gestion d'erreur si la requête UPDATE fd.user réussit 
-    mais la requête UPDATE fd.driver/customer/admin échoue.
+    Test la gestion d'erreur si la requête UPDATE "user" réussit
+    mais la requête UPDATE driver/customer/admin échoue.
     """
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            if "update fd.driver" in query.lower():
+            # CORRIGÉ: "update driver"
+            if "update driver" in query.lower():
                 raise Exception("Simulated Child DB Update Error")
+            # Toutes les autres requêtes utilisent le Mock normal, y compris update "user"
             return super().sql_query(query, data, return_type)
 
     user_DAO = UserDAO(ErrorMock())
-    
+
     # Données à jour pour le Driver (ID 2)
     updated_driver_data = Driver(
         id_user=2,
@@ -476,6 +497,6 @@ def test_update_driver_error_on_child_query():
     )
 
     updated_user = user_DAO.update_user(updated_driver_data)
-    
+
     # L'update complet doit échouer, donc la méthode doit retourner None.
     assert updated_user is None

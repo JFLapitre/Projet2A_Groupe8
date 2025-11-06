@@ -7,12 +7,14 @@ from pydantic import BaseModel
 from src.DAO.addressDAO import AddressDAO
 from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
+from src.DAO.itemDAO import ItemDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.order import Order
 
 
 class OrderDAO(BaseModel):
     db_connector: DBConnector
+    item_dao: ItemDAO
     user_dao: UserDAO
     address_dao: AddressDAO
     bundle_dao: BundleDAO
@@ -30,8 +32,11 @@ class OrderDAO(BaseModel):
             Order object if found, None otherwise.
         """
         try:
+            # CORRIGÉ: "order" au lieu de fd.order
             raw_order = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_order = %(id_order)s", {"id_order": id_order}, "one"
+                'SELECT * FROM "order" WHERE id_order = %(id_order)s',
+                {"id_order": id_order},
+                "one",
             )
             if raw_order is None:
                 return None
@@ -44,27 +49,29 @@ class OrderDAO(BaseModel):
             if raw_order["id_address"] is not None:
                 address = self.address_dao.find_address_by_id(raw_order["id_address"])
 
-            raw_bundle_ids = self.db_connector.sql_query(
+            # CORRIGÉ: item et order_item au lieu de fd.item et fd.order_item
+            raw_items = self.db_connector.sql_query(
                 """
-                SELECT id_bundle 
-                FROM fd.order_bundle 
-                WHERE id_order = %(id_order)s
+                SELECT i.*
+                FROM item i
+                JOIN order_item oi ON i.id_item = oi.id_item
+                WHERE oi.id_order = %(id_order)s
                 """,
                 {"id_order": id_order},
                 "all",
             )
 
-            bundles = []
-            for bundle_data in raw_bundle_ids:
-                bundle = self.bundle_dao.find_bundle_by_id(bundle_data["id_bundle"])
-                if bundle:
-                    bundles.append(bundle)
+            items = []
+            for item_data in raw_items:
+                item = self.item_dao.find_item_by_id(item_data["id_item"])
+                if item:
+                    items.append(item)
 
             return Order(
                 id_order=raw_order["id_order"],
                 customer=customer,
                 address=address,
-                bundles=bundles,
+                items=items,
                 status=raw_order["status"],
                 order_date=raw_order["order_date"],
             )
@@ -79,44 +86,14 @@ class OrderDAO(BaseModel):
             List[Order]: A list of Order objects (empty if no orders exist).
         """
         try:
-            raw_orders = self.db_connector.sql_query("SELECT * FROM fd.order", {}, "all")
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
+            raw_orders = self.db_connector.sql_query('SELECT * FROM "order"', {}, "all")
 
             orders = []
             for order_data in raw_orders:
-                customer = None
-                if order_data["id_user"] is not None:
-                    customer = self.user_dao.find_user_by_id(order_data["id_user"])
-
-                address = None
-                if order_data["id_address"] is not None:
-                    address = self.address_dao.find_address_by_id(order_data["id_address"])
-
-                raw_bundle_ids = self.db_connector.sql_query(
-                    """
-                    SELECT id_bundle 
-                    FROM fd.order_bundle 
-                    WHERE id_order = %(id_order)s
-                    """,
-                    {"id_order": order_data["id_order"]},
-                    "all",
-                )
-
-                bundles = []
-                for bundle_data in raw_bundle_ids:
-                    bundle = self.bundle_dao.find_bundle_by_id(bundle_data["id_bundle"])
-                    if bundle:
-                        bundles.append(bundle)
-
-                orders.append(
-                    Order(
-                        id_order=order_data["id_order"],
-                        customer=customer,
-                        address=address,
-                        bundles=bundles,
-                        status=order_data["status"],
-                        order_date=order_data["order_date"],
-                    )
-                )
+                order = self.find_order_by_id(order_data["id_order"])
+                if order:
+                    orders.append(order)
 
             return orders
         except Exception as e:
@@ -133,8 +110,11 @@ class OrderDAO(BaseModel):
             List[Order]: List of orders for this customer.
         """
         try:
+            # CORRIGÉ: "order" au lieu de fd.order
             raw_orders = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_user = %(id_user)s", {"id_user": id_user}, "all"
+                'SELECT * FROM "order" WHERE id_user = %(id_user)s',
+                {"id_user": id_user},
+                "all",
             )
 
             orders = []
@@ -161,9 +141,10 @@ class OrderDAO(BaseModel):
             id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
             id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
 
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             raw_created_order = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.order (id_user, status, id_address, order_date)
+                INSERT INTO "order" (id_user, status, id_address, order_date)
                 VALUES (%(id_user)s, %(status)s, %(id_address)s, %(order_date)s)
                 RETURNING *;
                 """,
@@ -178,14 +159,18 @@ class OrderDAO(BaseModel):
 
             id_order = raw_created_order["id_order"]
 
-            for bundle in order.bundles:
-                bundle_id = bundle.id_bundle if hasattr(bundle, "id_bundle") else bundle
+            for item in order.items:
+                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_bundle (id_order, id_bundle)
-                    VALUES (%(id_order)s, %(id_bundle)s)
+                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
+                    VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
                     """,
-                    {"id_order": id_order, "id_bundle": bundle_id},
+                    {
+                        "id_order": id_order,
+                        "id_item": item.id_item,
+                        "price": item.price,
+                    },
                     None,
                 )
 
@@ -204,9 +189,10 @@ class OrderDAO(BaseModel):
             bool: True if update succeeded, False otherwise.
         """
         try:
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             res = self.db_connector.sql_query(
                 """
-                UPDATE fd.order
+                UPDATE "order"
                 SET id_user = %(id_user)s,
                     status = %(status)s,
                     id_address = %(id_address)s,
@@ -224,18 +210,25 @@ class OrderDAO(BaseModel):
                 "one",
             )
 
+            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": order.id_order}, None
+                "DELETE FROM order_item WHERE id_order = %(id_order)s",
+                {"id_order": order.id_order},
+                None,
             )
 
-            for bundle in order.bundles:
-                bundle_id = bundle.id_bundle
+            for item in order.items:
+                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_bundle (id_order, id_bundle)
-                    VALUES (%(id_order)s, %(id_bundle)s)
+                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
+                    VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
                     """,
-                    {"id_order": order.id_order, "id_bundle": bundle_id},
+                    {
+                        "id_order": order.id_order,
+                        "id_item": item.id_item,
+                        "price": item.price,
+                    },
                     None,
                 )
 
@@ -254,16 +247,25 @@ class OrderDAO(BaseModel):
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
+            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": id_order}, None
+                "DELETE FROM order_item WHERE id_order = %(id_order)s",
+                {"id_order": id_order},
+                None,
             )
 
+            # CORRIGÉ: delivery_order au lieu de fd.delivery_order
             self.db_connector.sql_query(
-                "DELETE FROM fd.delivery_order WHERE id_order = %(id_order)s", {"id_order": id_order}, None
+                "DELETE FROM delivery_order WHERE id_order = %(id_order)s",
+                {"id_order": id_order},
+                None,
             )
 
+            # CORRIGÉ: "order" au lieu de fd.order
             res = self.db_connector.sql_query(
-                "DELETE FROM fd.order WHERE id_order = %(id_order)s RETURNING id_order;", {"id_order": id_order}, "one"
+                'DELETE FROM "order" WHERE id_order = %(id_order)s RETURNING id_order;',
+                {"id_order": id_order},
+                "one",
             )
             return res is not None
         except Exception as e:

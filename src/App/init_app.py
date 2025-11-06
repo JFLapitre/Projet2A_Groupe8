@@ -21,7 +21,9 @@ user_dao = UserDAO(db_connector=db_connector)
 address_dao = AddressDAO(db_connector=db_connector)
 item_dao = ItemDAO(db_connector=db_connector)
 bundle_dao = BundleDAO(db_connector=db_connector, item_dao=item_dao)
-order_dao = OrderDAO(db_connector=db_connector, user_dao=user_dao, address_dao=address_dao, bundle_dao=bundle_dao)
+order_dao = OrderDAO(
+    db_connector=db_connector, user_dao=user_dao, address_dao=address_dao, bundle_dao=bundle_dao, item_dao=item_dao
+)
 delivery_dao = DeliveryDAO(db_connector=db_connector, user_dao=user_dao, order_dao=order_dao)
 
 jwt_service = JwtService()

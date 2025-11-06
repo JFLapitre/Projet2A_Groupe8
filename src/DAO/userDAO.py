@@ -29,10 +29,10 @@ class UserDAO:
                     d.availability,
                     a.name as admin_name,
                     a.phone_number as admin_phone
-                FROM fd.user u
-                LEFT JOIN fd.customer c USING (id_user)
-                LEFT JOIN fd.driver d USING (id_user)
-                LEFT JOIN fd.admin a USING (id_user)
+                FROM "user" u
+                LEFT JOIN customer c USING (id_user)
+                LEFT JOIN driver d USING (id_user)
+                LEFT JOIN admin a USING (id_user)
                 WHERE u.id_user = %(id_user)s
                 """,
                 {"id_user": id_user},
@@ -94,10 +94,10 @@ class UserDAO:
                     d.availability,
                     a.name as admin_name,
                     a.phone_number as admin_phone
-                FROM fd.user u
-                LEFT JOIN fd.customer c USING (id_user)
-                LEFT JOIN fd.driver d USING (id_user)
-                LEFT JOIN fd.admin a USING (id_user)
+                FROM "user" u
+                LEFT JOIN customer c USING (id_user)
+                LEFT JOIN driver d USING (id_user)
+                LEFT JOIN admin a USING (id_user)
                 WHERE u.username = %(username)s
                 """,
                 {"username": username},
@@ -130,10 +130,10 @@ class UserDAO:
                     d.availability,
                     a.name as admin_name,
                     a.phone_number as admin_phone
-                FROM fd.user u
-                LEFT JOIN fd.customer c USING (id_user)
-                LEFT JOIN fd.driver d USING (id_user)
-                LEFT JOIN fd.admin a USING (id_user)
+                FROM "user" u
+                LEFT JOIN customer c USING (id_user)
+                LEFT JOIN driver d USING (id_user)
+                LEFT JOIN admin a USING (id_user)
             """
             params = {}
             if user_type:
@@ -201,7 +201,7 @@ class UserDAO:
         try:
             result = self.db_connector.sql_query(
                 """
-            INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_date)
+            INSERT INTO "user" (id_user, username, hash_password, salt, user_type, sign_up_date)
             VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
             RETURNING id_user;
             """,
@@ -219,7 +219,7 @@ class UserDAO:
             if user_type == "customer":
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.customer (id_user, name, phone_number)
+                    INSERT INTO customer (id_user, name, phone_number)
                     VALUES (%(id_user)s, %(name)s, %(phone_number)s)
                     """,
                     {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
@@ -228,7 +228,7 @@ class UserDAO:
             elif user_type == "driver":
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability)
+                    INSERT INTO driver (id_user, name, phone_number, vehicle_type, availability)
                     VALUES (%(id_user)s, %(name)s, %(phone_number)s, %(vehicle_type)s, %(availability)s)
                     """,
                     {
@@ -243,7 +243,7 @@ class UserDAO:
             elif user_type == "admin":
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.admin (id_user, name, phone_number)
+                    INSERT INTO admin (id_user, name, phone_number)
                     VALUES (%(id_user)s, %(name)s, %(phone_number)s)
                     """,
                     {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
@@ -267,7 +267,7 @@ class UserDAO:
 
             self.db_connector.sql_query(
                 """
-                UPDATE fd.user
+                UPDATE "user"
                 SET username = %(username)s,
                     hash_password = %(hash_password)s,
                     user_type = %(user_type)s
@@ -285,7 +285,7 @@ class UserDAO:
             if user_type == "customer":
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.customer
+                    UPDATE customer
                     SET name = %(name)s,
                         phone_number = %(phone_number)s
                     WHERE id_user = %(id_user)s
@@ -300,7 +300,7 @@ class UserDAO:
             elif user_type == "driver":
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.driver
+                    UPDATE driver
                     SET name = %(name)s,
                         phone_number = %(phone_number)s,
                         vehicle_type = %(vehicle_type)s,
@@ -319,7 +319,7 @@ class UserDAO:
             elif user_type == "admin":
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.admin
+                    UPDATE admin
                     SET name = %(name)s,
                         phone_number = %(phone_number)s
                     WHERE id_user = %(id_user)s
@@ -354,25 +354,25 @@ class UserDAO:
 
             if user_type == "customer":
                 self.db_connector.sql_query(
-                    "DELETE FROM fd.customer WHERE id_user = %(id_user)s",
+                    "DELETE FROM customer WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
                     None,
                 )
             elif user_type == "driver":
                 self.db_connector.sql_query(
-                    "DELETE FROM fd.driver WHERE id_user = %(id_user)s",
+                    "DELETE FROM driver WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
                     None,
                 )
             elif user_type == "admin":
                 self.db_connector.sql_query(
-                    "DELETE FROM fd.admin WHERE id_user = %(id_user)s",
+                    "DELETE FROM admin WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
                     None,
                 )
 
             self.db_connector.sql_query(
-                "DELETE FROM fd.user WHERE id_user = %(id_user)s",
+                'DELETE FROM "user" WHERE id_user = %(id_user)s',
                 {"id_user": id_user},
                 None,
             )

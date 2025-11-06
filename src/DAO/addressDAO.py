@@ -24,7 +24,7 @@ class AddressDAO(BaseModel):
         """
         try:
             raw_address = self.db_connector.sql_query(
-                "SELECT * FROM fd.address WHERE id_address = %(id_address)s", {"id_address": id_address}, "one"
+                "SELECT * FROM address WHERE id_address = %(id_address)s", {"id_address": id_address}, "one"
             )
             if raw_address is None:
                 return None
@@ -41,7 +41,7 @@ class AddressDAO(BaseModel):
             List[Address]: A list of Address objects (empty if no addresses exist).
         """
         try:
-            raw_addresses = self.db_connector.sql_query("SELECT * FROM fd.address", {}, "all")
+            raw_addresses = self.db_connector.sql_query("SELECT * FROM address", {}, "all")
             return [Address(**address) for address in raw_addresses]
         except Exception as e:
             logging.error(f"Failed to fetch all addresses: {e}")
@@ -59,7 +59,7 @@ class AddressDAO(BaseModel):
         try:
             raw_created_address = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.address (city, postal_code, street_name, street_number)
+                INSERT INTO address (city, postal_code, street_name, street_number)
                 VALUES (%(city)s, %(postal_code)s, %(street_name)s, %(street_number)s)
                 RETURNING *;
                 """,
@@ -88,7 +88,7 @@ class AddressDAO(BaseModel):
         try:
             res = self.db_connector.sql_query(
                 """
-                UPDATE fd.address
+                UPDATE address
                 SET city = %(city)s,
                     postal_code = %(postal_code)s,
                     street_name = %(street_name)s,
@@ -121,7 +121,7 @@ class AddressDAO(BaseModel):
         """
         try:
             res = self.db_connector.sql_query(
-                "DELETE FROM fd.address WHERE id_address = %(id_address)s RETURNING id_address;",
+                "DELETE FROM address WHERE id_address = %(id_address)s RETURNING id_address;",
                 {"id_address": id_address},
                 "one",
             )

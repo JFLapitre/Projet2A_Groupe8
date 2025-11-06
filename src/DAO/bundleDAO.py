@@ -31,7 +31,7 @@ class BundleDAO(BaseModel):
         """
         try:
             raw_bundle = self.db_connector.sql_query(
-                "SELECT * FROM fd.bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, "one"
+                "SELECT * FROM bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, "one"
             )
 
             if not raw_bundle:
@@ -40,8 +40,8 @@ class BundleDAO(BaseModel):
             raw_items = self.db_connector.sql_query(
                 """
                 SELECT i.*
-                FROM fd.item i
-                JOIN fd.bundle_item bi ON i.id_item = bi.id_item
+                FROM item i
+                JOIN bundle_item bi ON i.id_item = bi.id_item
                 WHERE bi.id_bundle = %(bundle_id)s
                 """,
                 {"bundle_id": bundle_id},
@@ -97,7 +97,7 @@ class BundleDAO(BaseModel):
             List of all bundles
         """
         try:
-            raw_bundles = self.db_connector.sql_query("SELECT * FROM fd.bundle", {}, "all")
+            raw_bundles = self.db_connector.sql_query("SELECT * FROM bundle", {}, "all")
 
             bundles = []
             for raw_bundle in raw_bundles:
@@ -123,7 +123,7 @@ class BundleDAO(BaseModel):
         try:
             raw_created_bundle = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.bundle (name, description, bundle_type, price, discount)
+                INSERT INTO bundle (name, description, bundle_type, price, discount)
                 VALUES (%(name)s, %(description)s, 'predefined', %(price)s, NULL)
                 RETURNING *;
                 """,
@@ -137,7 +137,7 @@ class BundleDAO(BaseModel):
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.bundle_item (id_bundle, id_item)
+                    INSERT INTO bundle_item (id_bundle, id_item)
                     VALUES (%(id_bundle)s, %(id_item)s)
                     """,
                     {"id_bundle": id_bundle, "id_item": item_id},
@@ -163,7 +163,7 @@ class BundleDAO(BaseModel):
         try:
             raw_created_bundle = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.bundle (name, description, bundle_type, price, discount)
+                INSERT INTO bundle (name, description, bundle_type, price, discount)
                 VALUES (%(name)s, %(description)s, 'discount', NULL, %(discount)s)
                 RETURNING *;
                 """,
@@ -177,7 +177,7 @@ class BundleDAO(BaseModel):
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.bundle_item (id_bundle, id_item)
+                    INSERT INTO bundle_item (id_bundle, id_item)
                     VALUES (%(id_bundle)s, %(id_item)s)
                     """,
                     {"id_bundle": id_bundle, "id_item": item_id},
@@ -203,7 +203,7 @@ class BundleDAO(BaseModel):
         try:
             raw_created_bundle = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.bundle (name, description, bundle_type, price, discount)
+                INSERT INTO bundle (name, description, bundle_type, price, discount)
                 VALUES (%(name)s, %(description)s, 'single_item', %(price)s, NULL)
                 RETURNING *;
                 """,
@@ -217,7 +217,7 @@ class BundleDAO(BaseModel):
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.bundle_item (id_bundle, id_item)
+                    INSERT INTO bundle_item (id_bundle, id_item)
                     VALUES (%(id_bundle)s, %(id_item)s)
                     """,
                     {"id_bundle": id_bundle, "id_item": item_id},
@@ -244,7 +244,7 @@ class BundleDAO(BaseModel):
             if isinstance(bundle, PredefinedBundle):
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.bundle
+                    UPDATE bundle
                     SET name = %(name)s,
                         description = %(description)s,
                         price = %(price)s
@@ -261,7 +261,7 @@ class BundleDAO(BaseModel):
             elif isinstance(bundle, DiscountedBundle):
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.bundle
+                    UPDATE bundle
                     SET name = %(name)s,
                         description = %(description)s,
                         discount = %(discount)s,
@@ -280,7 +280,7 @@ class BundleDAO(BaseModel):
             elif isinstance(bundle, OneItemBundle):
                 self.db_connector.sql_query(
                     """
-                    UPDATE fd.bundle
+                    UPDATE bundle
                     SET name = %(name)s,
                         description = %(description)s,
                         price = %(price)s
@@ -296,14 +296,14 @@ class BundleDAO(BaseModel):
                 )
 
             self.db_connector.sql_query(
-                "DELETE FROM fd.bundle_item WHERE id_bundle = %(id_bundle)s", {"id_bundle": bundle.id_bundle}, None
+                "DELETE FROM bundle_item WHERE id_bundle = %(id_bundle)s", {"id_bundle": bundle.id_bundle}, None
             )
 
             for item in bundle.composition:
                 item_id = item.id_item if hasattr(item, "id_item") else item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.bundle_item (id_bundle, id_item)
+                    INSERT INTO bundle_item (id_bundle, id_item)
                     VALUES (%(id_bundle)s, %(id_item)s)
                     """,
                     {"id_bundle": bundle.id_bundle, "id_item": item_id},
@@ -328,11 +328,11 @@ class BundleDAO(BaseModel):
         """
         try:
             self.db_connector.sql_query(
-                "DELETE FROM fd.bundle_item WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
+                "DELETE FROM bundle_item WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
             )
 
             self.db_connector.sql_query(
-                "DELETE FROM fd.bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
+                "DELETE FROM bundle WHERE id_bundle = %(bundle_id)s", {"bundle_id": bundle_id}, None
             )
 
             logging.info(f"Deleted bundle with ID: {bundle_id}")
