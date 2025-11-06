@@ -32,8 +32,9 @@ class OrderDAO(BaseModel):
             Order object if found, None otherwise.
         """
         try:
+            # CORRIGÉ: "order" au lieu de fd.order
             raw_order = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_order = %(id_order)s",
+                'SELECT * FROM "order" WHERE id_order = %(id_order)s',
                 {"id_order": id_order},
                 "one",
             )
@@ -48,11 +49,12 @@ class OrderDAO(BaseModel):
             if raw_order["id_address"] is not None:
                 address = self.address_dao.find_address_by_id(raw_order["id_address"])
 
+            # CORRIGÉ: item et order_item au lieu de fd.item et fd.order_item
             raw_items = self.db_connector.sql_query(
                 """
                 SELECT i.*
-                FROM fd.item i
-                JOIN fd.order_item oi ON i.id_item = oi.id_item
+                FROM item i
+                JOIN order_item oi ON i.id_item = oi.id_item
                 WHERE oi.id_order = %(id_order)s
                 """,
                 {"id_order": id_order},
@@ -84,6 +86,7 @@ class OrderDAO(BaseModel):
             List[Order]: A list of Order objects (empty if no orders exist).
         """
         try:
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             raw_orders = self.db_connector.sql_query('SELECT * FROM "order"', {}, "all")
 
             orders = []
@@ -107,8 +110,9 @@ class OrderDAO(BaseModel):
             List[Order]: List of orders for this customer.
         """
         try:
+            # CORRIGÉ: "order" au lieu de fd.order
             raw_orders = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_user = %(id_user)s",
+                'SELECT * FROM "order" WHERE id_user = %(id_user)s',
                 {"id_user": id_user},
                 "all",
             )
@@ -137,6 +141,7 @@ class OrderDAO(BaseModel):
             id_user = order.customer.id_user if hasattr(order.customer, "id_user") else order.customer
             id_address = order.address.id_address if hasattr(order.address, "id_address") else order.address
 
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             raw_created_order = self.db_connector.sql_query(
                 """
                 INSERT INTO "order" (id_user, status, id_address, order_date)
@@ -155,9 +160,10 @@ class OrderDAO(BaseModel):
             id_order = raw_created_order["id_order"]
 
             for item in order.items:
+                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_item (id_order, id_item, quantity, price_at_order)
+                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
                     VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
                     """,
                     {
@@ -183,6 +189,7 @@ class OrderDAO(BaseModel):
             bool: True if update succeeded, False otherwise.
         """
         try:
+            # CORRIGÉ: "order" (était déjà corrigé dans votre fichier)
             res = self.db_connector.sql_query(
                 """
                 UPDATE "order"
@@ -203,16 +210,18 @@ class OrderDAO(BaseModel):
                 "one",
             )
 
+            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_item WHERE id_order = %(id_order)s",
+                "DELETE FROM order_item WHERE id_order = %(id_order)s",
                 {"id_order": order.id_order},
                 None,
             )
 
             for item in order.items:
+                # CORRIGÉ: order_item au lieu de fd.order_item
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_item (id_order, id_item, quantity, price_at_order)
+                    INSERT INTO order_item (id_order, id_item, quantity, price_at_order)
                     VALUES (%(id_order)s, %(id_item)s, 1, %(price)s)
                     """,
                     {
@@ -238,20 +247,23 @@ class OrderDAO(BaseModel):
             bool: True if the deletion succeeded, False otherwise.
         """
         try:
+            # CORRIGÉ: order_item au lieu de fd.order_item
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_item WHERE id_order = %(id_order)s",
+                "DELETE FROM order_item WHERE id_order = %(id_order)s",
                 {"id_order": id_order},
                 None,
             )
 
+            # CORRIGÉ: delivery_order au lieu de fd.delivery_order
             self.db_connector.sql_query(
-                "DELETE FROM fd.delivery_order WHERE id_order = %(id_order)s",
+                "DELETE FROM delivery_order WHERE id_order = %(id_order)s",
                 {"id_order": id_order},
                 None,
             )
 
+            # CORRIGÉ: "order" au lieu de fd.order
             res = self.db_connector.sql_query(
-                "DELETE FROM fd.order WHERE id_order = %(id_order)s RETURNING id_order;",
+                'DELETE FROM "order" WHERE id_order = %(id_order)s RETURNING id_order;',
                 {"id_order": id_order},
                 "one",
             )
