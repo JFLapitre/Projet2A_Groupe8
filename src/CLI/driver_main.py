@@ -69,6 +69,11 @@ class DriverMainView(AbstractView):
         driver_service = self.services.get("driver")
         driver_service.get_itinerary(self.session.user_id)
 
+    def _get_delivery_details(self):
+        driver_service = self.services.get("driver")
+        delivery_id= int(self.prompt("Which Delivery ID :"))
+        print(driver_service.get_delivery_details(delivery_id))
+
     def _complete_delivery(self):
         delivery_service = self.services.get("delivery")
         delivery_id = int(self.prompt("Delivery ID to mark complete: "))

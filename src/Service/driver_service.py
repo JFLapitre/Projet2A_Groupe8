@@ -136,7 +136,14 @@ class DriverService:
         delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
         if not delivery:
             raise ValueError(f"No delivery found with ID {delivery_id}.")
-        return delivery
+        addresses_list = {}
+        customer_list = {}
+        for o_id in delivery.orders:
+            order = self.order_dao.find_order_by_id(o_id)
+            addresses_list[o_id] = order.address
+            user = self.user_dao.find_user_by_id(order.customer.name)
+            customer_list[o_id] = user
+        return addresses_list, customer_list
 
     def list_pending_orders(self) -> List[Order]:
         """

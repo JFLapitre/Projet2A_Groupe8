@@ -13,7 +13,7 @@ class AddressService:
         self.address_dao = AddressDAO(db_connector=db_connector)
 
     def create_address(
-        self, street_name: str, city: str, postal_code: int, street_number: int = None
+        self, street_name: str, city: str, postal_code: int, street_number: str = None
     ) -> Optional[Address]:
         """
         Validates the data and creates a new address in the database.
@@ -24,8 +24,6 @@ class AddressService:
             raise ValueError("City name cannot be empty.")
         if not postal_code:
             raise ValueError("Postal code cannot be empty.")
-        if street_number <= 0:
-            raise ValueError("Street number must be a positive integer.")
 
         new_address = Address(
             street_name=street_name,
