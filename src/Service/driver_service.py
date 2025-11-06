@@ -11,7 +11,7 @@ from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.delivery import Delivery
 from src.Model.driver import Driver
-
+from src.Service.api_maps_service import ApiMapsService
 
 class DriverService:
     def __init__(self, db_connector: DBConnector):
@@ -81,14 +81,19 @@ class DriverService:
 
     def get_itinerary(self, driver_id:int ):
 
-        delivery_of_driver = self.delivery_dao.find_in_progress_deliveries_by_driver(driver_id)
+        deliveries = self.delivery_dao.find_in_progress_deliveries_by_driver(driver_id)
+        if not deliveries:
+            print("Aucune livraison en cours pour ce chauffeur.")
+            return None
+        delivery = deliveries[0]
+
         driver = self.user_dao.find_user_by_id(driver_id)
         if not driver or not isinstance(driver, Driver):
             raise ValueError(f"No valid driver found with ID {driver_id}")
 
         adresses = [
             f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
-            for order in delivery_of_driver.orders
+            for order in delivery.orders
         ]
         return ApiMapsService.Driveritinerary(adresses)
 
@@ -134,3 +139,9 @@ class DriverService:
         """
         all_deliveries = self.delivery_dao.find_all_deliveries()
         return [d for d in all_deliveries if d.status == "pending"]
+
+
+db_connector = DBConnector()
+service = DriverService(db_connector)
+service.create_and_assign_delivery([3],3)
+service.get_itinerary(3)
