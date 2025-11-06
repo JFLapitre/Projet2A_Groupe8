@@ -36,7 +36,8 @@ class MockDBConnector:
                 "availability": True,
             },
         ]
-        self.next_item_id = 2
+        # Corrigé : L'ID suivant doit être 3, car 1 et 2 existent déjà.
+        self.next_item_id = 3
 
     def sql_query(
         self,
@@ -47,32 +48,37 @@ class MockDBConnector:
         q = " ".join(query.lower().split())
 
         # add item
-        if "insert into fd.item" in q:
+        # CORRIGÉ: "insert into item"
+        if "insert into item" in q:
             if not isinstance(data, dict):
                 return False
 
             new_id = self.next_item_id
             self.next_item_id += 1
 
-                created_item = {
-                    "id_item": new_id,
-                    "name": data["name"],
-                    "item_type": data["item_type"],
-                    "price": data["price"],
-                    "description": data.get("description") if data.get("description") is not None else "Pas de description.",
-                    "stock": data.get("stock") if data.get("stock") is not None else 0,
-                    "availability": data.get("availability") if data.get("availability") is not None else True,
-                }
+            created_item = {
+                "id_item": new_id,
+                "name": data["name"],
+                "item_type": data["item_type"],
+                "price": data["price"],
+                "description": data.get("description")
+                if data.get("description") is not None
+                else "Pas de description.",
+                "stock": data.get("stock") if data.get("stock") is not None else 0,
+                "availability": data.get("availability") if data.get("availability") is not None else True,
+            }
 
             self.items.append(created_item)
             return created_item
 
         # find all items
-        if "select * from fd.item" in q and return_type == "all":
+        # CORRIGÉ: "select * from item"
+        if "select * from item" in q and return_type == "all":
             return list(self.items)
 
         # find item by id
-        if "from fd.item" in q and "where id_item" in q and return_type == "one":
+        # CORRIGÉ: "from item"
+        if "from item" in q and "where id_item" in q and return_type == "one":
             item_id = None
             if isinstance(data, dict):
                 item_id = data.get("id_item")
@@ -86,7 +92,8 @@ class MockDBConnector:
             return None
 
         # update item
-        if "update fd.item" in q and "where id_item" in q:
+        # CORRIGÉ: "update item"
+        if "update item" in q and "where id_item" in q:
             item_id_to_update = data.get("id_item")
             for item in self.items:
                 if item["id_item"] == item_id_to_update:
@@ -97,7 +104,8 @@ class MockDBConnector:
             return False
 
         # delete item
-        if "delete from fd.item" in q and "where id_item" in q:
+        # CORRIGÉ: "delete from item"
+        if "delete from item" in q and "where id_item" in q:
             item_id_to_delete = None
             if isinstance(data, dict):
                 item_id_to_delete = data.get("id_item")
@@ -115,8 +123,8 @@ class MockDBConnector:
 
 @pytest.fixture
 def item_dao():
-    mock_connector = MockDBConnector() 
-    return ItemDAO(mock_connector) 
+    mock_connector = MockDBConnector()
+    return ItemDAO(mock_connector)
 
 
 def test_find_all_items(item_dao):
@@ -144,10 +152,12 @@ def test_find_item_by_id_non_existing(item_dao):
 def test_add_item(item_dao):
     """Test adding one item"""
     new_item = Item(id_item=None, name="Test Pizza", item_type="main", price=15.00)
+
+    # Le MockDBConnector a next_item_id = 3
     created_item = item_dao.add_item(new_item)
 
     assert created_item is not None
-    assert created_item.id_item == 2
+    assert created_item.id_item == 3  # ID doit être 3
     assert created_item.name == "Test Pizza"
     assert created_item.price == 15.00
 
@@ -156,26 +166,26 @@ def test_add_item(item_dao):
 
 def test_update_item(item_dao):
     """Test the update of one item"""
-    new_item = Item(id_item=None, name="Test Update", item_type="main", price=10.00)
-    created_item = item_dao.add_item(new_item)
+    # Utilise l'item 1 existant pour la mise à jour
+    item_to_update = item_dao.find_item_by_id(1)
 
-    created_item.name = "Test Updated"
-    created_item.price = 12.00
-    success = item_dao.update_item(created_item)
+    item_to_update.name = "Test Updated"
+    item_to_update.price = 12.00
+    success = item_dao.update_item(item_to_update)
 
     assert success is True
 
-    updated_item = item_dao.find_item_by_id(created_item.id_item)
+    updated_item = item_dao.find_item_by_id(1)
     assert updated_item.name == "Test Updated"
     assert updated_item.price == 12.00
-
-    item_dao.delete_item(created_item.id_item)
 
 
 def test_delete_item(item_dao):
     """Test deleting one item"""
+    # Ajoute un item pour le supprimer (ID 3)
     new_item = Item(id_item=None, name="Test Delete", item_type="main", price=10.00)
     created_item = item_dao.add_item(new_item)
+    assert created_item.id_item == 3
 
     success = item_dao.delete_item(created_item.id_item)
     assert success is True
@@ -183,22 +193,19 @@ def test_delete_item(item_dao):
     deleted_item = item_dao.find_item_by_id(created_item.id_item)
     assert deleted_item is None
 
+
 def test_add_item_minimal_data(item_dao):
     """Test the add of one item without optionnal values"""
-    new_item = Item(
-        id_item=None, 
-        name="Minimal Side",
-        item_type="side",
-        price=3.50
-    )
-    created_item = item_dao.add_item(new_item)
+    new_item = Item(id_item=None, name="Minimal Side", item_type="side", price=3.50)
+    created_item = item_dao.add_item(new_item)  # ID 3
 
     assert created_item is not None
     assert created_item.name == "Minimal Side"
     assert created_item.price == 3.50
 
-    assert created_item.description is not None
-    assert isinstance(created_item.stock, int)
+    # Vérifie les valeurs par défaut définies dans le mock
+    assert created_item.description == "Pas de description."
+    assert created_item.stock == 0
     assert created_item.availability is True
 
     item_dao.delete_item(created_item.id_item)
@@ -206,12 +213,7 @@ def test_add_item_minimal_data(item_dao):
 
 def test_update_item_non_existing(item_dao):
     """Test the update of an inexisting item"""
-    non_existing_item = Item(
-        id_item=9997,
-        name="Should not exist",
-        item_type="side",
-        price=1.00
-    )
+    non_existing_item = Item(id_item=9997, name="Should not exist", item_type="side", price=1.00)
     success = item_dao.update_item(non_existing_item)
     assert success is False
 

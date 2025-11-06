@@ -29,7 +29,7 @@ class DeliveryDAO:
         """
         try:
             raw_delivery = self.db_connector.sql_query(
-                "SELECT * FROM fd.delivery WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, "one"
+                "SELECT * FROM delivery WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, "one"
             )
             if raw_delivery is None:
                 return None
@@ -39,7 +39,7 @@ class DeliveryDAO:
                 driver = self.user_dao.find_user_by_id(raw_delivery["id_driver"])
 
             raw_order_ids = self.db_connector.sql_query(
-                "SELECT id_order FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s",
+                "SELECT id_order FROM delivery_order WHERE id_delivery = %(id_delivery)s",
                 {"id_delivery": id_delivery},
                 "all",
             )
@@ -68,7 +68,7 @@ class DeliveryDAO:
             List[Delivery]: A list of Delivery objects (empty if no deliveries exist).
         """
         try:
-            raw_deliveries = self.db_connector.sql_query("SELECT * FROM fd.delivery", {}, "all")
+            raw_deliveries = self.db_connector.sql_query("SELECT * FROM delivery", {}, "all")
 
             deliveries = []
             for delivery_data in raw_deliveries:
@@ -79,7 +79,7 @@ class DeliveryDAO:
                 raw_order_ids = self.db_connector.sql_query(
                     """
                     SELECT id_order 
-                    FROM fd.delivery_order 
+                    FROM delivery_order 
                     WHERE id_delivery = %(id_delivery)s
                     """,
                     {"id_delivery": delivery_data["id_delivery"]},
@@ -120,7 +120,7 @@ class DeliveryDAO:
             raw_deliveries = self.db_connector.sql_query(
                 """
                 SELECT *
-                FROM fd.delivery
+                FROM delivery
                 WHERE id_driver = %(driver_id)s
                 AND status = 'in_progress';
                 """,
@@ -154,7 +154,7 @@ class DeliveryDAO:
 
             res = self.db_connector.sql_query(
                 """
-                UPDATE fd.delivery
+                UPDATE delivery
                 SET id_driver = %(id_driver)s,
                     status = %(status)s,
                     delivery_time = %(delivery_time)s
@@ -188,7 +188,7 @@ class DeliveryDAO:
 
             raw_created_delivery = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.delivery (id_driver, status, delivery_time)
+                INSERT INTO delivery (id_driver, status, delivery_time)
                 VALUES (%(id_driver)s, %(status)s, %(delivery_time)s)
                 RETURNING *;
                 """,
@@ -202,7 +202,7 @@ class DeliveryDAO:
                 order_id = order.id_order if hasattr(order, "id_order") else order
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.delivery_order (id_delivery, id_order)
+                    INSERT INTO delivery_order (id_delivery, id_order)
                     VALUES (%(id_delivery)s, %(id_order)s)
                     """,
                     {"id_delivery": id_delivery, "id_order": order_id},
@@ -225,11 +225,11 @@ class DeliveryDAO:
         """
         try:
             self.db_connector.sql_query(
-                "DELETE FROM fd.delivery_order WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, None
+                "DELETE FROM delivery_order WHERE id_delivery = %(id_delivery)s", {"id_delivery": id_delivery}, None
             )
 
             res = self.db_connector.sql_query(
-                "DELETE FROM fd.delivery WHERE id_delivery = %(id_delivery)s RETURNING id_delivery;",
+                "DELETE FROM delivery WHERE id_delivery = %(id_delivery)s RETURNING id_delivery;",
                 {"id_delivery": id_delivery},
                 "one",
             )

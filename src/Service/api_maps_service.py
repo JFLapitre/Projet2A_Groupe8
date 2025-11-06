@@ -12,7 +12,6 @@ from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 
-
 # Initialisations
 db = DBConnector()
 load_dotenv()
@@ -20,7 +19,9 @@ user_dao = UserDAO(db_connector=db)
 address_dao = AddressDAO(db_connector=db)
 item_dao = ItemDAO(db_connector=db)
 bundle_dao = BundleDAO(db_connector=db, item_dao=item_dao)
-order_dao = OrderDAO(db_connector=db, user_dao=user_dao, address_dao=address_dao, bundle_dao=bundle_dao)
+order_dao = OrderDAO(
+    db_connector=db, user_dao=user_dao, address_dao=address_dao, bundle_dao=bundle_dao, item_dao=item_dao
+)
 delivery_dao = DeliveryDAO(db_connector=db, user_dao=user_dao, order_dao=order_dao)
 
 
@@ -65,10 +66,10 @@ class ApiMapsService:
         else:
             print("Erreur :", data["status"])
 
+
 delivery = delivery_dao.find_delivery_by_id(1)
 
 addresses = [
     f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
     for order in delivery.orders
-
 ]
