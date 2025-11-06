@@ -59,10 +59,14 @@ class DriverMainView(AbstractView):
         delivery_service = self.services.get("delivery")
         delivery_id = int(self.prompt("Delivery ID to take: "))
         try:
-            delivery_service.assign_driver_to_delivery(delivery_id, self.session.user_id)
+            delivery_service.create_and_assign_delivery(delivery_id, self.session.user_id)
             self.print_info(f"Assigned to delivery #{delivery_id}.")
         except Exception as e:
             self.print_error(f"Assignment failed: {e}")
+
+    def _get_itinerary(self):
+        driver_service = self.services.get("driver")
+        driver_service.get_itinerary(self.session.user_id)
 
     def _complete_delivery(self):
         delivery_service = self.services.get("delivery")
