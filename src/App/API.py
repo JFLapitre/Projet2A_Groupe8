@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from .OrderController import order_router
 from .UserController import user_router
+from .MenuController import menu_router
 
 
 def run_app():
@@ -14,9 +15,9 @@ def run_app():
 
     # Enregistrement des routers
     # app.include_router(auth_router, prefix="/auth")
-    app.include_router(user_router, prefix="/users")
-    app.include_router(order_router, prefix="/orders")
-    # app.include_router(menu_router, prefix="/menus")
+    app.include_router(user_router)
+    app.include_router(order_router)
+    app.include_router(menu_router)
     # app.include_router(delivery_router, prefix="/deliveries")
 
     @app.get("/", include_in_schema=False)

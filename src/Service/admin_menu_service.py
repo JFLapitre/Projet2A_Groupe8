@@ -1,5 +1,4 @@
 from src.DAO.bundleDAO import BundleDAO
-from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
@@ -9,12 +8,12 @@ from src.Model.predefined_bundle import PredefinedBundle
 
 
 class AdminMenuService:
-    def __init__(self, db_connector: DBConnector):
+    def __init__(self, item_dao = ItemDAO, bundle_dao= BundleDAO):
         """
         Initializes the service and injects dependencies into the DAOs.
         """
-        self.item_dao = ItemDAO(db_connector=db_connector)
-        self.bundle_dao = BundleDAO(db_connector=db_connector, item_dao=self.item_dao)
+        self.item_dao = item_dao
+        self.bundle_dao = bundle_dao
 
     def create_item(self, name: str, desc: str, price: float, stock: int, availability: bool, item_type: str) -> None:
         """
@@ -94,10 +93,7 @@ class AdminMenuService:
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")
 
-    def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
-        """
-        ValidTates and creates a new bundle containing only one item.
-        """
+    """def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
         if price <= 0:
             raise ValueError("Price must be positive.")
         if not item:
@@ -106,7 +102,7 @@ class AdminMenuService:
         new_bundle = OneItemBundle(name=name, description=description, price=price, composition=item)
         created_bundle = self.bundle_dao.add_one_item_bundle(new_bundle)
         if not created_bundle:
-            raise Exception(f"Failed to create one-item bundle: {name}")
+            raise Exception(f"Failed to create one-item bundle: {name}")"""
 
     def create_discounted_bundle(self, name: str, description: str, required_item_types: list, discount: float) -> None:
         """

@@ -45,7 +45,7 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
 
 
 @user_router.post("/jwt", status_code=status.HTTP_201_CREATED)
-def APIlogin(username: str, password: str) -> JWTResponse:
+def login(username: str, password: str) -> JWTResponse:
     """
     Authenticate with username and password and obtain a token
     """
@@ -73,10 +73,9 @@ def get_user_from_credentials(credentials: HTTPAuthorizationCredentials) -> APIU
         raise HTTPException(status_code=404, detail="User not found")
     return APIUser(id_user=user.id_user, username=user.username)
 
+
 @user_router.post("/driver", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
-def create_driver_user(
-    username: str, password: str, name: str, phone_number: str, vehicle_type: str
-) -> APIUser:
+def create_driver_user(username: str, password: str, name: str, phone_number: str, vehicle_type: str) -> APIUser:
     """
     Performs validation and creates a new Driver account.
     This route requires an existing Admin to be authenticated.
