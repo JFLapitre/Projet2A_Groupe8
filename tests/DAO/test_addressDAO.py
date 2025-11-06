@@ -48,11 +48,22 @@ class MockDBConnector:
                 created_address = {
                     "id_address": new_id,
                     "city": data["city"],
-                    "postal code": data[""],
-                    "street name": 'Rue de la République',
-                    "street number": "1"
+                    "postal code": data["postal code"],
+                    "street name": data["street name"],
+                    "street number": data["street number"]
                 }
 
-                self.items.append(created_item) 
-                return created_item
+                self.address.append(created_address)
+                return created_address
+
+            # update address
+            if "update fd.address" in q and "where id address" in q:
+                address_id_to_update = data.get("id address")
+                for address in self.adress:
+                    if address["id address"] == address_id_to_update:
+                        for key, value in data.address():
+                            if key != "id address":
+                                address[key] = value
+                        return True
+                return False
 
