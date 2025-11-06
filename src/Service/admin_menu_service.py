@@ -1,4 +1,5 @@
 from src.DAO.bundleDAO import BundleDAO
+from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
@@ -8,12 +9,12 @@ from src.Model.predefined_bundle import PredefinedBundle
 
 
 class AdminMenuService:
-    def __init__(self, item_dao = ItemDAO, bundle_dao= BundleDAO):
+    def __init__(self, db_connector: DBConnector):
         """
         Initializes the service and injects dependencies into the DAOs.
         """
-        self.item_dao = item_dao
-        self.bundle_dao = bundle_dao
+        self.item_dao = ItemDAO(db_connector=db_connector)
+        self.bundle_dao = BundleDAO(db_connector=db_connector, item_dao=self.item_dao)
 
     def create_item(self, name: str, desc: str, price: float, stock: int, availability: bool, item_type: str) -> None:
         """

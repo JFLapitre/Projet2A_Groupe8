@@ -18,7 +18,6 @@ class DeliveryService:
         """
         Initializes the service and injects dependencies into the DAOs.
         """
-        # Initialisation dans l'ordre de dépendance
         self.item_dao = ItemDAO(db_connector=db_connector)
         self.user_dao = UserDAO(db_connector=db_connector)
         self.address_dao = AddressDAO(db_connector=db_connector)
