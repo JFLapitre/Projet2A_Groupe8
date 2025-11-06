@@ -11,7 +11,7 @@ class PasswordService:
 
     COMMON_PASSWORDS = {"password", "12345678", "qwerty", "azerty", "admin", "motdepasse"}
     MIN_LENGTH = 8
-    MIN_SCORE = 3
+    MIN_SCORE = 4
 
     def __init__(self):
         pass
@@ -61,6 +61,7 @@ class PasswordService:
 
         if score < self.MIN_SCORE:
             raise Exception(
-                f"Le mot de passe doit contenir au moins {self.MIN_SCORE} des 4 types de caractères (majuscules, minuscules, chiffres, spéciaux). Score actuel : {score}/4."
+                f"Your password must have all the caracters' types "
+                + "(capital letter, lower letter, digit and special). You actually have {score}/4 of them."
             )
         return True
