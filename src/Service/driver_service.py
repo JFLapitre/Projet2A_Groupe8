@@ -86,15 +86,18 @@ class DriverService:
             print("Aucune livraison en cours pour ce chauffeur.")
             return None
         delivery = deliveries[0]
+        print(delivery)
 
         driver = self.user_dao.find_user_by_id(driver_id)
         if not driver or not isinstance(driver, Driver):
             raise ValueError(f"No valid driver found with ID {driver_id}")
+        print (driver)
 
         adresses = [
             f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
             for order in delivery.orders
         ]
+        print (adresses)
         return ApiMapsService.Driveritinerary(adresses)
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
