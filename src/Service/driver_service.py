@@ -13,6 +13,7 @@ from src.Model.delivery import Delivery
 from src.Model.driver import Driver
 from src.Service.api_maps_service import ApiMapsService
 
+
 class DriverService:
     def __init__(self, db_connector: DBConnector):
         """
@@ -29,6 +30,7 @@ class DriverService:
             user_dao=self.user_dao,
             address_dao=self.address_dao,
             bundle_dao=self.bundle_dao,
+            item_dao=self.item_dao,
         )
 
         self.delivery_dao = DeliveryDAO(db_connector=db_connector, user_dao=self.user_dao, order_dao=self.order_dao)
@@ -79,7 +81,7 @@ class DriverService:
 
         return created_delivery
 
-    def get_itinerary(self, driver_id:int ):
+    def get_itinerary(self, driver_id: int):
         """
         Retrieves the ongoing delivery for a given driver.
         """
@@ -93,13 +95,13 @@ class DriverService:
         driver = self.user_dao.find_user_by_id(driver_id)
         if not driver or not isinstance(driver, Driver):
             raise ValueError(f"No valid driver found with ID {driver_id}")
-        print (driver)
+        print(driver)
 
         adresses = [
             f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
             for order in delivery.orders
         ]
-        print (adresses)
+        print(adresses)
         return ApiMapsService.Driveritinerary(adresses)
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
@@ -144,5 +146,3 @@ class DriverService:
         """
         all_deliveries = self.delivery_dao.find_all_deliveries()
         return [d for d in all_deliveries if d.status == "pending"]
-
-
