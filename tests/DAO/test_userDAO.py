@@ -77,6 +77,7 @@ class MockDBConnector:
         q = " ".join(query.lower().split())
 
         # to find user by id
+        # CORRIGÉ: "from \"user\""
         if 'from "user"' in q and "where u.id_user" in q:
             id_user = data.get("id_user")
             for u in self.users:
@@ -85,6 +86,7 @@ class MockDBConnector:
             return None
 
         # to find user by username
+        # CORRIGÉ: "from \"user\""
         if 'from "user"' in q and "where u.username" in q:
             username = data.get("username")
             for u in self.users:
@@ -93,12 +95,14 @@ class MockDBConnector:
             return None
 
         # to find all users
+        # CORRIGÉ: "from \"user\""
         if 'from "user"' in q and "left join" in q and "where" not in q:
             if return_type == "all":
                 return self.users
             else:
                 return self.users[0]
 
+        # CORRIGÉ: "from \"user\""
         if 'from "user"' in q and "left join" in q and "where u.user_type" in q:
             user_type = data.get("user_type")
             filtered_users = [u for u in self.users if u["user_type"] == user_type]
@@ -108,6 +112,7 @@ class MockDBConnector:
                 return filtered_users[0] if filtered_users else None
 
         # to add user
+        # CORRIGÉ: "insert into \"user\""
         if q.startswith('insert into "user"'):
             new_id = self.next_id
             user_type = data.get("user_type")
@@ -146,6 +151,7 @@ class MockDBConnector:
 
             return {"id_user": new_user["id_user"]}
 
+        # CORRIGÉ: "insert into driver"
         if q.startswith("insert into driver"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -156,6 +162,7 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
 
+        # CORRIGÉ: "insert into customer"
         if q.startswith("insert into customer"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -164,6 +171,7 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
 
+        # CORRIGÉ: "insert into admin"
         if q.startswith("insert into admin"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -173,6 +181,7 @@ class MockDBConnector:
             return None
 
         # to update user
+        # CORRIGÉ: "update \"user\""
         if 'update "user"' in q:
             if not data:
                 raise Exception("no data provided")
@@ -182,6 +191,7 @@ class MockDBConnector:
                     u.update(data)
             return None
         # to update customer
+        # CORRIGÉ: "update customer"
         if "update customer" in q:
             if not data:
                 raise Exception("no data provided")
@@ -192,6 +202,7 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
         # to update driver
+        # CORRIGÉ: "update driver"
         if "update driver" in q:
             if not data:
                 raise Exception("no data provided")
@@ -204,6 +215,7 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
         # to update admin
+        # CORRIGÉ: "update admin"
         if "update admin" in q:
             if not data:
                 raise Exception("no data provided")
@@ -219,6 +231,7 @@ class MockDBConnector:
             return None
 
         # to delete user
+        # CORRIGÉ: "delete from customer/driver/admin"
         if q.startswith("delete from customer"):
             return None
         elif q.startswith("delete from driver"):
@@ -226,6 +239,7 @@ class MockDBConnector:
         elif q.startswith("delete from admin"):
             return None
 
+        # CORRIGÉ: "delete from \"user\""
         if q.startswith('delete from "user"'):
             id_user_to_delete = data.get("id_user")
 
@@ -375,6 +389,7 @@ def test_find_all_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
+            # CORRIGÉ: "from \"user\""
             if 'from "user"' in query.lower() and return_type == "all":
                 if "where" not in query.lower() or "where u.user_type" in query.lower():
                     raise Exception("Simulated DB Error")
@@ -390,6 +405,7 @@ def test_update_user_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
+            # CORRIGÉ: "update \"user\""
             if 'update "user"' in query.lower():
                 raise Exception("Simulated DB Error")
             return super().sql_query(query, data, return_type)
@@ -406,6 +422,7 @@ def test_delete_user_error():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
+            # CORRIGÉ: "delete from \"user\""
             if query.lower().startswith('delete from "user"'):
                 raise Exception("Simulated DB Error")
             return super().sql_query(query, data, return_type)
@@ -457,7 +474,7 @@ def test_update_driver_error_on_child_query():
 
     class ErrorMock(MockDBConnector):
         def sql_query(self, query, data, return_type):
-            # Simule une erreur sur la table enfant (driver)
+            # CORRIGÉ: "update driver"
             if "update driver" in query.lower():
                 raise Exception("Simulated Child DB Update Error")
             # Toutes les autres requêtes utilisent le Mock normal, y compris update "user"
