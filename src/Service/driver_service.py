@@ -144,3 +144,7 @@ class DriverService:
         return [d for d in all_deliveries if d.status == "pending"]
 
 
+db_connector = DBConnector()
+service = DriverService(db_connector)
+service.create_and_assign_delivery([3],6)
+service.get_itinerary(6)
