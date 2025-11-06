@@ -48,7 +48,7 @@ class DiscountedBundleCreate(BaseModel):
     required_item_types: List[str]"""
 
 
-menu_router = APIRouter(tags=["Admin Menu"], dependencies=[Depends(admin_required)])
+menu_router = APIRouter(prefix="/menu", tags=["Menu management"], dependencies=[Depends(admin_required)])
 
 
 def get_service():

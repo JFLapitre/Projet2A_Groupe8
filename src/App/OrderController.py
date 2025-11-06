@@ -7,7 +7,7 @@ from src.Model.order import Order
 from .auth import admin_required
 from .init_app import admin_order_service
 
-order_router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[Depends(admin_required)])
+order_router = APIRouter(prefix="/orders", tags=["Consulting orders"], dependencies=[Depends(admin_required)])
 
 def get_admin_order_service():
     return admin_order_service
