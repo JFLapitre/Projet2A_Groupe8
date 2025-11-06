@@ -71,7 +71,7 @@ class OrderDAO(BaseModel):
                 address=address,
                 items=items,
                 status=raw_order["status"],
-                price=raw_order.get("price", sum(item.price for item in items)),  # price inclus
+                price=raw_order["price"],
                 order_date=raw_order["order_date"],
             )
         except Exception as e:

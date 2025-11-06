@@ -1,17 +1,8 @@
-from typing import TYPE_CHECKING, Annotated
+from fastapi import APIRouter, HTTPException, status
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
-
-from src.Model.APIUser import APIUser
 from src.Model.JWTResponse import JWTResponse
 
-from .auth import admin_required
-from .init_app import admin_user_service, auth_service, jwt_service, password_service
-from .JWTBearer import JWTBearer
-
-if TYPE_CHECKING:
-    from src.Model.User import User
+from .init_app import auth_service, jwt_service
 
 auth_router = APIRouter(prefix="/auth", tags=["Authentification"])
 
@@ -25,5 +16,6 @@ def login(username: str, password: str) -> JWTResponse:
         user = auth_service.login(username=username, password=password)
     except Exception as error:
         raise HTTPException(status_code=403, detail="Invalid username and password combination") from error
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
     return jwt_service.encode_jwt(user.id_user)
