@@ -80,6 +80,7 @@ class DriverService:
     def get_itinerary(self, driver_id:int ):
 
         delivery_of_driver = self.delivery_dao.find_in_progress_deliveries_by_driver(driver_id)
+        driver = self.user_dao.find_user_by_id(driver_id)
         if not driver or not isinstance(driver, Driver):
             raise ValueError(f"No valid driver found with ID {driver_id}")
 
