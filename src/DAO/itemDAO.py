@@ -12,7 +12,7 @@ class ItemDAO:
         self.db_connector = db_connector
 
     def find_item_by_id(self, id_item: int) -> Item:
-        raw_item = self.db_connector.sql_query("SELECT * from fd.item WHERE id_item=%s", [id_item], "one")
+        raw_item = self.db_connector.sql_query("SELECT * from item WHERE id_item=%s", [id_item], "one")
         if raw_item is None:
             return None
         return Item(**raw_item)
@@ -23,13 +23,13 @@ class ItemDAO:
         Returns:
             List[Item]: A list of Item objects (empty if no items exist).
         """
-        raw_all_items = self.db_connector.sql_query("SELECT * FROM fd.item", {}, "all")
+        raw_all_items = self.db_connector.sql_query("SELECT * FROM item", {}, "all")
         return [Item(**item) for item in raw_all_items]
 
     def update_item(self, item: Item) -> bool:
         success_indicator = self.db_connector.sql_query(
             """
-            UPDATE fd.item
+            UPDATE item
             SET name = %(name)s,
                 item_type = %(item_type)s,
                 price = %(price)s,
@@ -39,15 +39,15 @@ class ItemDAO:
             WHERE id_item = %(id_item)s; 
             """,
             {
-                "id_item": item.id_item, 
-                "name": item.name, 
-                "item_type": item.item_type, 
+                "id_item": item.id_item,
+                "name": item.name,
+                "item_type": item.item_type,
                 "price": item.price,
                 "description": item.description,
                 "stock": item.stock,
                 "availability": item.availability,
             },
-            return_type=None, 
+            return_type=None,
         )
         if success_indicator is True or success_indicator is False:
             return success_indicator
@@ -56,7 +56,7 @@ class ItemDAO:
     def add_item(self, item: Item) -> Item:
         raw_created_item = self.db_connector.sql_query(
             """
-        INSERT INTO fd.item (id_item, name, item_type, price)
+        INSERT INTO item (id_item, name, item_type, price, description, stock, availability)
         VALUES (DEFAULT, %(name)s, %(item_type)s, %(price)s, %(description)s, %(stock)s, %(availability)s)
         RETURNING *;
         """,
@@ -72,11 +72,10 @@ class ItemDAO:
         )
         return Item(**raw_created_item)
 
-
     def delete_item(self, id_item: int) -> bool:
         success_indicator = self.db_connector.sql_query(
             """
-            DELETE FROM fd.item
+            DELETE FROM item
             WHERE id_item = %s;
             """,
             (id_item,),

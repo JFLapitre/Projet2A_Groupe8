@@ -31,7 +31,7 @@ class OrderDAO(BaseModel):
         """
         try:
             raw_order = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_order = %(id_order)s", {"id_order": id_order}, "one"
+                'SELECT * FROM "order" WHERE id_order = %(id_order)s', {"id_order": id_order}, "one"
             )
             if raw_order is None:
                 return None
@@ -47,7 +47,7 @@ class OrderDAO(BaseModel):
             raw_bundle_ids = self.db_connector.sql_query(
                 """
                 SELECT id_bundle 
-                FROM fd.order_bundle 
+                FROM order_bundle 
                 WHERE id_order = %(id_order)s
                 """,
                 {"id_order": id_order},
@@ -79,7 +79,7 @@ class OrderDAO(BaseModel):
             List[Order]: A list of Order objects (empty if no orders exist).
         """
         try:
-            raw_orders = self.db_connector.sql_query("SELECT * FROM fd.order", {}, "all")
+            raw_orders = self.db_connector.sql_query('SELECT * FROM "order"', {}, "all")
 
             orders = []
             for order_data in raw_orders:
@@ -94,7 +94,7 @@ class OrderDAO(BaseModel):
                 raw_bundle_ids = self.db_connector.sql_query(
                     """
                     SELECT id_bundle 
-                    FROM fd.order_bundle 
+                    FROM order_bundle 
                     WHERE id_order = %(id_order)s
                     """,
                     {"id_order": order_data["id_order"]},
@@ -134,7 +134,7 @@ class OrderDAO(BaseModel):
         """
         try:
             raw_orders = self.db_connector.sql_query(
-                "SELECT * FROM fd.order WHERE id_user = %(id_user)s", {"id_user": id_user}, "all"
+                'SELECT * FROM "order" WHERE id_user = %(id_user)s', {"id_user": id_user}, "all"
             )
 
             orders = []
@@ -163,7 +163,7 @@ class OrderDAO(BaseModel):
 
             raw_created_order = self.db_connector.sql_query(
                 """
-                INSERT INTO fd.order (id_user, status, id_address, order_date)
+                INSERT INTO "order" (id_user, status, id_address, order_date)
                 VALUES (%(id_user)s, %(status)s, %(id_address)s, %(order_date)s)
                 RETURNING *;
                 """,
@@ -182,7 +182,7 @@ class OrderDAO(BaseModel):
                 bundle_id = bundle.id_bundle if hasattr(bundle, "id_bundle") else bundle
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_bundle (id_order, id_bundle)
+                    INSERT INTO order_bundle (id_order, id_bundle)
                     VALUES (%(id_order)s, %(id_bundle)s)
                     """,
                     {"id_order": id_order, "id_bundle": bundle_id},
@@ -206,7 +206,7 @@ class OrderDAO(BaseModel):
         try:
             res = self.db_connector.sql_query(
                 """
-                UPDATE fd.order
+                UPDATE "order"
                 SET id_user = %(id_user)s,
                     status = %(status)s,
                     id_address = %(id_address)s,
@@ -225,14 +225,14 @@ class OrderDAO(BaseModel):
             )
 
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": order.id_order}, None
+                "DELETE FROM order_bundle WHERE id_order = %(id_order)s", {"id_order": order.id_order}, None
             )
 
             for bundle in order.bundles:
                 bundle_id = bundle.id_bundle
                 self.db_connector.sql_query(
                     """
-                    INSERT INTO fd.order_bundle (id_order, id_bundle)
+                    INSERT INTO order_bundle (id_order, id_bundle)
                     VALUES (%(id_order)s, %(id_bundle)s)
                     """,
                     {"id_order": order.id_order, "id_bundle": bundle_id},
@@ -255,15 +255,15 @@ class OrderDAO(BaseModel):
         """
         try:
             self.db_connector.sql_query(
-                "DELETE FROM fd.order_bundle WHERE id_order = %(id_order)s", {"id_order": id_order}, None
+                "DELETE FROM order_bundle WHERE id_order = %(id_order)s", {"id_order": id_order}, None
             )
 
             self.db_connector.sql_query(
-                "DELETE FROM fd.delivery_order WHERE id_order = %(id_order)s", {"id_order": id_order}, None
+                "DELETE FROM delivery_order WHERE id_order = %(id_order)s", {"id_order": id_order}, None
             )
 
             res = self.db_connector.sql_query(
-                "DELETE FROM fd.order WHERE id_order = %(id_order)s RETURNING id_order;", {"id_order": id_order}, "one"
+                'DELETE FROM "order" WHERE id_order = %(id_order)s RETURNING id_order;', {"id_order": id_order}, "one"
             )
             return res is not None
         except Exception as e:

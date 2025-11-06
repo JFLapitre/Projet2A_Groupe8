@@ -54,15 +54,17 @@ class MockDBConnector:
             new_id = self.next_item_id
             self.next_item_id += 1
 
-                created_item = {
-                    "id_item": new_id,
-                    "name": data["name"],
-                    "item_type": data["item_type"],
-                    "price": data["price"],
-                    "description": data.get("description") if data.get("description") is not None else "Pas de description.",
-                    "stock": data.get("stock") if data.get("stock") is not None else 0,
-                    "availability": data.get("availability") if data.get("availability") is not None else True,
-                }
+            created_item = {
+                "id_item": new_id,
+                "name": data["name"],
+                "item_type": data["item_type"],
+                "price": data["price"],
+                "description": data.get("description")
+                if data.get("description") is not None
+                else "Pas de description.",
+                "stock": data.get("stock") if data.get("stock") is not None else 0,
+                "availability": data.get("availability") if data.get("availability") is not None else True,
+            }
 
             self.items.append(created_item)
             return created_item
@@ -115,8 +117,8 @@ class MockDBConnector:
 
 @pytest.fixture
 def item_dao():
-    mock_connector = MockDBConnector() 
-    return ItemDAO(mock_connector) 
+    mock_connector = MockDBConnector()
+    return ItemDAO(mock_connector)
 
 
 def test_find_all_items(item_dao):
@@ -183,14 +185,10 @@ def test_delete_item(item_dao):
     deleted_item = item_dao.find_item_by_id(created_item.id_item)
     assert deleted_item is None
 
+
 def test_add_item_minimal_data(item_dao):
     """Test the add of one item without optionnal values"""
-    new_item = Item(
-        id_item=None, 
-        name="Minimal Side",
-        item_type="side",
-        price=3.50
-    )
+    new_item = Item(id_item=None, name="Minimal Side", item_type="side", price=3.50)
     created_item = item_dao.add_item(new_item)
 
     assert created_item is not None
@@ -206,12 +204,7 @@ def test_add_item_minimal_data(item_dao):
 
 def test_update_item_non_existing(item_dao):
     """Test the update of an inexisting item"""
-    non_existing_item = Item(
-        id_item=9997,
-        name="Should not exist",
-        item_type="side",
-        price=1.00
-    )
+    non_existing_item = Item(id_item=9997, name="Should not exist", item_type="side", price=1.00)
     success = item_dao.update_item(non_existing_item)
     assert success is False
 

@@ -14,17 +14,14 @@ from src.utils.reset_database_test import ResetDatabaseTest
 
 
 @pytest.fixture(scope="function", autouse=True)
-def setup_database(monkeypatch):
+def setup_database():
     """
     Fixture automatique (autouse=True) pour réinitialiser la BDD de test
     avant CHAQUE test (scope="function").
 
-    Elle utilise monkeypatch pour forcer le DBConnector à utiliser
-    le schéma 'tests' en définissant la variable d'environnement.
+    On suppose que le script ResetDatabaseTest est conçu pour
+    initialiser son propre DBConnector en mode test (par ex. DBConnector(test=True)).
     """
-
-    # Force le DBConnector à utiliser le schéma 'tests'
-    monkeypatch.setenv("POSTGRES_SCHEMA", "tests")
 
     # Lance le script de réinitialisation de la BDD de test
     reset_script = ResetDatabaseTest()
@@ -42,19 +39,19 @@ def setup_database(monkeypatch):
 @pytest.fixture(scope="function")
 def db_connector() -> DBConnector:
     """
-    Fournit un VRAI connecteur de base de données pointant vers la BDD de test.
-    Dépend implicitement de 'setup_database' (grâce à autouse=True)
-    pour s'assurer que l'ENV VAR 'POSTGRES_SCHEMA' est positionnée sur 'tests'.
+    Fournit un VRAI connecteur de base de données pointant vers la BDD de test
+    en utilisant l'initialisation DBConnector(test=True).
     """
-    # load_dotenv() est appelé dans DBConnector, donc les vars sont chargées
-    return DBConnector()
+    # Initialise le connecteur en mode test, comme demandé
+    return DBConnector(test=True)
 
 
 @pytest.fixture(scope="function")
 def user_dao(db_connector: DBConnector) -> UserDAO:
     """
-    Fournit une instance de UserDAO utilisant le vrai connecteur de BDD.
+    Fournit une instance de UserDAO utilisant le vrai connecteur de BDD (mode test).
     """
+    # Le db_connector passé ici est celui initialisé avec test=True
     return UserDAO(db_connector)
 
 
@@ -79,7 +76,7 @@ def test_find_user_by_id(user_dao: UserDAO):
     assert isinstance(driver, Driver)
     assert driver.username == "bob_driver"
     assert driver.vehicle_type == "Scooter"
-    assert driver.availability is True
+    assert driver.availability is True  # Doit maintenant lire depuis le schéma 'tests'
 
     # 3. Tester un Admin (ID 4)
     admin = user_dao.find_user_by_id(4)
@@ -96,8 +93,6 @@ def test_find_user_by_id(user_dao: UserDAO):
 def test_find_user_by_username(user_dao: UserDAO):
     """
     Teste la récupération d'utilisateurs par username.
-    Note : Le type hint 'int' dans le fichier source est une erreur,
-    l'implémentation attend bien un 'str'.
     """
     # 1. Tester un Customer
     customer = user_dao.find_user_by_username("john_doe")
@@ -137,9 +132,9 @@ def test_find_all_filtered(user_dao: UserDAO):
     """
     Teste le filtre 'user_type' de la méthode find_all.
     Données de 'pop_db_test.sql':
-    - 8 Customers (3 originaux + 5 nouveaux)
-    - 3 Drivers (1 original + 2 nouveaux)
-    - 2 Admins (1 original + 1 nouveau)
+    - 8 Customers
+    - 3 Drivers
+    - 2 Admins
     """
     # 1. Filtre Customer
     customers = user_dao.find_all(user_type="customer")
