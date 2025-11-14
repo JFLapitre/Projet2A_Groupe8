@@ -24,6 +24,7 @@ def mock_password_service() -> MagicMock:
     """
     mock_ps = MagicMock(spec=PasswordService)
 
+    # check_password_strength returns None by default, which is considered success by the service
     mock_ps.check_password_strength.return_value = None
     mock_ps.create_salt.return_value = "generated_mock_salt"
     mock_ps.hash_password.return_value = "generated_mock_hash"
@@ -33,10 +34,13 @@ def mock_password_service() -> MagicMock:
 @pytest.fixture
 def mock_user_dao(request) -> mock.MagicMock:
     """
-    Simule (patch) la classe UserDAO sans utiliser la fixture 'mocker'.
+    Patches the UserDAO class using standard mock mechanism.
+    Ensures the mock is automatically cleaned up after the test.
     """
     mock_instance = mock.MagicMock()
     mock_instance.find_user_by_username.return_value = None
+    # Simulate adding the user and returning the created object
+    mock_instance.add_user.side_effect = lambda user: user
     patcher = mock.patch("src.Service.authentication_service.UserDAO", return_value=mock_instance)
     patcher.start()
     request.addfinalizer(patcher.stop)
@@ -48,12 +52,11 @@ def mock_user_dao(request) -> mock.MagicMock:
 def dummy_customer() -> Customer:
     """
     Provides a constant Customer object for login tests.
-    The "real" password for this user is "correct_password".
     """
     return Customer(
         id_user=1,
         username="existing_user",
-        phone_number="1234567890",
+        phone_number="+33 6 12 34 56 78",
         salt="jambon",
         hash_password="7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7",
     )
@@ -67,8 +70,6 @@ def service(
     Provides an AuthenticationService instance for each test,
     injected with the necessary mocks.
     """
-    # Note: mock_user_dao has already patched the UserDAO class,
-    # so the AuthenticationService constructor will use the mock.
     return AuthenticationService(db_connector=mock_db_connector, password_service=mock_password_service)
 
 
@@ -105,10 +106,9 @@ def test_login_user_not_found(service: AuthenticationService, mock_user_dao: Mag
     Tests that login raises a ValueError if the user does not exist.
     """
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match="User not found."):
         service.login("unknown_user", "any_password")
 
-    assert "User not found" in str(e.value)
     mock_user_dao.find_user_by_username.assert_called_with("unknown_user")
 
 
@@ -123,14 +123,13 @@ def test_login_incorrect_password(
     mock_user_dao.find_user_by_username.return_value = dummy_customer
     mock_password_service.hash_password.return_value = "different_hash_value"
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match="Incorrect password."):
         service.login(username, wrong_password)
 
-    assert "Incorrect password" in str(e.value)
     mock_password_service.hash_password.assert_called_with(wrong_password, "jambon")
 
 
-# --- Tests for register() method ---
+# --- Tests for register_customer() method ---
 
 
 def test_register_customer_successful(
@@ -139,25 +138,45 @@ def test_register_customer_successful(
     """
     Tests the successful registration of a new user.
     """
-    username = "new_user"
+    username = "new_user_1"
     password = "ValidPassword123"
-    phone = "555-0123"
+    phone = "+33 6 12 34 56 78"
 
     try:
         new_user = service.register_customer(username, password, phone)
 
+        # Assertions
         mock_user_dao.find_user_by_username.assert_called_with(username)
         mock_password_service.check_password_strength.assert_called_with(password)
         mock_user_dao.add_user.assert_called_once_with(ANY)
 
+        # Verification of the created Customer object
         created_user_arg = mock_user_dao.add_user.call_args[0][0]
         assert isinstance(created_user_arg, Customer)
         assert created_user_arg.username == username
-        assert created_user_arg.phone_number == phone
+        # The service formats the phone number to INTERNATIONAL format
+        assert created_user_arg.phone_number == "+33 6 12 34 56 78"
         assert new_user is created_user_arg
 
     except Exception as e:
         pytest.fail(f"register_customer raised an unexpected exception: {e}")
+
+
+def test_register_customer_successful_phone_unformatted(
+    service: AuthenticationService, mock_user_dao: MagicMock, mock_password_service: MagicMock
+):
+    """
+    Tests successful registration when the phone number is provided without spaces or country code (assumes FR).
+    """
+    username = "user_ok"
+    password = "ValidPassword123"
+    phone = "0612345678"
+
+    new_user = service.register_customer(username, password, phone)
+
+    # Verify that the phone number was formatted correctly
+    created_user_arg = mock_user_dao.add_user.call_args[0][0]
+    assert created_user_arg.phone_number == "+33 6 12 34 56 78"
 
 
 def test_register_customer_username_exists(
@@ -170,31 +189,84 @@ def test_register_customer_username_exists(
 
     existing_username = "existing_user"
 
-    with pytest.raises(ValueError) as e:
-        service.register_customer(existing_username, "any_password", "any_phone")
+    with pytest.raises(ValueError, match=f"Username '{existing_username}' already exists."):
+        service.register_customer(existing_username, "any_password", "+33612345678")
 
-    assert f"Username '{existing_username}' already exists" in str(e.value)
     mock_user_dao.find_user_by_username.assert_called_with(existing_username)
+    mock_user_dao.add_user.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "invalid_username, error_match",
+    [
+        ("short", "Username must constain at least 6 caracters."),
+        ("user!x", "Username may only contain letters"),  # Changed to 'user!x' (6 chars) to bypass length check first
+        ("user space", "Username may only contain letters"),
+        ("user@name", "Username may only contain letters"),
+    ],
+)
+def test_register_customer_invalid_username(
+    service: AuthenticationService,
+    mock_user_dao: MagicMock,
+    mock_password_service: MagicMock,  # Added fixture to fix AttributeError
+    invalid_username,
+    error_match,
+):
+    """
+    Tests that register raises ValueError for username validation failures (length or characters).
+    """
+    with pytest.raises(ValueError, match=error_match):
+        service.register_customer(invalid_username, "ValidPassword123", "+33612345678")
+
+    mock_user_dao.find_user_by_username.assert_called_with(invalid_username)
+    mock_password_service.check_password_strength.assert_not_called()
+    mock_user_dao.add_user.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "invalid_phone, error_match",
+    [
+        ("1234", "Invalid phone number. If you have a stranger phone numer"),
+        ("+33 12 34 56 78", "Invalid phone number. If you have a stranger phone numer"),
+        ("0000000000", "Invalid phone number. If you have a stranger phone numer"),
+    ],
+)
+def test_register_customer_invalid_phone_number(
+    service: AuthenticationService,
+    mock_user_dao: MagicMock,
+    mock_password_service: MagicMock,  # Added fixture to fix AttributeError
+    invalid_phone,
+    error_match,
+):
+    """
+    Tests that register raises ValueError for invalid phone numbers (using phonenumbers library).
+    """
+    # Use a valid username to ensure failure is due to the phone number
+    valid_username = "validuser"
+
+    with pytest.raises(ValueError, match=error_match):
+        service.register_customer(valid_username, "ValidPassword123", invalid_phone)
+
+    mock_user_dao.find_user_by_username.assert_called_with(valid_username)
+    mock_password_service.check_password_strength.assert_not_called()
+    mock_user_dao.add_user.assert_not_called()
 
 
 def test_register_weak_password(
     service: AuthenticationService, mock_user_dao: MagicMock, mock_password_service: MagicMock
 ):
     """
-    Tests that register raises an Exception if the
-    password strength check fails.
+    Tests that register raises an Exception if the password strength check fails.
     """
     weak_password = "short"
     error_message = "Password length must be at least 8 characters"
 
-    mock_password_service.check_password_strength.side_effect = Exception(error_message)
+    mock_password_service.check_password_strength.side_effect = ValueError(error_message)
 
-    with pytest.raises(Exception) as e:
-        service.register_customer("another_user", weak_password, "any_phone")
+    with pytest.raises(ValueError, match=error_message):
+        service.register_customer("another_user_ok", weak_password, "+33612345678")
 
-    assert error_message in str(e.value)
-
-    mock_user_dao.find_user_by_username.assert_called_with("another_user")
+    mock_user_dao.find_user_by_username.assert_called_with("another_user_ok")
     mock_password_service.check_password_strength.assert_called_with(weak_password)
     mock_password_service.create_salt.assert_not_called()
     mock_password_service.hash_password.assert_not_called()
