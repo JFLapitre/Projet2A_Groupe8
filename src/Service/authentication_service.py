@@ -2,6 +2,8 @@ from src.DAO.DBConnector import DBConnector
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
 from src.Service.password_service import PasswordService
+import re
+import phonenumbers
 
 
 class AuthenticationService:
@@ -36,14 +38,36 @@ class AuthenticationService:
         if self.user_dao.find_user_by_username(username):
             raise ValueError(f"Username '{username}' already exists.")
 
-        # Vérifie la solidité du mot de passe
+        if len(username) < 6 : 
+            raise ValueError(f"Username must constain at least 6 caracters")
+
+        pattern = r'^[A-Za-z0-9._-]+$'
+        if not re.match(pattern, username):
+            raise ValueError(
+                "Username may only contain letters (a-z, A-Z), digits (0-9), "
+                "underscores (_), dots (.), or hyphens (-)."
+            ) 
+
+        try:
+            if phone_number_clean.startswith("+"):
+            number = phonenumbers.parse(phone_number_clean, None)
+            else:
+                number = phonenumbers.parse(phone_number_clean, FR)
+        except phonenumbers.NumberParseException:
+            raise ValueError("Invalid phone number. If you have a stranger phone numer, please enter +xx for the region concerned")
+
+        if not phonenumbers.is_valid_number(number):
+            raise ValueError("Invalid phone number. If you have a stranger phone numer, please enter +xx for the region concerned")
+
+        phone_number = phonenumbers.format_number(
+            number, phonenumbers.PhoneNumberFormat.INTERNATIONAL
+        )
+
         self.password_service.check_password_strength(password)
 
-        # Crée le salt et le hash
         salt = self.password_service.create_salt()
         hashed_password = self.password_service.hash_password(password, salt)
 
-        # Crée l’objet Customer
         new_customer = Customer(
             username=username,
             hash_password=hashed_password,
