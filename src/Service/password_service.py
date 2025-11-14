@@ -40,10 +40,10 @@ class PasswordService:
         """
 
         if len(password) < self.MIN_LENGTH:
-            raise Exception(f"The password must be at least {self.MIN_LENGTH} characters long.")
+            raise ValueError(f"The password must be at least {self.MIN_LENGTH} characters long.")
 
         if password.lower() in self.COMMON_PASSWORDS:
-            raise Exception("The password is one of the most commonly used passwords and is prohibited.")
+            raise ValueError("The password is one of the most commonly used passwords and is prohibited.")
 
         score = 0
 
@@ -60,8 +60,8 @@ class PasswordService:
             score += 1
 
         if score < self.MIN_SCORE:
-            raise Exception(
-                f"Your password must have all the caracters' types "
+            raise ValueError(
+                "Your password must have all the caracters' types "
                 + "(capital letter, lower letter, digit and special). You actually have {score}/4 of them."
             )
         return True

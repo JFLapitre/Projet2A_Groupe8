@@ -3,9 +3,9 @@
 from typing import Dict
 
 from src.CLI.auth_view import AuthView
-from src.CLI.customer_main import CustomerMainView
+from src.CLI.customer_main_view import CustomerMainView
 from src.CLI.session import Session
-from src.CLI.driver_main import DriverMainView
+from src.CLI.driver_main_view import DriverMainView
 
 def _build_services() -> Dict:
     """Charge les vrais services depuis src.init_app"""

@@ -7,7 +7,7 @@ class Session:
         self.token = None
 
     def is_authenticated(self):
-        return self.user is not None  # on se base sur l'objet user
+        return self.user is not None
 
     def logout(self):
         self.user = None
