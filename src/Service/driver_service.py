@@ -104,7 +104,9 @@ class DriverService:
             f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
             for order in delivery.orders
         ]
-        return ApiMapsService.Driveritinerary(adresses)
+        service = ApiMapsService()
+        return service.Driveritinerary(adresses)
+
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """

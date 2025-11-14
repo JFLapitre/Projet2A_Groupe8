@@ -1,5 +1,5 @@
 from unittest.mock import ANY, MagicMock, patch
-
+import os
 import pytest
 
 from src.DAO.addressDAO import AddressDAO
@@ -54,6 +54,21 @@ def mock_delivery_dao():
 def mock_bundle_dao():
     """Provides a mock BundleDAO."""
     return MagicMock(spec=BundleDAO)
+
+
+def test_api_key_exists_in_real_env():
+    """Vérifie réellement que la clé GOOGLE_MAPS_API_KEY est chargée depuis l'environnement."""
+
+    service = ApiMapsService()
+
+    # The API Key needs to exist in the env 
+    assert service.api_key is not None, "GOOGLE_MAPS_API_KEY n'est pas définie dans le .env ou l'environnement"
+    assert service.api_key != "", "GOOGLE_MAPS_API_KEY est vide dans l'environnement"
+
+    print("Clé trouvée :", service.api_key)
+
+
+    print("Clé trouvée :", service.api_key)
 
 
 def test_itinerary_created(service: ApiMapsService, mock_delievry_dao: MagicMock, sample_delivery: Delivery):
