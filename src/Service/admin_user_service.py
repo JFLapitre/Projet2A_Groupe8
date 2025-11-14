@@ -48,7 +48,7 @@ class AdminUserService:
         return created_user
 
     def create_driver_account(
-        self, username: str, password: str, name: str, phone_number: str, vehicle_type: str, availability = True
+        self, username: str, password: str, name: str, phone_number: str, vehicle_type: str, availability=True
     ) -> Driver:
         if not username or not password or not name or not phone_number:
             raise ValueError("Username, password, name, and phone number are required.")
@@ -70,7 +70,7 @@ class AdminUserService:
             salt=salt,
             phone_number=phone_number,
             vehicle_type=vehicle_type,
-            availability=availability
+            availability=availability,
         )
 
         created_user = self.user_dao.add_user(new_driver)
