@@ -17,12 +17,22 @@ class ItemDAO:
             return None
         return Item(**raw_item)
 
-    def find_all_items(self) -> list[Item]:
-        """Returns a list of all Item objects from the database.
+    def get_items_by_ids(self, item_ids: List[int]) -> List[Item]:
+        if not item_ids:
+            return []
 
-        Returns:
-            List[Item]: A list of Item objects (empty if no items exist).
-        """
+        placeholders = ', '.join(['%s'] * len(item_ids))
+
+        query = f"SELECT * FROM item WHERE id_item IN ({placeholders})"
+
+        raw_items = self.db_connector.sql_query(query, item_ids, "all") 
+
+        if not raw_items:
+            return []
+
+        return [Item(**raw_item) for raw_item in raw_items]
+
+    def find_all_items(self) -> list[Item]:
         raw_all_items = self.db_connector.sql_query("SELECT * FROM item", {}, "all")
         return [Item(**item) for item in raw_all_items]
 

@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
@@ -15,7 +15,9 @@ from .init_app import admin_menu_service
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
 
-menu_bundle_router = APIRouter(prefix="/menu", tags=["Menu Bundle management"], dependencies=[Depends(admin_required)])
+menu_bundle_router = APIRouter(
+    prefix="/menubundle", tags=["Menu Bundle management"], dependencies=[Depends(admin_required)]
+)
 
 
 def get_service():
@@ -39,6 +41,7 @@ def handle_service_error(e: Exception):
     print(f"Unexpected error: {e}")
     raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 @menu_bundle_router.get("/bundles", response_model=List[AnyBundle])
 def list_bundles(service=Depends(get_service)):
     try:
@@ -55,22 +58,14 @@ def get_bundle(bundle_id: int, dao=Depends(get_bundle_dao)):
     return bundle
 
 
-@menu_bundle_router.delete("/bundles/{bundle_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_bundle(bundle_id: int, service=Depends(get_service)):
-    try:
-        service.delete_bundle(bundle_id)
-    except Exception as e:
-        handle_service_error(e)
-
-
-@menu_bundle_router.post("/bundles/predifined", status_code=status.HTTP_201_CREATED)
+@menu_bundle_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
 def create_predefined_bundle(
-    name:str,
-    price: float,
-    availability: bool,
-    composition: list,
+    name: str=Query(),
+    price: float=Query(),
+    availability: bool=Query(),
+    item_ids: List[int] = Query(...),
+    desc: Optional[str] = Query(None, alias="description"),
     service=Depends(get_service),
-    desc: Optional[str]=None,
 ):
     try:
         service.create_predefined_bundle(
@@ -78,7 +73,7 @@ def create_predefined_bundle(
             description=desc,
             price=price,
             availability=availability,
-            composition=composition,
+            item_ids=item_ids,
         )
         return {"message": "Predefined bundle created"}
     except Exception as e:
@@ -86,22 +81,29 @@ def create_predefined_bundle(
 
 
 @menu_bundle_router.post("/bundles/discounted", status_code=status.HTTP_201_CREATED)
-def create_discounted_bundle(name: str,
-    price: float,
-    availability: bool,
-    composition: list,
-    discount: float = 0.0,
+def create_discounted_bundle(
+    name: str=Query(),
+    required_item_types: List[str] = Query(),
+    discount: float=Query(),
+    desc: Optional[str] = Query(None, alias="description"),
     service=Depends(get_service),
-    desc: str = None,
 ):
     try:
-        service.create_discounted_bundle(name=name,
-            desc=desc,
-            price=price,
-            availability=availability,
-            composition=composition,
-            discount=discount
+        service.create_discounted_bundle(
+            name=name,
+            description=desc,
+            discount= discount,
+            required_item_types=required_item_types,
         )
-        return {"message": "Discounted bundle created"}
+        return {"message": "Predefined bundle created"}
     except Exception as e:
         handle_service_error(e)
+
+
+@menu_bundle_router.delete("/bundles/{bundle_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bundle(bundle_id: int, service=Depends(get_service)):
+    try:
+        service.delete_bundle(bundle_id)
+    except Exception as e:
+        handle_service_error(e)
+

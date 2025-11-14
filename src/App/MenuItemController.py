@@ -15,7 +15,7 @@ from .init_app import admin_menu_service
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
 
-menu_item_router = APIRouter(prefix="/menu", tags=["Menu Item management"], dependencies=[Depends(admin_required)])
+menu_item_router = APIRouter(prefix="/menuitem", tags=["Menu Item management"], dependencies=[Depends(admin_required)])
 
 
 def get_service():
