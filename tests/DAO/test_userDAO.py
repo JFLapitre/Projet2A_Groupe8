@@ -1,7 +1,6 @@
 from datetime import date
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-# Importation de pytest pour les fixtures
 import pytest
 
 from src.DAO.userDAO import UserDAO
@@ -14,10 +13,9 @@ if TYPE_CHECKING:
 
 
 class MockDBConnector:
-    """Mock pour simuler les interactions avec la base de données."""
+    """Mock to simulate interactions with the database."""
 
     def __init__(self):
-        # Initialisation des données simulées
         self.users = [
             {
                 "id_user": 1,
@@ -53,7 +51,6 @@ class MockDBConnector:
                 "hash_password": "random_driver_hash",
                 "salt": "random_driver_salt",
             },
-            # Nouvel Admin
             {
                 "id_user": 3,
                 "user_type": "admin",
@@ -73,7 +70,6 @@ class MockDBConnector:
             },
         ]
         self.next_id = 4
-        # Flag pour simuler l'échec d'une requête spécifique (pour les tests d'erreur)
         self.raise_exception = False
 
     def sql_query(
@@ -84,7 +80,6 @@ class MockDBConnector:
     ):
         q = " ".join(query.lower().split())
 
-        # Gestion des erreurs simulées
         if self.raise_exception:
             if "where u.id_user" in q and 'from "user"' in q:
                 if data and data.get("id_user") == 1:
@@ -104,7 +99,6 @@ class MockDBConnector:
             if q.startswith('delete from "user"') and data and data.get("id_user") == 1:
                 raise Exception("Simulated DB Error (delete user)")
 
-        # to find user by id
         if 'from "user"' in q and "where u.id_user" in q:
             id_user = data.get("id_user")
             for u in self.users:
@@ -112,7 +106,6 @@ class MockDBConnector:
                     return u
             return None
 
-        # to find user by username
         if 'from "user"' in q and "where u.username" in q:
             username = data.get("username")
             for u in self.users:
@@ -120,14 +113,12 @@ class MockDBConnector:
                     return u
             return None
 
-        # to find all users
         if 'from "user"' in q and "left join" in q and "where" not in q:
             if return_type == "all":
                 return self.users
             else:
                 return self.users[0]
 
-        # to find all users filtered
         if 'from "user"' in q and "left join" in q and "where u.user_type" in q:
             user_type = data.get("user_type")
             filtered_users = [u for u in self.users if u["user_type"] == user_type]
@@ -136,7 +127,6 @@ class MockDBConnector:
             else:
                 return filtered_users[0] if filtered_users else None
 
-        # to add user
         if q.startswith('insert into "user"'):
             new_id = self.next_id
             user_type = data.get("user_type")
@@ -147,8 +137,8 @@ class MockDBConnector:
                 "username": data.get("username"),
                 "password": data.get("password"),
                 "sign_up_date": date.today(),
-                "salt": data.get("salt"),  # Assurer que le salt est pris en compte
-                "hash_password": data.get("hash_password"),  # Assurer que le hash est pris en compte
+                "salt": data.get("salt"),
+                "hash_password": data.get("hash_password"),
                 "customer_name": None,
                 "customer_phone": None,
                 "driver_name": None,
@@ -164,7 +154,6 @@ class MockDBConnector:
 
             return {"id_user": new_user["id_user"]}
 
-        # insert into driver
         if q.startswith("insert into driver"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -175,7 +164,6 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
 
-        # insert into customer
         if q.startswith("insert into customer"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -184,7 +172,6 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
 
-        # insert into admin
         if q.startswith("insert into admin"):
             id_user = data.get("id_user")
             for u in self.users:
@@ -193,7 +180,6 @@ class MockDBConnector:
                     u["admin_phone"] = data.get("phone_number")
             return None
 
-        # to update user
         if 'update "user"' in q:
             if not data:
                 raise Exception("no data provided")
@@ -203,12 +189,10 @@ class MockDBConnector:
                     u["username"] = data.get("username")
                     u["hash_password"] = data.get("hash_password")
                     u["user_type"] = data.get("user_type")
-                    # Ajouté la mise à jour de salt pour la couverture de test
                     if "salt" in data:
                         u["salt"] = data.get("salt")
             return None
 
-        # to update customer
         if "update customer" in q:
             if not data:
                 raise Exception("no data provided")
@@ -219,7 +203,6 @@ class MockDBConnector:
                     u["customer_phone"] = data.get("phone_number")
             return None
 
-        # to update driver
         if "update driver" in q:
             if not data:
                 raise Exception("no data provided")
@@ -232,7 +215,6 @@ class MockDBConnector:
                     u["availability"] = data.get("availability")
             return None
 
-        # to update admin
         if "update admin" in q:
             if not data:
                 raise Exception("no data provided")
@@ -247,7 +229,6 @@ class MockDBConnector:
                     u["admin_phone"] = data.get("phone_number")
             return None
 
-        # to delete user
         if q.startswith("delete from customer"):
             return None
         elif q.startswith("delete from driver"):
@@ -255,7 +236,6 @@ class MockDBConnector:
         elif q.startswith("delete from admin"):
             return None
 
-        # delete from "user"
         if q.startswith('delete from "user"'):
             id_user_to_delete = data.get("id_user")
 
@@ -267,25 +247,26 @@ class MockDBConnector:
         return None
 
 
-# --- FIXTURES PYTEST ---
+# --- PYTEST FIXTURES ---
 
 
 @pytest.fixture
 def mock_db():
-    """Fournit une instance réutilisable du MockDBConnector."""
+    """Provides a reusable instance of the MockDBConnector."""
     return MockDBConnector()
 
 
 @pytest.fixture
 def user_dao(mock_db):
-    """Fournit une instance de UserDAO avec le MockDBConnector."""
+    """Provides a UserDAO instance with the MockDBConnector."""
     return UserDAO(mock_db)
 
 
-# --- TESTS NOMINAUX ---
+# --- NOMINAL TESTS ---
 
 
 def test_find_user_by_id(user_dao: UserDAO):
+    """Tests finding a user by ID and verifying its type and data."""
     user: AbstractUser = user_dao.find_user_by_id(1)
     assert user is not None
     assert user.id_user == 1
@@ -294,6 +275,7 @@ def test_find_user_by_id(user_dao: UserDAO):
 
 
 def test_find_user_by_username(user_dao: UserDAO):
+    """Tests finding a user by username and verifying its type and data."""
     user: AbstractUser = user_dao.find_user_by_username("janjak")
     assert user is not None
     assert user.id_user == 1
@@ -302,6 +284,7 @@ def test_find_user_by_username(user_dao: UserDAO):
 
 
 def test_find_all(user_dao: UserDAO):
+    """Tests retrieving all users."""
     users: list[AbstractUser] = user_dao.find_all()
     assert users is not None
     assert isinstance(users, list)
@@ -309,6 +292,7 @@ def test_find_all(user_dao: UserDAO):
 
 
 def test_add_customer(user_dao: UserDAO, mock_db: MockDBConnector):
+    """Tests adding a new Customer."""
     new_user = Customer(
         id_user=0,
         username="alice",
@@ -322,12 +306,13 @@ def test_add_customer(user_dao: UserDAO, mock_db: MockDBConnector):
     added_user = user_dao.add_user(new_user)
     assert added_user is not None
     assert added_user.username == "alice"
-    assert added_user.id_user == 4  # Vérifie le nouvel ID
+    assert added_user.id_user == 4
     assert any(u["username"] == "alice" for u in mock_db.users)
     assert isinstance(added_user, Customer)
 
 
 def test_add_driver(user_dao: UserDAO, mock_db: MockDBConnector):
+    """Tests adding a new Driver."""
     new_driver = Driver(
         id_user=0,
         username="trucker_mike",
@@ -348,6 +333,7 @@ def test_add_driver(user_dao: UserDAO, mock_db: MockDBConnector):
 
 
 def test_add_admin(user_dao: UserDAO, mock_db: MockDBConnector):
+    """Tests adding a new Admin."""
     new_admin = Admin(
         id_user=0,
         username="new_chief",
@@ -365,8 +351,9 @@ def test_add_admin(user_dao: UserDAO, mock_db: MockDBConnector):
 
 
 def test_update_customer(user_dao: UserDAO):
+    """Tests updating an existing Customer's details."""
     existing_user = user_dao.find_user_by_id(1)
-    assert existing_user is not None, "L'utilisateur initial doit exister"
+    assert existing_user is not None
 
     updated_user = Customer(
         id_user=1,
@@ -389,6 +376,7 @@ def test_update_customer(user_dao: UserDAO):
 
 
 def test_update_driver(user_dao: UserDAO):
+    """Tests updating an existing Driver's details."""
     existing_driver = user_dao.find_user_by_id(2)
     assert isinstance(existing_driver, Driver)
 
@@ -416,6 +404,7 @@ def test_update_driver(user_dao: UserDAO):
 
 
 def test_update_admin(user_dao: UserDAO):
+    """Tests updating an existing Admin's details."""
     existing_admin = user_dao.find_user_by_id(3)
     assert isinstance(existing_admin, Admin)
 
@@ -438,24 +427,26 @@ def test_update_admin(user_dao: UserDAO):
 
 
 def test_delete_user(user_dao: UserDAO, mock_db: MockDBConnector):
+    """Tests deleting a user by ID."""
     id_to_delete = 1
     existing_user = user_dao.find_user_by_id(1)
-    assert existing_user is not None, "L'utilisateur initial doit exister"
+    assert existing_user is not None
 
     initial_count = len(mock_db.users)
     assert initial_count > 0
 
     delete = user_dao.delete_user(id_to_delete)
-    assert delete is True, "La suppression doit retourner True"
+    assert delete is True
 
     deleted_user = user_dao.find_user_by_id(id_to_delete)
-    assert deleted_user is None, "L'utilisateur ne doit plus être trouvé après la suppression"
+    assert deleted_user is None
 
     final_count = len(mock_db.users)
     assert final_count == initial_count - 1
 
 
 def test_find_all_filtered_drivers(user_dao: UserDAO):
+    """Tests finding all users filtered by 'driver' type."""
     drivers = user_dao.find_all(user_type="driver")
 
     assert len(drivers) == 1
@@ -463,10 +454,11 @@ def test_find_all_filtered_drivers(user_dao: UserDAO):
     assert isinstance(drivers[0], Driver)
 
 
-# --- TESTS D'ERREUR ET DE CAS LIMITES ---
+# --- ERROR AND EDGE CASE TESTS ---
 
 
 def test_find_user_by_id_error(mock_db: MockDBConnector, user_dao: UserDAO):
+    """Tests error handling when finding a user by ID fails in the DB."""
     mock_db.raise_exception = True
     user = user_dao.find_user_by_id(1)
     assert user is None
@@ -474,6 +466,7 @@ def test_find_user_by_id_error(mock_db: MockDBConnector, user_dao: UserDAO):
 
 
 def test_find_user_by_username_error(mock_db: MockDBConnector, user_dao: UserDAO):
+    """Tests error handling when finding a user by username fails in the DB."""
     mock_db.raise_exception = True
     user = user_dao.find_user_by_username("janjak")
     assert user is None
@@ -481,6 +474,7 @@ def test_find_user_by_username_error(mock_db: MockDBConnector, user_dao: UserDAO
 
 
 def test_find_all_error(mock_db: MockDBConnector, user_dao: UserDAO):
+    """Tests error handling when finding all users fails in the DB."""
     mock_db.raise_exception = True
     users = user_dao.find_all()
     assert users == []
@@ -488,7 +482,7 @@ def test_find_all_error(mock_db: MockDBConnector, user_dao: UserDAO):
 
 
 def test_update_user_error(mock_db: MockDBConnector, user_dao: UserDAO):
-    """Test the error handling in update_user (general table update failure)."""
+    """Tests error handling in update_user when the general 'user' table update fails."""
     mock_db.raise_exception = True
     error_user = Customer(id_user=1, username="fail_update", hash_password="h", salt="s", name="N", phone_number="0")
 
@@ -498,7 +492,7 @@ def test_update_user_error(mock_db: MockDBConnector, user_dao: UserDAO):
 
 
 def test_delete_user_error(mock_db: MockDBConnector, user_dao: UserDAO):
-    """Test the error handling in delete_user."""
+    """Tests error handling in delete_user when the final 'user' table delete fails."""
     mock_db.raise_exception = True
     success = user_dao.delete_user(1)
     assert success is False
@@ -507,7 +501,7 @@ def test_delete_user_error(mock_db: MockDBConnector, user_dao: UserDAO):
 
 def test_find_user_by_id_not_found(user_dao: UserDAO):
     """Checks that find_user_by_id returns None for a non-existent ID."""
-    user = user_dao.find_user_by_id(999)  # ID non présent
+    user = user_dao.find_user_by_id(999)
     assert user is None
 
 
@@ -518,9 +512,7 @@ def test_find_user_by_username_not_found(user_dao: UserDAO):
 
 
 def test_find_all_filtered_empty(user_dao: UserDAO):
-    """Vérifie que find_all avec un filtre retourne une liste vide si aucun résultat."""
-    # Le MockDBConnector actuel contient des Customers, Drivers et Admins.
-    # On choisit un type non existant pour le test.
+    """Verifies that find_all with a filter returns an empty list if no results are found."""
     users = user_dao.find_all(user_type="manager")
     assert users == []
     assert len(users) == 0
@@ -528,12 +520,11 @@ def test_find_all_filtered_empty(user_dao: UserDAO):
 
 def test_update_driver_error_on_child_query(mock_db: MockDBConnector, user_dao: UserDAO):
     """
-    Test la gestion d'erreur si la requête UPDATE "user" réussit
-    mais la requête UPDATE driver échoue (simulé par le Mock).
+    Tests error handling when the general 'user' update succeeds,
+    but the specific 'driver' update fails (simulated).
     """
-    mock_db.raise_exception = True  # Active l'erreur pour la requête 'update driver'
+    mock_db.raise_exception = True
 
-    # Données à jour pour le Driver (ID 2)
     updated_driver_data = Driver(
         id_user=2,
         username="bob_fail_update",
@@ -549,8 +540,6 @@ def test_update_driver_error_on_child_query(mock_db: MockDBConnector, user_dao: 
 
     updated_user = user_dao.update_user(updated_driver_data)
 
-    # L'update complet doit échouer si l'update enfant échoue.
     assert updated_user is None
 
-    # Réinitialisation
     mock_db.raise_exception = False
