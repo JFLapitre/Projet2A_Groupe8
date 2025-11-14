@@ -84,7 +84,10 @@ class AddressCheckoutView:
                 components = validation_result["components"]
 
                 display_street_number = components["street_number"] or ""
-                display_address = f"{display_street_number} {components['street_name']}, {components['postal_code']} {components['city']}".strip()
+                display_address = (
+                    f"{display_street_number} {components['street_name']}, "
+                    f"{components['postal_code']} {components['city']}"
+                ).strip()
 
                 if status == "AMBIGUOUS":
                     print(f"\n⚠️  Address is ambiguous (Google suggests: {validation_result.get('formatted_address')})")
@@ -162,7 +165,9 @@ class AddressCheckoutView:
 
             print(f"\n🎉 Order #{created_order.id_order} confirmed!")
 
-            delivery_address = f"{final_address_obj.street_number or ''} {final_address_obj.street_name}, {final_address_obj.city}".strip()
+            delivery_address = (
+                f"{final_address_obj.street_number or ''} {final_address_obj.street_name}, {final_address_obj.city}"
+            ).strip()
             print(f"🧾 Total: {total:.2f}€ — {len(self.cart)} items delivered to {delivery_address}.")
 
             # 3. Clear Cart upon success
