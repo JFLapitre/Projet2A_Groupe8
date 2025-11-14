@@ -8,7 +8,6 @@ from src.DAO.itemDAO import ItemDAO
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
-from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
 from src.Service.admin_menu_service import AdminMenuService
 
@@ -240,31 +239,6 @@ def test_create_predefined_bundle_dao_failure(
         service.create_predefined_bundle("Menu Midi", "Desc", sample_item_list, True, 15.0)
 
 
-def test_create_one_item_bundle_success(service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item: Item):
-    """Tests successful creation of a one-item bundle."""
-    mock_bundle_dao.add_one_item_bundle.return_value = MagicMock(spec=OneItemBundle)
-
-    service.create_one_item_bundle("Solo Deal", "Desc", 8.0, sample_item)
-
-    mock_bundle_dao.add_one_item_bundle.assert_called_once_with(ANY)
-    called_bundle = mock_bundle_dao.add_one_item_bundle.call_args[0][0]
-    assert isinstance(called_bundle, OneItemBundle)
-    assert called_bundle.name == "Solo Deal"
-    assert called_bundle.composition == sample_item
-
-
-def test_create_one_item_bundle_validation_price(service: AdminMenuService, sample_item: Item):
-    """Tests that price <= 0 raises a ValueError."""
-    with pytest.raises(ValueError, match="Price must be positive."):
-        service.create_one_item_bundle("Bad Deal", "Desc", 0, sample_item)
-
-
-def test_create_one_item_bundle_validation_item(service: AdminMenuService):
-    """Tests that a null item raises a ValueError."""
-    with pytest.raises(ValueError, match="Item cannot be null."):
-        service.create_one_item_bundle("Bad Deal", "Desc", 8.0, None)
-
-
 def test_create_discounted_bundle_success(
     service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_types: list
 ):
@@ -324,7 +298,7 @@ def test_delete_bundle_not_found(service: AdminMenuService, mock_bundle_dao: Mag
 def test_delete_bundle_dao_failure(service: AdminMenuService, mock_bundle_dao: MagicMock, sample_bundle: MagicMock):
     """Tests that an Exception is raised if the DAO fails to delete."""
     mock_bundle_dao.find_bundle_by_id.return_value = sample_bundle
-    mock_bundle_dao.delete_bundle.return_value = False  # Simulate DAO failure
+    mock_bundle_dao.delete_bundle.return_value = False
 
     with pytest.raises(Exception, match="Failed to delete bundle: 5"):
         service.delete_bundle(5)
