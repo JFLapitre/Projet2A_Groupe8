@@ -6,14 +6,17 @@ from src.Service.password_service import PasswordService
 @pytest.fixture
 def service():
     """
-    Provides a PasswordService instance for each test.
+    Provides a PasswordService instance.
     """
     return PasswordService()
 
 
+# --- Hashing and Salting Tests ---
+
+
 def test_hash_password_with_known_salt(service: PasswordService):
     """
-    Tests hashing a known password and salt produces a known hash.
+    Tests hashing a known password/salt pair yields a known hash.
     """
     password = "soleil1234"
     salt = "jambon"
@@ -31,9 +34,9 @@ def test_hash_password_requires_salt(service: PasswordService):
     password = "onepassword"
 
     with pytest.raises(ValueError) as e:
-        service.hash_password(password, salt=None)
+        service.hash_password(password)
 
-    assert "Salt must be provided" in str(e.value)
+    assert "Salt must be provided for secure hashing." in str(e.value)
 
 
 def test_different_salts_produce_different_hashes(service: PasswordService):
@@ -63,43 +66,65 @@ def test_hash_is_consistent(service: PasswordService):
     assert hash1 == hash2
 
 
-def test_strength_valid_length(service: PasswordService):
+def test_create_salt_length(service: PasswordService):
     """
-    Tests that a password meeting the length requirement passes.
+    Tests that create_salt returns a 64-character hex string (32 bytes).
+    """
+    salt = service.create_salt()
+    assert len(salt) == 64
+    assert all(c in "0123456789abcdef" for c in salt)
+
+
+# --- Password Strength Tests ---
+
+
+def test_strength_valid_password(service: PasswordService):
+    """
+    Tests that a valid password (length and 4/4 score) passes the check.
     """
     try:
-        service.check_password_strength("ValidPassword123")
-        service.check_password_strength("123456789")
+        assert service.check_password_strength("MyStrongP@ss1") is True
+        assert service.check_password_strength("P@ssw0rdA") is True
     except Exception as e:
         pytest.fail(f"check_password_strength raised an unexpected exception: {e}")
 
 
-def test_strength_exact_length(service: PasswordService):
+@pytest.mark.parametrize(
+    "invalid_password, error_message_part",
+    [
+        ("short1!", "The password must be at least 8 characters long."),
+        ("", "The password must be at least 8 characters long."),
+        ("password", "The password is one of the most commonly used passwords and is prohibited."),
+        ("12345678", "The password is one of the most commonly used passwords and is prohibited."),
+        ("motdepasse", "The password is one of the most commonly used passwords and is prohibited."),
+    ],
+)
+def test_strength_length_and_common_passwords(service: PasswordService, invalid_password, error_message_part):
     """
-    Tests that a password of exactly 8 characters passes.
+    Tests rules for minimum length and forbidden common passwords.
     """
-    try:
-        service.check_password_strength("12345678")
-    except Exception as e:
-        pytest.fail(f"check_password_strength raised an unexpected exception: {e}")
+    with pytest.raises(ValueError) as e:
+        service.check_password_strength(invalid_password)
+
+    assert error_message_part in str(e.value)
 
 
-def test_strength_too_short(service: PasswordService):
+@pytest.mark.parametrize(
+    "low_score_password, missing_char_type",
+    [
+        ("Password123", "special"),
+        ("password123!", "capital letter"),
+        ("Password!", "digit"),
+        ("PASSWORD123!", "lower letter"),
+        ("azertyuiop", "all the caracters' types"),
+    ],
+)
+def test_strength_low_score(service: PasswordService, low_score_password, missing_char_type):
     """
-    Tests that a password shorter than 8 characters raises an Exception.
+    Tests that passwords failing the minimum score rule (4/4) raise a ValueError.
     """
-    with pytest.raises(Exception) as e:
-        service.check_password_strength("1234567")
+    with pytest.raises(ValueError) as e:
+        service.check_password_strength(low_score_password)
 
-    # Check the specific error message
-    assert "Password length must be at least 8 characters" in str(e.value)
-
-
-def test_strength_empty_string(service: PasswordService):
-    """
-    Tests that an empty string (length 0) raises an Exception.
-    """
-    with pytest.raises(Exception) as e:
-        service.check_password_strength("")  # 0 chars
-
-    assert "Password length must be at least 8 characters" in str(e.value)
+    assert "Your password must have all the caracters' types" in str(e.value)
+    assert "You actually have" in str(e.value)
