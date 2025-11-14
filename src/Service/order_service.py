@@ -8,7 +8,10 @@ from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.customer import Customer
+from src.Model.discounted_bundle import DiscountedBundle
+from src.Model.one_item_bundle import OneItemBundle
 from src.Model.order import Order
+from src.Model.predefined_bundle import PredefinedBundle
 
 
 class OrderService:
@@ -63,7 +66,9 @@ class OrderService:
         order = self.order_dao.find_order_by_id(order_id)
         return order
 
-    def add_bundle_to_order(self, order_id: int, bundle) -> Optional[Order]:
+    def add_bundle_to_order(
+        self, order_id: int, bundle: PredefinedBundle | DiscountedBundle | OneItemBundle
+    ) -> Optional[Order]:
         """
         Adds all items from a bundle to an existing 'pending' order.
         'bundle' can be a PredefinedBundle, DiscountedBundle, or OneItemBundle from the cart.

@@ -71,3 +71,6 @@ typing = [
     "types-psycopg2>=2.9.21.20250809",
     "pyrefly>=0.30.0",
 ]
+dev = [
+    "pytest-mock>=3.15.1",
+]
