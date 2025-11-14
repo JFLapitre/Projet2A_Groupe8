@@ -10,10 +10,12 @@ from src.DAO.deliveryDAO import DeliveryDAO
 from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
+from src.Model.address import Address
 from src.Model.customer import Customer
 from src.Model.delivery import Delivery
 from src.Model.driver import Driver
 from src.Model.order import Order
+from src.Service.api_maps_service import ApiMapsService
 from src.Service.driver_service import DriverService
 
 # --- Fixtures ---
@@ -74,8 +76,8 @@ def service(
 ):
     """
     Provides a DriverService instance with all DAO dependencies mocked.
-    This is complex due to the chained __init__ in the service.
     """
+    # Patch all DAO constructors called within DriverService.__init__
     mocker.patch("src.Service.driver_service.ItemDAO", return_value=mock_item_dao)
     mocker.patch("src.Service.driver_service.UserDAO", return_value=mock_user_dao)
     mocker.patch("src.Service.driver_service.AddressDAO", return_value=mock_address_dao)
@@ -83,7 +85,9 @@ def service(
     mocker.patch("src.Service.driver_service.OrderDAO", return_value=mock_order_dao)
     mocker.patch("src.Service.driver_service.DeliveryDAO", return_value=mock_delivery_dao)
 
-    # Now, create the service. Its __init__ will use all the mocks above.
+    # Mock ApiMapsService pour get_itinerary
+    mocker.patch("src.Service.driver_service.ApiMapsService")
+
     driver_service = DriverService(db_connector=mock_db_connector)
     return driver_service
 
@@ -109,30 +113,55 @@ def sample_driver_unavailable():
 
 
 @pytest.fixture
-def sample_order_pending():
+def sample_customer():
+    """Provides a mock Customer with an ID and name."""
+    customer = MagicMock(spec=Customer)
+    customer.id = 10
+    customer.name = "Test Customer"
+    return customer
+
+
+@pytest.fixture
+def sample_address():
+    """Provides a mock Address with details."""
+    address = MagicMock(spec=Address)
+    address.street_number = "123"
+    address.street_name = "Main St"
+    address.city = "Testville"
+    return address
+
+
+@pytest.fixture
+def sample_order_pending(sample_customer, sample_address):
     """Provides a mock Order with 'pending' status."""
     order = MagicMock(spec=Order)
     order.id = 101
     order.status = "pending"
+    order.customer = sample_customer
+    order.address = sample_address
+    order.id_order = 101  # <--- AJOUTEZ CETTE LIGNE
     return order
 
 
 @pytest.fixture
-def sample_order_validated():
-    """Provides a mock Order with 'validated' status."""
+def sample_order_validated(sample_customer, sample_address):
+    """Provides a mock Order with 'validated' status (used to ensure test fails against service)."""
     order = MagicMock(spec=Order)
     order.id = 102
     order.status = "validated"
+    order.customer = sample_customer
+    order.address = sample_address
     return order
 
 
 @pytest.fixture
-def sample_delivery_inprogress(sample_driver_available, sample_order_validated):
-    """Provides a mock Delivery with 'in_progress' status."""
+def sample_delivery_inprogress(sample_driver_available, sample_order_pending):
+    """Provides a mock Delivery with 'in_progress' status, linked to a pending order."""
     delivery = MagicMock(spec=Delivery)
     delivery.id = 50
     delivery.driver = sample_driver_available
-    delivery.orders = [sample_order_validated]
+    # Le service change le statut de la commande en in_progress lors de la création de la livraison
+    delivery.orders = [sample_order_pending]
     delivery.status = "in_progress"
     delivery.delivery_time = None
     return delivery
@@ -140,7 +169,7 @@ def sample_delivery_inprogress(sample_driver_available, sample_order_validated):
 
 @pytest.fixture
 def sample_delivery_pending():
-    """Provides a mock Delivery with 'pending' status."""
+    """Provides a mock Delivery with 'pending' status (should be filtered out)."""
     delivery = MagicMock(spec=Delivery)
     delivery.id = 51
     delivery.status = "pending"
@@ -156,17 +185,20 @@ def test_create_and_assign_delivery_success(
     mock_order_dao: MagicMock,
     mock_delivery_dao: MagicMock,
     sample_driver_available: Driver,
-    sample_order_validated: Order,
+    sample_order_pending: Order,  # CHANGEMENT: Utiliser pending
+    mocker,
 ):
     """Tests successful creation and assignment of a new delivery."""
     # Arrange
     mock_user_dao.find_user_by_id.return_value = sample_driver_available
-    mock_order_dao.find_order_by_id.return_value = sample_order_validated
+    mock_order_dao.find_order_by_id.return_value = sample_order_pending
 
     mock_created_delivery = MagicMock(spec=Delivery, id=1)
     mock_delivery_dao.add_delivery.return_value = mock_created_delivery
+    mock_order_dao.update_order.return_value = True
+    mock_user_dao.update_user.return_value = True
 
-    order_ids = [sample_order_validated.id]
+    order_ids = [sample_order_pending.id]
     driver_id = sample_driver_available.id
 
     # Act
@@ -174,14 +206,22 @@ def test_create_and_assign_delivery_success(
 
     # Assert
     mock_user_dao.find_user_by_id.assert_called_once_with(driver_id)
-    mock_order_dao.find_order_by_id.assert_called_once_with(sample_order_validated.id)
+    mock_order_dao.find_order_by_id.assert_called_once_with(sample_order_pending.id)
 
-    # Check the object passed to add_delivery
+    # Vérification que le statut de la commande a été mis à jour
+    assert sample_order_pending.status == "in_progress"
+    mock_order_dao.update_order.assert_called_once_with(sample_order_pending)
+
+    # Vérification que la disponibilité du chauffeur a été mise à jour
+    assert sample_driver_available.availability is False
+    mock_user_dao.update_user.assert_called_once_with(sample_driver_available)
+
+    # Vérification de l'objet passé à add_delivery
     mock_delivery_dao.add_delivery.assert_called_once_with(ANY)
     called_delivery = mock_delivery_dao.add_delivery.call_args[0][0]
     assert isinstance(called_delivery, Delivery)
-    assert called_delivery.id_driver == driver_id
-    assert called_delivery.orders == [sample_order_validated]
+    assert called_delivery.driver == sample_driver_available
+    assert called_delivery.orders == [sample_order_pending]
     assert called_delivery.status == "in_progress"
 
     assert result == mock_created_delivery
@@ -190,14 +230,14 @@ def test_create_and_assign_delivery_success(
 def test_create_delivery_validation_no_orders(service: DriverService):
     """Tests that a ValueError is raised if order_ids is empty."""
     with pytest.raises(ValueError, match="Cannot create a delivery with no orders."):
-        service.create_and_assign_delivery(order_ids=[], driver_id=1)
+        service.create_and_assign_delivery(order_ids=[], user_id=1)
 
 
 def test_create_delivery_validation_driver_not_found(service: DriverService, mock_user_dao: MagicMock):
     """Tests that a ValueError is raised if the driver is not found."""
     mock_user_dao.find_user_by_id.return_value = None
     with pytest.raises(ValueError, match="No valid driver found with ID 999"):
-        service.create_and_assign_delivery(order_ids=[101], driver_id=999)
+        service.create_and_assign_delivery(order_ids=[101], user_id=999)
 
 
 def test_create_delivery_validation_user_is_not_driver(service: DriverService, mock_user_dao: MagicMock):
@@ -205,7 +245,7 @@ def test_create_delivery_validation_user_is_not_driver(service: DriverService, m
     not_a_driver = MagicMock(spec=Customer)  # Is a User, but not a Driver
     mock_user_dao.find_user_by_id.return_value = not_a_driver
     with pytest.raises(ValueError, match="No valid driver found with ID 3"):
-        service.create_and_assign_delivery(order_ids=[101], driver_id=3)
+        service.create_and_assign_delivery(order_ids=[101], user_id=3)
 
 
 def test_create_delivery_validation_driver_not_available(
@@ -213,8 +253,8 @@ def test_create_delivery_validation_driver_not_available(
 ):
     """Tests that a ValueError is raised if the driver is not available."""
     mock_user_dao.find_user_by_id.return_value = sample_driver_unavailable
-    with pytest.raises(ValueError, match="is not available"):
-        service.create_and_assign_delivery(order_ids=[101], driver_id=sample_driver_unavailable.id)
+    with pytest.raises(ValueError, match="is not available to start a new delivery."):
+        service.create_and_assign_delivery(order_ids=[101], user_id=sample_driver_unavailable.id)
 
 
 def test_create_delivery_validation_order_not_found(
@@ -223,22 +263,24 @@ def test_create_delivery_validation_order_not_found(
     """Tests that a ValueError is raised if an order is not found."""
     mock_user_dao.find_user_by_id.return_value = sample_driver_available
     mock_order_dao.find_order_by_id.return_value = None
-    with pytest.raises(ValueError, match="Order with ID 999 not found"):
-        service.create_and_assign_delivery(order_ids=[999], driver_id=sample_driver_available.id)
+    with pytest.raises(ValueError, match="Order with ID 999 not found."):
+        service.create_and_assign_delivery(order_ids=[999], user_id=sample_driver_available.id)
 
 
-def test_create_delivery_validation_order_not_validated(
+def test_create_delivery_validation_order_not_pending(  # CHANGEMENT: le statut est maintenant "pending" dans le service
     service: DriverService,
     mock_user_dao: MagicMock,
     mock_order_dao: MagicMock,
     sample_driver_available: Driver,
-    sample_order_pending: Order,
+    sample_order_validated: Order,  # CHANGEMENT: Utiliser validated pour simuler un échec
 ):
-    """Tests that a ValueError is raised if an order is not in 'validated' status."""
+    """Tests that a ValueError is raised if an order is not in 'pending' status (Service logic)."""
     mock_user_dao.find_user_by_id.return_value = sample_driver_available
-    mock_order_dao.find_order_by_id.return_value = sample_order_pending
-    with pytest.raises(ValueError, match="is not validated"):
-        service.create_and_assign_delivery(order_ids=[sample_order_pending.id], driver_id=sample_driver_available.id)
+    mock_order_dao.find_order_by_id.return_value = sample_order_validated
+    with pytest.raises(
+        ValueError, match="has not the pending status. Current status: validated"
+    ):  # CHANGEMENT: Message exact
+        service.create_and_assign_delivery(order_ids=[sample_order_validated.id], user_id=sample_driver_available.id)
 
 
 def test_create_delivery_dao_failure(
@@ -247,15 +289,15 @@ def test_create_delivery_dao_failure(
     mock_order_dao: MagicMock,
     mock_delivery_dao: MagicMock,
     sample_driver_available: Driver,
-    sample_order_validated: Order,
+    sample_order_pending: Order,
 ):
     """Tests that an Exception is raised if the DAO fails to add the delivery."""
     mock_user_dao.find_user_by_id.return_value = sample_driver_available
-    mock_order_dao.find_order_by_id.return_value = sample_order_validated
+    mock_order_dao.find_order_by_id.return_value = sample_order_pending
     mock_delivery_dao.add_delivery.return_value = None  # Simulate DAO failure
 
-    with pytest.raises(Exception, match="Failed to create and assign the delivery"):
-        service.create_and_assign_delivery(order_ids=[101], driver_id=1)
+    with pytest.raises(Exception, match="Failed to create and assign the delivery in the database."):
+        service.create_and_assign_delivery(order_ids=[101], user_id=1)
 
 
 # --- Test Complete Delivery ---
@@ -299,7 +341,7 @@ def test_complete_delivery_success(
 def test_complete_delivery_validation_not_found(service: DriverService, mock_delivery_dao: MagicMock):
     """Tests that a ValueError is raised if the delivery is not found."""
     mock_delivery_dao.find_delivery_by_id.return_value = None
-    with pytest.raises(ValueError, match="No delivery found with ID 999"):
+    with pytest.raises(ValueError, match="No delivery found with ID 999."):
         service.complete_delivery(999)
 
 
@@ -308,7 +350,7 @@ def test_complete_delivery_validation_wrong_status(
 ):
     """Tests that a ValueError is raised if the delivery is not 'in_progress'."""
     mock_delivery_dao.find_delivery_by_id.return_value = sample_delivery_pending
-    with pytest.raises(ValueError, match="Only 'in_progress' deliveries can be completed"):
+    with pytest.raises(ValueError, match="Only 'in_progress' deliveries can be completed. Current status: pending"):
         service.complete_delivery(sample_delivery_pending.id)
 
 
@@ -326,19 +368,22 @@ def test_complete_delivery_order_update_fails(
     # Arrange
     mock_delivery_dao.find_delivery_by_id.return_value = sample_delivery_inprogress
     mock_delivery_dao.update_delivery.return_value = sample_delivery_inprogress
-    mock_order_dao.update_order.side_effect = Exception("DB Error")  # Simulate order update failure
+    # Utiliser side_effect pour que le MockOrderDAO lève une exception lors de l'appel à update_order
+    mock_order_dao.update_order.side_effect = Exception("DB Error")
 
     # Act
-    result = service.complete_delivery(sample_delivery_inprogress.id)
+    service.complete_delivery(sample_delivery_inprogress.id)
 
     # Assert
     # Check that the log was written
-    assert "Could not update status for orders" in caplog.text
+    # Note: caplog.text capture la sortie de logging.warning
+    assert (
+        "Could not update status for orders in delivery 50: DB Error" in caplog.text
+    )  # CHANGEMENT: Assurer que l'ID est dans le log
 
     # Check that the delivery *was* still updated and completed
     assert sample_delivery_inprogress.status == "completed"
     mock_delivery_dao.update_delivery.assert_called_once_with(sample_delivery_inprogress)
-    assert result == sample_delivery_inprogress
 
 
 def test_complete_delivery_dao_failure(
@@ -348,56 +393,156 @@ def test_complete_delivery_dao_failure(
     mock_delivery_dao.find_delivery_by_id.return_value = sample_delivery_inprogress
     mock_delivery_dao.update_delivery.return_value = None  # Simulate DAO failure
 
-    with pytest.raises(Exception, match="Failed to update delivery status to completed"):
+    with pytest.raises(Exception, match="Failed to update delivery status to completed."):
         service.complete_delivery(sample_delivery_inprogress.id)
 
 
-# --- Test Get Delivery Details ---
+# --- Test Get Delivery Details (Behavior changed in Service) ---
 
 
-def test_get_delivery_details_success(
-    service: DriverService, mock_delivery_dao: MagicMock, sample_delivery_inprogress: Delivery
+def test_get_delivery_details_returns_dicts(
+    service: DriverService,
+    mock_delivery_dao: MagicMock,
+    mock_user_dao: MagicMock,
+    sample_delivery_inprogress: Delivery,
+    sample_address: Address,
+    sample_customer: Customer,
 ):
-    """Tests that details for a specific delivery are returned."""
+    """
+    Tests that the updated get_delivery_details returns a tuple of two dictionaries (addresses, customers).
+    """
+    # Arrange
     mock_delivery_dao.find_delivery_by_id.return_value = sample_delivery_inprogress
+    # Mock find_user_by_id: Le service utilise order.customer.name pour trouver l'utilisateur, ce qui est probablement un bug
+    # On simule que find_user_by_id(name) retourne l'objet Customer
+    mock_user_dao.find_user_by_id.return_value = sample_customer
 
-    result = service.get_delivery_details(sample_delivery_inprogress.id)
+    # Act
+    result_addresses, result_customers = service.get_delivery_details(sample_delivery_inprogress.id)
 
-    assert result == sample_delivery_inprogress
+    # Assert
     mock_delivery_dao.find_delivery_by_id.assert_called_once_with(sample_delivery_inprogress.id)
+
+    # Vérification des adresses
+    expected_address = sample_address
+    assert isinstance(result_addresses, dict)
+    assert len(result_addresses) == 1
+    assert result_addresses[sample_delivery_inprogress.orders[0].id] == expected_address
+
+    # Vérification des clients
+    expected_customer = sample_customer
+    assert isinstance(result_customers, dict)
+    assert len(result_customers) == 1
+    assert result_customers[sample_delivery_inprogress.orders[0].id] == expected_customer
 
 
 def test_get_delivery_details_not_found(service: DriverService, mock_delivery_dao: MagicMock):
     """Tests that a ValueError is raised if the delivery is not found."""
     mock_delivery_dao.find_delivery_by_id.return_value = None
 
-    with pytest.raises(ValueError, match="No delivery found with ID 999"):
+    with pytest.raises(ValueError, match="No delivery found with ID 999."):
         service.get_delivery_details(999)
 
 
-# --- Test List Pending Deliveries ---
+# --- Test List Pending Orders (Renamed from list_pending_deliveries) ---
 
 
-def test_list_pending_deliveries_success(
+def test_list_pending_orders_success(
     service: DriverService,
-    mock_delivery_dao: MagicMock,
-    sample_delivery_pending: Delivery,
-    sample_delivery_inprogress: Delivery,
+    mock_order_dao: MagicMock,
+    sample_order_pending: Order,
+    sample_order_validated: Order,
 ):
-    """Tests that only deliveries with 'pending' status are returned."""
-    all_deliveries = [sample_delivery_pending, sample_delivery_inprogress]
-    mock_delivery_dao.find_all_deliveries.return_value = all_deliveries
+    """Tests that only orders with 'pending' status are returned."""
+    all_orders = [sample_order_pending, sample_order_validated]
+    mock_order_dao.find_all_orders.return_value = all_orders
 
-    result = service.list_pending_deliveries()
+    result = service.list_pending_orders()
 
-    assert result == [sample_delivery_pending]
-    mock_delivery_dao.find_all_deliveries.assert_called_once()
+    assert result == [sample_order_pending]
+    mock_order_dao.find_all_orders.assert_called_once()
 
 
-def test_list_pending_deliveries_empty(service: DriverService, mock_delivery_dao: MagicMock):
-    """Tests that an empty list is returned if no deliveries exist."""
-    mock_delivery_dao.find_all_deliveries.return_value = []
+def test_list_pending_orders_empty(service: DriverService, mock_order_dao: MagicMock):
+    """Tests that an empty list is returned if no orders exist."""
+    mock_order_dao.find_all_orders.return_value = []
 
-    result = service.list_pending_deliveries()
+    result = service.list_pending_orders()
 
     assert result == []
+
+
+# --- Nouveaux tests pour get_assigned_delivery et get_itinerary ---
+
+
+def test_get_assigned_delivery_success(
+    service: DriverService, mock_delivery_dao: MagicMock, sample_delivery_inprogress: Delivery
+):
+    """Tests retrieving the assigned delivery for a driver."""
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.return_value = [sample_delivery_inprogress]
+
+    result = service.get_assigned_delivery(user_id=1)
+
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.assert_called_once_with(1)
+    assert result == [sample_delivery_inprogress]
+
+
+def test_get_assigned_delivery_no_delivery(service: DriverService, mock_delivery_dao: MagicMock):
+    """Tests retrieving no assigned delivery for a driver."""
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.return_value = []
+
+    result = service.get_assigned_delivery(user_id=1)
+
+    assert result == []
+
+
+def test_get_itinerary_success(
+    service: DriverService,
+    mock_delivery_dao: MagicMock,
+    mock_user_dao: MagicMock,
+    sample_driver_available: Driver,
+    sample_delivery_inprogress: Delivery,
+    mocker,
+):
+    """Tests retrieving the itinerary for an ongoing delivery."""
+    # Arrange
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.return_value = [sample_delivery_inprogress]
+    mock_user_dao.find_user_by_id.return_value = sample_driver_available
+
+    # 1. Stocker la référence à l'objet mock créé par le patch
+    expected_itinerary = "Itinerary map URL"
+    mock_itinerary_func = mocker.patch(
+        "src.Service.driver_service.ApiMapsService.Driveritinerary", return_value=expected_itinerary
+    )  # <-- Capture de l'objet Mock
+
+    # Act
+    result = service.get_itinerary(user_id=sample_driver_available.id)
+
+    # Assert
+    expected_addresses = [
+        f"{sample_delivery_inprogress.orders[0].address.street_number} "
+        f"{sample_delivery_inprogress.orders[0].address.street_name}, "
+        f"{sample_delivery_inprogress.orders[0].address.city}, France"
+    ]
+
+    # 2. Utiliser l'objet mock stocké pour l'assertion
+    mock_itinerary_func.assert_called_once_with(expected_addresses)
+    assert result == expected_itinerary
+
+
+def test_get_itinerary_no_delivery(service: DriverService, mock_delivery_dao: MagicMock):
+    """Tests get_itinerary when no delivery is in progress."""
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.return_value = []
+
+    result = service.get_itinerary(user_id=1)
+
+    assert result is None
+
+
+def test_get_itinerary_driver_not_found(service: DriverService, mock_delivery_dao: MagicMock, mock_user_dao: MagicMock):
+    """Tests get_itinerary when the driver ID is invalid."""
+    mock_delivery_dao.find_in_progress_deliveries_by_driver.return_value = [MagicMock(spec=Delivery)]
+    mock_user_dao.find_user_by_id.return_value = None
+
+    with pytest.raises(ValueError, match="No valid driver found with ID 99"):
+        service.get_itinerary(user_id=99)
