@@ -3,14 +3,13 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from src.App.auth import admin_required
+from src.App.init_app import admin_menu_service
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
 from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
-
-from .auth import admin_required
-from .init_app import admin_menu_service
 
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
@@ -60,9 +59,9 @@ def get_bundle(bundle_id: int, dao=Depends(get_bundle_dao)):
 
 @menu_bundle_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
 def create_predefined_bundle(
-    name: str=Query(),
-    price: float=Query(),
-    availability: bool=Query(),
+    name: str = Query(),
+    price: float = Query(),
+    availability: bool = Query(),
     item_ids: List[int] = Query(...),
     desc: Optional[str] = Query(None, alias="description"),
     service=Depends(get_service),
@@ -82,9 +81,9 @@ def create_predefined_bundle(
 
 @menu_bundle_router.post("/bundles/discounted", status_code=status.HTTP_201_CREATED)
 def create_discounted_bundle(
-    name: str=Query(),
+    name: str = Query(),
     required_item_types: List[str] = Query(),
-    discount: float=Query(),
+    discount: float = Query(),
     desc: Optional[str] = Query(None, alias="description"),
     service=Depends(get_service),
 ):
@@ -92,7 +91,7 @@ def create_discounted_bundle(
         service.create_discounted_bundle(
             name=name,
             description=desc,
-            discount= discount,
+            discount=discount,
             required_item_types=required_item_types,
         )
         return {"message": "Predefined bundle created"}
@@ -106,4 +105,3 @@ def delete_bundle(bundle_id: int, service=Depends(get_service)):
         service.delete_bundle(bundle_id)
     except Exception as e:
         handle_service_error(e)
-
