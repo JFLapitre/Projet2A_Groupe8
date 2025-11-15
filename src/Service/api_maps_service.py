@@ -15,7 +15,6 @@ from src.DAO.userDAO import UserDAO
 
 # Initialisations
 db = DBConnector()
-load_dotenv()
 user_dao = UserDAO(db_connector=db)
 address_dao = AddressDAO(db_connector=db)
 item_dao = ItemDAO(db_connector=db)
@@ -28,17 +27,20 @@ delivery_dao = DeliveryDAO(db_connector=db, user_dao=user_dao, order_dao=order_d
 
 class ApiMapsService:
     def __init__(self) -> None:
-        load_dotenv()
-        self.delivery_dao = DeliveryDAO()
-        self.api_key = os.environ["GOOGLE_MAPS_API_KEY"]
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")
+        load_dotenv(env_path)
 
-    def Driveritinerary(self,waypoints=list):
+        self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+
+        if not self.api_key:
+            raise ValueError(f"❌ GOOGLE_MAPS_API_KEY introuvable dans : {env_path}")
+
+    def Driveritinerary(self, waypoints=list):
         """
         Give an itinerary that starts and finishes at ENSAI and goes through all the waypoints.
         """
         if not self.api_key:
-            print("Error: Missing Google Maps API key in environment variables.")
-            return
+            raise RuntimeError("Google Maps API key missing")
         origin = "51 Rue Blaise Pascal, Bruz, France"
         destination = "51 Rue Blaise Pascal, Bruz, France"
 
@@ -46,7 +48,7 @@ class ApiMapsService:
         encoded_destination = urllib.parse.quote_plus(destination)
         encoded_waypoints = "%7C".join(urllib.parse.quote_plus(w) for w in waypoints)
 
-        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&waypoints={waypoints}&key={self.api_key}"
+        url = f"https://maps.googleapis.com/maps/api/directions/json?origin={encoded_origin}&destination={encoded_destination}&waypoints={encoded_waypoints}&key={self.api_key}"
 
         response = requests.get(url)
         data = response.json()
@@ -70,3 +72,55 @@ class ApiMapsService:
             print("Lien Google Maps :", maps_url)
         else:
             print("Erreur :", data["status"])
+
+    def validate_address_api(self, street_name: str, city: str, postal_code: int, street_number: str = None) -> dict:
+        """
+        Calls Google Maps API for validation WITHOUT saving to DB.
+        Returns a dictionary with the check result.
+        """
+        if not street_name or not city or not postal_code:
+            return {"status": "INVALID", "message": "Street name, city, and postal code are required."}
+
+        full_address = f"{street_number or ''} {street_name}, {postal_code} {city}".strip()
+
+        if not self.api_key:
+            raise EnvironmentError("Missing Google Maps API key.")
+
+        response = requests.get(
+            "https://maps.googleapis.com/maps/api/geocode/json",
+            params={"address": full_address, "key": self.api_key},
+        )
+        data = response.json()
+        status = data.get("status")
+
+        if status != "OK":
+            return {"status": "INVALID", "message": f"Address not found by Google (Status: {status})"}
+
+        result = data["results"][0]
+        location_type = result["geometry"]["location_type"]
+        formatted_address = result["formatted_address"]
+
+        # Si l'adresse est vague (juste la ville, la rue, etc.)
+        if location_type not in ["ROOFTOP", "RANGE_INTERPOLATED"]:
+            return {
+                "status": "AMBIGUOUS",
+                "formatted_address": formatted_address,
+                "components": {
+                    "street_name": street_name,  # Garde les composants d'origine
+                    "city": city,
+                    "postal_code": postal_code,
+                    "street_number": street_number,
+                },
+            }
+
+        # L'adresse est précise et correcte
+        return {
+            "status": "VALID",
+            "formatted_address": formatted_address,
+            "components": {
+                "street_name": street_name,
+                "city": city,
+                "postal_code": postal_code,
+                "street_number": street_number,
+            },
+        }

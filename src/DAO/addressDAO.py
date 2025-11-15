@@ -129,3 +129,40 @@ class AddressDAO(BaseModel):
         except Exception as e:
             logging.error(f"Failed to delete address {id_address}: {e}")
             return False
+
+    def find_address_by_components(
+        self, city: str, postal_code: int, street_name: str, street_number: Optional[str] = None
+    ) -> Optional[Address]:
+        """
+        Finds an address by its exact components.
+        Handles null street numbers correctly.
+        """
+        try:
+            query = """
+                     SELECT * FROM address
+                     WHERE city = %(city)s
+                     AND postal_code = %(postal_code)s
+                     AND street_name = %(street_name)s
+                 """
+            params = {
+                "city": city,
+                # CORRECTION : Conversion explicite en string pour la BDD
+                "postal_code": str(postal_code),
+                "street_name": street_name,
+            }
+
+            if street_number:
+                query += " AND street_number = %(street_number)s"
+                params["street_number"] = street_number
+            else:
+                query += " AND street_number IS NULL"
+
+            raw_address = self.db_connector.sql_query(query, params, "one")
+
+            if raw_address is None:
+                return None
+            return Address(**raw_address)
+
+        except Exception as e:
+            logging.error(f"Failed to find address by components: {e}")
+            return None

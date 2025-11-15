@@ -104,7 +104,9 @@ class DriverService:
             f"{order.address.street_number} {order.address.street_name}, {order.address.city}, France"
             for order in delivery.orders
         ]
-        return ApiMapsService.Driveritinerary(adresses)
+        service = ApiMapsService()
+        return service.Driveritinerary(adresses)
+
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """
@@ -144,7 +146,7 @@ class DriverService:
         customer_list = {}
         for order in delivery.orders:
             addresses_list[order.id_order] = order.address
-            user = self.user_dao.find_user_by_id(order.customer.name)
+            user = order.customer.name
             customer_list[order.id_order] = user
         return addresses_list, customer_list
 

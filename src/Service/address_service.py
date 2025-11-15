@@ -18,43 +18,42 @@ class AddressService:
         self.address_dao = AddressDAO(db_connector=db_connector)
         self.api_key = os.environ["GOOGLE_MAPS_API_KEY"]
 
-    def create_address(
+    def get_or_create_address(
         self, street_name: str, city: str, postal_code: int, street_number: str = None
     ) -> Optional[Address]:
         """
-        Validates the data and creates a new address in the database.
+        Retrieves an address from the database if it exists.
+        If not found, creates a new address record.
+        This assumes the address components have already been validated.
         """
-        if not street_name:
-            raise ValueError("Street name cannot be empty.")
-        if not city:
-            raise ValueError("City name cannot be empty.")
-        if not postal_code:
-            raise ValueError("Postal code cannot be empty.")
-        full_address = f"{street_number or ''} {street_name}, {postal_code} {city}".strip()
-        if not self.api_key:
-            raise EnvironmentError("Missing Google Maps API key in environment variables.")
-        response = requests.get(
-            "https://maps.googleapis.com/maps/api/geocode/json",
-            params={"address": full_address, "key": self.api_key},
+
+        # 1. Try to find the address first
+        existing_address = self.address_dao.find_address_by_components(
+            city=city, postal_code=postal_code, street_name=street_name, street_number=street_number
         )
 
-        data = response.json()
-        status = data.get("status")
-        if status != "OK":
-            raise ValueError(f"Invalid address: {full_address}. Google Maps returned status: {status}")
-        new_address = Address(
-            street_name=street_name,
-            street_number=street_number,
-            city=city,
-            postal_code=postal_code,
-        )
+        if existing_address:
+            return existing_address  # Return the existing one
 
-        created_address = self.address_dao.add_address(new_address)
+        # 2. If not found, create it
+        try:
+            new_address = Address(
+                street_name=street_name,
+                street_number=street_number,
+                city=city,
+                postal_code=postal_code,
+            )
 
-        if not created_address:
-            raise Exception("Failed to create the address in the database.")
+            created_address = self.address_dao.add_address(new_address)
 
-        return created_address
+            if not created_address:
+                raise Exception("DAO failed to add new address.")
+
+            return created_address
+
+        except Exception as e:
+            # Raise exception if database insertion fails
+            raise ValueError(f"Database error while saving address: {e}") from e
 
     def get_address_by_id(self, address_id: int) -> Optional[Address]:
         """

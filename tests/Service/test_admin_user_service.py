@@ -31,8 +31,12 @@ def mock_user_dao():
 @pytest.fixture
 def mock_password_service():
     """Provides a mock PasswordService instance."""
-    # Create an instance, as the service's __init__ expects one
-    return MagicMock(spec=PasswordService)
+    mock_ps = MagicMock(spec=PasswordService)
+    # Configure les valeurs par défaut pour les appels de hachage réussis
+    mock_ps.create_salt.return_value = "generated_salt"
+    mock_ps.hash_password.return_value = "generated_hash"
+    mock_ps.check_password_strength.return_value = None
+    return mock_ps
 
 
 @pytest.fixture
@@ -40,15 +44,13 @@ def service(mock_db_connector, mock_user_dao, mock_password_service, mocker):
     """
     Provides an AdminUserService instance with mocked UserDAO and PasswordService.
     """
-    # Patch the *constructors* for UserDAO and PasswordService
+    # Patch the *constructors* for UserDAO and PasswordService to return our mocks
     mocker.patch("src.Service.admin_user_service.UserDAO", return_value=mock_user_dao)
-    # Patch the class itself to return our mock instance
-    mocker.patch("src.Service.admin_user_service.PasswordService", return_value=mock_password_service)
 
     # Create the service. Its __init__ will use the mocks.
-    admin_service = AdminUserService(db_connector=mock_db_connector)
+    # Note: L'argument 'password_service' est nécessaire car il n'est plus une classe par défaut
+    admin_service = AdminUserService(db_connector=mock_db_connector, password_service=mock_password_service)
 
-    # We can also verify the service constructor received the mock
     assert admin_service.user_dao == mock_user_dao
     assert admin_service.password_service == mock_password_service
 
@@ -120,7 +122,7 @@ def test_create_admin_account_success(
 
     assert isinstance(called_admin_obj, Admin)
     assert called_admin_obj.username == "newadmin"
-    assert called_admin_obj.hash_password == "testhash123"  # Check password was hashed
+    assert called_admin_obj.hash_password == "testhash123"
     assert called_admin_obj.salt == "testsalt"
     assert called_admin_obj.phone_number == "123456"
 
@@ -164,10 +166,10 @@ def test_create_admin_account_weak_password(
     # Arrange
     mock_user_dao.find_user_by_username.return_value = None
     # Simulate PasswordService raising an error
-    mock_password_service.check_password_strength.side_effect = Exception("Password is too weak.")
+    mock_password_service.check_password_strength.side_effect = ValueError("Password is too weak.")
 
     # Act / Assert
-    with pytest.raises(Exception, match="Password is too weak."):
+    with pytest.raises(ValueError, match="Password is too weak."):
         service.create_admin_account("newadmin", "123", "New Admin", "123456")
 
     # Check that user creation was not attempted
@@ -192,37 +194,43 @@ def test_create_admin_account_dao_failure(
 # --- Test Create Driver Account ---
 
 
-def test_create_driver_account_success(
+def test_create_driver_account_success_secure(
     service: AdminUserService, mock_user_dao: MagicMock, mock_password_service: MagicMock
 ):
     """
-    Tests successful creation of a driver.
-    NOTE: This test confirms that PasswordService is *not* used for hashing,
-    as per the provided service code.
+    Tests successful creation of a driver, verifying that hashing and salting are used.
     """
     # Arrange
     mock_user_dao.find_user_by_username.return_value = None  # Username is available
-    created_driver_mock = MagicMock(spec=Driver, id=2, username="newdriver", name="New Driver")
+    mock_password_service.create_salt.return_value = "driversalt"
+    mock_password_service.hash_password.return_value = "driverhash"
+
+    created_driver_mock = MagicMock(spec=Driver, id=2, username="newdriver", name="New Driver", availability=True)
     mock_user_dao.add_user.return_value = created_driver_mock
 
     # Act
-    result = service.create_driver_account("newdriver", "DriverPass123", "New Driver", "555666", "car")
+    result = service.create_driver_account(
+        "newdriver", "DriverPass123", "New Driver", "555666", "car", availability=True
+    )
 
     # Assert
     mock_user_dao.find_user_by_username.assert_called_once_with("newdriver")
 
-    # Verify PasswordService was *NOT* called
-    mock_password_service.check_password_strength.assert_not_called()
-    mock_password_service.hash_password.assert_not_called()
+    # Verify PasswordService calls (now fully implemented in the service)
+    mock_password_service.check_password_strength.assert_called_once_with("DriverPass123")
+    mock_password_service.create_salt.assert_called_once()
+    mock_password_service.hash_password.assert_called_once_with("DriverPass123", "driversalt")
 
-    # Check that the DAO was called with a Driver object
+    # Check that the DAO was called with a Driver object containing hash/salt
     mock_user_dao.add_user.assert_called_once_with(ANY)
     called_driver_obj = mock_user_dao.add_user.call_args[0][0]
 
     assert isinstance(called_driver_obj, Driver)
     assert called_driver_obj.username == "newdriver"
-    assert called_driver_obj.password == "DriverPass123"  # Check password is PLAINTEXT
+    assert called_driver_obj.hash_password == "driverhash"  # Should be the hashed value
+    assert called_driver_obj.salt == "driversalt"
     assert called_driver_obj.vehicle_type == "car"
+    assert called_driver_obj.availability is True
 
     assert result == created_driver_mock
 
@@ -239,13 +247,40 @@ def test_create_driver_account_username_exists(service: AdminUserService, mock_u
     mock_user_dao.add_user.assert_not_called()
 
 
-def test_create_driver_account_empty_vehicle_type(service: AdminUserService, mock_user_dao: MagicMock):
-    """Tests that a ValueError is raised if vehicle_type is empty."""
+@pytest.mark.parametrize(
+    "username, password, name, phone_number, vehicle_type, error_match",
+    [
+        ("", "p", "N", "1", "car", "Username, password, name, and phone number are required."),
+        ("u", "", "N", "1", "car", "Username, password, name, and phone number are required."),
+        ("u", "p", "", "1", "car", "Username, password, name, and phone number are required."),
+        ("u", "p", "N", "", "car", "Username, password, name, and phone number are required."),
+        ("u", "p", "N", "1", "", "Vehicle type is required for a driver."),
+    ],
+)
+def test_create_driver_account_empty_required_fields(
+    service: AdminUserService, username, password, name, phone_number, vehicle_type, error_match
+):
+    """Tests that required fields cannot be empty."""
+    with pytest.raises(ValueError, match=error_match):
+        service.create_driver_account(username, password, name, phone_number, vehicle_type)
+
+    service.user_dao.find_user_by_username.assert_not_called()
+
+
+def test_create_driver_account_weak_password(
+    service: AdminUserService, mock_user_dao: MagicMock, mock_password_service: MagicMock
+):
+    """Tests that a weak password (as defined by PasswordService) raises an exception."""
+    # Arrange
     mock_user_dao.find_user_by_username.return_value = None
+    # Simulate PasswordService raising an error
+    mock_password_service.check_password_strength.side_effect = ValueError("Driver password is too weak.")
 
-    with pytest.raises(ValueError, match="Vehicle type is required for a driver."):
-        service.create_driver_account("driver", "pass123", "Name", "111", "")
+    # Act / Assert
+    with pytest.raises(ValueError, match="Driver password is too weak."):
+        service.create_driver_account("newdriver", "123", "New Driver", "555666", "car")
 
+    # Check that user creation was not attempted
     mock_user_dao.add_user.assert_not_called()
 
 
@@ -361,7 +396,7 @@ def test_delete_user_not_found(service: AdminUserService, mock_user_dao: MagicMo
     mock_user_dao.find_user_by_id.return_value = None
 
     # Act / Assert
-    with pytest.raises(ValueError, match="No user found with ID 999"):
+    with pytest.raises(ValueError, match="No user found with ID 999."):
         service.delete_user(user_id=999)
 
     mock_user_dao.delete_user.assert_not_called()
@@ -374,7 +409,7 @@ def test_delete_user_dao_failure(service: AdminUserService, mock_user_dao: Magic
     mock_user_dao.delete_user.return_value = False  # Simulate DAO failure
 
     # Act / Assert
-    with pytest.raises(Exception, match="Failed to delete user 1"):
+    with pytest.raises(Exception, match="Failed to delete user 1."):
         service.delete_user(user_id=1)
 
 
