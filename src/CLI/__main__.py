@@ -1,14 +1,13 @@
-# src/CLI/__main__.py
-
 from typing import Dict
 
 from src.CLI.auth_view import AuthView
 from src.CLI.customer_main_view import CustomerMainView
-from src.CLI.session import Session
 from src.CLI.driver_main_view import DriverMainView
+from src.CLI.session import Session
+
 
 def _build_services() -> Dict:
-    """Charge les vrais services depuis src.init_app"""
+    """Loads services src.init_app"""
     try:
         import importlib
 
@@ -25,7 +24,6 @@ def _build_services() -> Dict:
             "driver": getattr(init_app, "driver_service", None),
         }
 
-        # Vérifie s’il en manque
         missing = [k for k, v in services.items() if v is None]
         if missing:
             print(f"[WARN] Some services missing: {', '.join(missing)}")
@@ -38,11 +36,10 @@ def _build_services() -> Dict:
 
 
 def run_cli():
-    """Lance le CLI complet (auth + menus)."""
+    """Starts CLI"""
     session = Session()
     services = _build_services()
 
-    # Étape 1 — Authentification
     auth_view = AuthView(session, services)
     authenticated = auth_view.display()
     if not authenticated:
@@ -56,7 +53,6 @@ def run_cli():
     if session.role == "driver":
         view = DriverMainView(session, services)
         view.display()
-
 
 
 if __name__ == "__main__":
