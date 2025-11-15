@@ -24,7 +24,6 @@ def _build_services() -> Dict:
             "driver": getattr(init_app, "driver_service", None),
         }
 
-        # Vérifie s’il en manque
         missing = [k for k, v in services.items() if v is None]
         if missing:
             print(f"[WARN] Some services missing: {', '.join(missing)}")
@@ -37,7 +36,7 @@ def _build_services() -> Dict:
 
 
 def run_cli():
-    """Lance le CLI complet (auth + menus)."""
+    """Launch the full CLI (auth + menus)."""
     session = Session()
     services = _build_services()
 
