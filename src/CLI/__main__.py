@@ -7,7 +7,7 @@ from src.CLI.session import Session
 
 
 def _build_services() -> Dict:
-    """Loads the real services from src.init_app."""
+    """Loads services src.init_app"""
     try:
         import importlib
 
@@ -24,7 +24,6 @@ def _build_services() -> Dict:
             "driver": getattr(init_app, "driver_service", None),
         }
 
-        # Checks for missing services
         missing = [k for k, v in services.items() if v is None]
         if missing:
             print(f"[WARN] Some services missing: {', '.join(missing)}")
@@ -37,11 +36,11 @@ def _build_services() -> Dict:
 
 
 def run_cli():
-    """Launches the complete CLI (auth + menus)."""
+    """Launch the full CLI (auth + menus)."""
     session = Session()
     services = _build_services()
 
-    # Step 1 — Authentication
+    # Étape 1 — Authentification
     auth_view = AuthView(session, services)
     authenticated = auth_view.display()
     if not authenticated:

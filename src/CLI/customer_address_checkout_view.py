@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from src.CLI.session import Session
     from src.Model.address import Address
     from src.Service.address_service import AddressService
+    from src.Service.api_maps_service import ApiMapsService
     from src.Service.order_service import OrderService
 
 
@@ -25,6 +26,7 @@ class AddressCheckoutView:
             cart: Reference to the customer's current cart list.
         """
         self.address_service: "AddressService" = services.get("address")
+        self.api_maps_service: "ApiMapsService" = services.get("api_maps")
         self.order_service: "OrderService" = services.get("order")
         self.session = session
         self.cart = cart
@@ -67,7 +69,7 @@ class AddressCheckoutView:
                 street_number = address_data["street_number_input"] if address_data["street_number_input"] else None
 
                 # 1. API Validation
-                validation_result = self.address_service.validate_address_api(
+                validation_result = self.api_maps_service.validate_address_api(
                     street_name=address_data["street_name"],
                     city=address_data["city"],
                     postal_code=postal_code,
