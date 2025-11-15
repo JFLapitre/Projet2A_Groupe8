@@ -1,11 +1,9 @@
-from typing import List, Optional, Union
+from typing import List, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_menu_service
-from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
 from src.Model.one_item_bundle import OneItemBundle
@@ -14,7 +12,7 @@ from src.Model.predefined_bundle import PredefinedBundle
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
 
-menu_item_router = APIRouter(prefix="/menuitem", tags=["Menu Item management"], dependencies=[Depends(admin_required)])
+menu_item_router = APIRouter(tags=["Menu Item management"], dependencies=[Depends(admin_required)])
 
 
 def get_service():
@@ -25,10 +23,6 @@ def get_item_dao():
     return admin_menu_service.item_dao
 
 
-def get_bundle_dao():
-    return admin_menu_service.bundle_dao
-
-
 def handle_service_error(e: Exception):
     msg = str(e).lower()
     if "not found" in msg:
@@ -37,6 +31,14 @@ def handle_service_error(e: Exception):
         raise HTTPException(status_code=400, detail=str(e)) from e
     print(f"Unexpected error: {e}")
     raise HTTPException(status_code=500, detail="Internal Server Error") from e
+
+
+@menu_item_router.get("/items/{id_item}")
+def get_item(id_item: int, dao=Depends(get_item_dao)):
+    item = dao.find_item_by_id(id_item)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Item {id_item} not found")
+    return item
 
 
 @menu_item_router.get("/items", response_model=List[Item])
@@ -71,7 +73,7 @@ def create_item(
         handle_service_error(e)
 
 
-@menu_item_router.put("/items/{item_id}")
+@menu_item_router.put("/items/{id_item}")
 def update_item(
     name: str,
     price: float,
@@ -95,9 +97,9 @@ def update_item(
         handle_service_error(e)
 
 
-@menu_item_router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_item(item_id: int, service=Depends(get_service)):
+@menu_item_router.delete("/items/{id_item}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_item(id_item: int, service=Depends(get_service)):
     try:
-        service.delete_item(item_id)
+        service.delete_item(id_item)
     except Exception as e:
         handle_service_error(e)

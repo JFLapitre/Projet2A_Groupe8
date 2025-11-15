@@ -103,18 +103,6 @@ INSERT INTO tests.bundle (name, description, bundle_type, required_item_types, p
 ('Main & Side', 'Main course + side, 5% off', 'discount', ARRAY['main', 'side'], NULL, 0.05),
 ('Full Course Deal', 'Starter, Main, Side, Dessert, Drink', 'discount', ARRAY['starter', 'main', 'side', 'dessert', 'drink'], NULL, 0.25);
 
--- Insert single item bundles
-INSERT INTO tests.bundle (name, description, bundle_type, required_item_types, price, discount)
-SELECT 
-    i.name, 
-    '1 single item', 
-    'single_item',
-    NULL, 
-    i.price, 
-    NULL
-FROM tests.item i
-WHERE i.name IN ('Classic Burger', 'Fries', 'Pepperoni Pizza', 'Onion Rings', 'Chocolate Cake', 'Caesar Salad');
-
 -- Associate items with predefined bundles
 INSERT INTO tests.bundle_item (id_bundle, id_item) VALUES
 -- Pizza Menu (bundle 1): Margherita Pizza (1) + Coca Cola (5) + Tiramisu (4)

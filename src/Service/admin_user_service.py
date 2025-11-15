@@ -120,8 +120,8 @@ class AdminUserService:
         """
         return self.user_dao.find_all(user_type="driver")
 
-    def find_user_by_id(self):
+    def find_user_by_id(self, id_user: int):
         """
         Retrieves a user by its id.
         """
-        return self.user_dao.find_user_by_id()
+        return self.user_dao.find_user_by_id(id_user)

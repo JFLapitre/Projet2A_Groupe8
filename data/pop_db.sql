@@ -50,19 +50,6 @@ INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, pric
 ('Simple bundle', '', 'discount', ARRAY['main', 'drink'], NULL, 0.20),
 ('Complete bundle', '', 'discount', ARRAY['starter', 'main', 'dessert'], NULL, 0.2);
 
--- Insert single item bundles
--- Insert single items as bundles with the corresponding item price
-INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount)
-SELECT 
-    i.name, 
-    '1 single item', 
-    'single_item',
-    NULL, 
-    i.price, 
-    NULL
-FROM fd.item i
-WHERE i.name IN ('Classic Burger', 'Fries');
-
 -- Associate items with predefined bundles
 INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 -- Pizza Menu (bundle 1): Margherita Pizza + Coca Cola + Tiramisu

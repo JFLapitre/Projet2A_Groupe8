@@ -11,6 +11,11 @@ if TYPE_CHECKING:
 
 user_router = APIRouter(prefix="/users", tags=["Users"])
 
+
+def get_admin_user_service():
+    return admin_user_service
+
+
 def handle_service_error(e: Exception):
     msg = str(e).lower()
     if "not found" in msg:
@@ -18,22 +23,22 @@ def handle_service_error(e: Exception):
     if isinstance(e, ValueError):
         raise HTTPException(status_code=400, detail=str(e)) from e
     print(f"Unexpected error: {e}")
-    raise HTTPException(status_code=500, detail="Internal Server Error") from e
-
-
+    raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @user_router.get("/{id_user}", status_code=status.HTTP_200_OK)
-def find_user_by_id(id_user: int):
+def find_user_by_id(id_user: int, service=Depends(get_admin_user_service)):
     try:
-        user = admin_user_service.find_user_by_id(id_user)
+        user = service.find_user_by_id(id_user)
         return user
     except Exception as e:
         handle_service_error(e)
 
 
 @user_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
-def create_admin_user(username: str, password: str, name: str, phone_number: str) -> APIUser:
+def create_admin_user(
+    username: str, password: str, name: str, phone_number: str, service=Depends(get_admin_user_service)
+) -> APIUser:
     """
     Performs validation on the username and password
     """
@@ -43,7 +48,7 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
-        admin_user_service.create_admin_account(
+        service.create_admin_account(
             username=username, password=password, name=name, phone_number=phone_number
         )
     except Exception as e:
@@ -51,7 +56,9 @@ def create_admin_user(username: str, password: str, name: str, phone_number: str
 
 
 @user_router.post("/driver", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
-def create_driver_user(username: str, password: str, name: str, phone_number: str, vehicle_type: str) -> APIUser:
+def create_driver_user(
+    username: str, password: str, name: str, phone_number: str, vehicle_type: str, service=Depends(get_admin_user_service)
+) -> APIUser:
     """
     Performs validation and creates a new Driver account.
     This route requires an existing Admin to be authenticated.
@@ -62,7 +69,7 @@ def create_driver_user(username: str, password: str, name: str, phone_number: st
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
-        admin_user_service.create_driver_account(
+        service.create_driver_account(
             username=username,
             password=password,
             name=name,
@@ -72,10 +79,19 @@ def create_driver_user(username: str, password: str, name: str, phone_number: st
     except Exception as e:
         handle_service_error(e)
 
-    @user_router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-    def delete_item(item_id: int, service=Depends(get_service)):
-        try:
-            service.delete_item(item_id)
-        except Exception as e:
-            handle_service_error(e)
+@user_router.put("/{id_user}")
+def update_driver_availability(id_user: int, availability: bool, service=Depends(get_admin_user_service)):
+    try:
+        service.update_driver_availability(id_user, availability)
+        return {"message": "Availability was successfully updated"}
+    except Exception as e:
+        handle_service_error(e)
 
+
+@user_router.delete("/{id_user}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(id_user: int, service=Depends(get_admin_user_service)):
+    try:
+        service.delete_user(id_user)
+        return {"message": "Driver was successfully deleted"}
+    except Exception as e:
+        handle_service_error(e)

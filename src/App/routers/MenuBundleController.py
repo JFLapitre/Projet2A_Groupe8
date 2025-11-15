@@ -1,22 +1,17 @@
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_menu_service
-from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
-from src.Model.item import Item
 from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
 
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
 
 
-menu_bundle_router = APIRouter(
-    prefix="/menubundle", tags=["Menu Bundle management"], dependencies=[Depends(admin_required)]
-)
+menu_bundle_router = APIRouter(tags=["Menu Bundle management"], dependencies=[Depends(admin_required)])
 
 
 def get_service():
@@ -41,20 +36,20 @@ def handle_service_error(e: Exception):
     raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@menu_bundle_router.get("/bundles/{id_bundle}", response_model=AnyBundle)
+def get_bundle(id_bundle: int, dao=Depends(get_bundle_dao)):
+    bundle = dao.find_bundle_by_id(id_bundle)
+    if not bundle:
+        raise HTTPException(status_code=404, detail=f"Bundle {id_bundle} not found")
+    return bundle
+
+
 @menu_bundle_router.get("/bundles", response_model=List[AnyBundle])
 def list_bundles(service=Depends(get_service)):
     try:
         return service.list_bundles()
     except Exception as e:
         handle_service_error(e)
-
-
-@menu_bundle_router.get("/bundles/{bundle_id}", response_model=AnyBundle)
-def get_bundle(bundle_id: int, dao=Depends(get_bundle_dao)):
-    bundle = dao.find_bundle_by_id(bundle_id)
-    if not bundle:
-        raise HTTPException(status_code=404, detail=f"Bundle {bundle_id} not found")
-    return bundle
 
 
 @menu_bundle_router.post("/bundles/predefined", status_code=status.HTTP_201_CREATED)
@@ -99,9 +94,9 @@ def create_discounted_bundle(
         handle_service_error(e)
 
 
-@menu_bundle_router.delete("/bundles/{bundle_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_bundle(bundle_id: int, service=Depends(get_service)):
+@menu_bundle_router.delete("/bundles/{id_bundle}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bundle(id_bundle: int, service=Depends(get_service)):
     try:
-        service.delete_bundle(bundle_id)
+        service.delete_bundle(id_bundle)
     except Exception as e:
         handle_service_error(e)
