@@ -77,15 +77,21 @@ class AdminMenuService:
             raise Exception(f"Failed to delete item: {id}")
 
     def create_predefined_bundle(
-        self, name: str, description: str, composition: list, availability: bool, price: float
+        self, name: str, description: str, item_ids: list[int], availability: bool, price: float
     ) -> None:
         """
         Validates and creates a new predefined (fixed-price) bundle.
         """
         if price <= 0:
             raise ValueError("Price must be positive.")
-        if not composition:
-            raise ValueError("Composition cannot be empty.")
+        if not item_ids: 
+            raise ValueError("Composition must contain at least 2 items.")
+
+        composition: list = self.item_dao.get_items_by_ids(item_ids)
+
+        if not composition or len(composition) != len(item_ids):
+
+            raise ValueError("One or more item IDs provided in the composition were not found.")
 
         new_bundle = PredefinedBundle(
             name=name, description=description, composition=composition, price=price, availability=availability
@@ -94,29 +100,28 @@ class AdminMenuService:
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")
 
-    """def create_one_item_bundle(self, name: str, description: str, price: float, item: Item) -> None:
-        if price <= 0:
-            raise ValueError("Price must be positive.")
-        if not item:
-            raise ValueError("Item cannot be null.")
 
-        new_bundle = OneItemBundle(name=name, description=description, price=price, composition=item)
-        created_bundle = self.bundle_dao.add_one_item_bundle(new_bundle)
-        if not created_bundle:
-            raise Exception(f"Failed to create one-item bundle: {name}")"""
-
-    def create_discounted_bundle(self, name: str, description: str, required_item_types: list, discount: float) -> None:
+    def create_discounted_bundle(self, name: str, description: str, required_item_types: list[str], 
+    discount: float) -> None:
         """
         Validates and creates a new bundle that applies a discount.
         """
         if not (0 < discount < 100):
             raise ValueError("Discount must be between 0 and 100 (exclusive).")
+
         if not required_item_types:
             raise ValueError("Item types cannot be empty.")
 
+        if not all(isinstance(t, str) and t.strip() for t in required_item_types):
+            raise ValueError("All item types must be valid, non-empty strings.")
+
         new_bundle = DiscountedBundle(
-            name=name, description=description, required_item_types=required_item_types, discount=discount
+            name=name,
+            description=description,
+            required_item_types=required_item_types,
+            discount=discount
         )
+
         created_bundle = self.bundle_dao.add_discounted_bundle(new_bundle)
         if not created_bundle:
             raise Exception(f"Failed to create discounted bundle: {name}")

@@ -79,7 +79,7 @@ class BundleDAO(BaseModel):
                     name=raw_bundle["name"],
                     description=raw_bundle["description"],
                     price=raw_bundle["price"],
-                    composition=composition,  # composition must be a list
+                    composition=composition,
                 )
             else:
                 logging.warning(f"Unknown bundle type: {bundle_type}")
@@ -163,29 +163,20 @@ class BundleDAO(BaseModel):
         try:
             raw_created_bundle = self.db_connector.sql_query(
                 """
-                INSERT INTO bundle (name, description, bundle_type, price, discount)
-                VALUES (%(name)s, %(description)s, 'discount', NULL, %(discount)s)
+                INSERT INTO bundle (name, description, bundle_type, price, discount, required_item_types)
+                VALUES (%(name)s, %(description)s, 'discount', NULL, %(discount)s, %(required_item_types)s)
                 RETURNING *;
                 """,
-                {"name": bundle.name, "description": bundle.description, "discount": bundle.discount},
+                {"name": bundle.name, "description": bundle.description, "discount": bundle.discount,
+                "required_item_types": bundle.required_item_types},
                 "one",
             )
 
             id_bundle = raw_created_bundle["id_bundle"]
 
-            for item in bundle.composition:
-                item_id = item.id_item if hasattr(item, "id_item") else item
-                self.db_connector.sql_query(
-                    """
-                    INSERT INTO bundle_item (id_bundle, id_item)
-                    VALUES (%(id_bundle)s, %(id_item)s)
-                    """,
-                    {"id_bundle": id_bundle, "id_item": item_id},
-                    None,
-                )
-
             logging.info(f"Added discounted bundle: {bundle.name}")
             return self.find_bundle_by_id(id_bundle)
+
         except Exception as e:
             logging.error(f"Failed to add discounted bundle: {e}")
             return None
