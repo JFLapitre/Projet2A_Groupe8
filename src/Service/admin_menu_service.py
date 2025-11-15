@@ -34,33 +34,60 @@ class AdminMenuService:
         if not created_item:
             raise Exception(f"Failed to create item: {name}")
 
+    from typing import Optional
+
     def update_item(
-        self, id: int, name: str, desc: str, price: float, stock: int, availability: bool, item_type: str
+        self, 
+        id: int, 
+        # Tous les champs à l'exception de l'ID sont maintenant optionnels
+        name: Optional[str] = None, 
+        desc: Optional[str] = None, 
+        price: Optional[float] = None, 
+        stock: Optional[int] = None, 
+        availability: Optional[bool] = None, 
+        item_type: Optional[str] = None
     ) -> None:
         """
-        Finds an existing item by ID, validates new data, and updates it.
+        Finds an existing item by ID and updates only the fields that are not None.
         """
+        
+        # 1. Trouver l'item existant
         item = self.item_dao.find_item_by_id(id)
         if not item:
             raise ValueError(f"No item found with ID {id}.")
 
-        if price >= 0:
+        # --- 2. Mise à jour Conditionnelle et Validation ---
+        
+        # Champ PRICE (avec validation)
+        if price is not None:
+            if price < 0:
+                raise ValueError("Price must be positive.")
             item.price = price
-        else:
-            raise ValueError("Price must be positive.")
+        
+        # Champ STOCK (avec validation)
+        if stock is not None:
+            if stock < 0:
+                raise ValueError("Stock cannot be negative.")
+            item.stock = stock # Mise à jour temporaire
+            
+        # Champ AVAILABILITY
+        if availability is not None:
+            item.availability = availability # Mise à jour temporaire
 
-        if stock < 0:
-            raise ValueError("Stock cannot be negative.")
-        if stock == 0 and availability:
+        # Validation finale après toutes les mises à jour
+        # Les valeurs de 'item' sont maintenant soit les anciennes, soit les nouvelles.
+        if item.stock == 0 and item.availability:
             raise ValueError("Zero stock implies non-availability.")
 
-        # Update all fields
-        item.name = name
-        item.description = desc
-        item.stock = stock
-        item.availability = availability
-        item.item_type = item_type
+        # Champs simples (Mis à jour APRES les validations stock/availability)
+        if name is not None:
+            item.name = name
+        if desc is not None:
+            item.description = desc
+        if item_type is not None:
+            item.item_type = item_type
 
+        # --- 3. Enregistrement ---
         updated_item = self.item_dao.update_item(item)
         if not updated_item:
             raise Exception(f"Failed to update item: {id}")

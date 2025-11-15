@@ -1,6 +1,6 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Path, HTTPException, status, Query
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_menu_service
@@ -75,16 +75,18 @@ def create_item(
 
 @menu_item_router.put("/items/{id_item}")
 def update_item(
-    name: str,
-    price: float,
-    stock: int,
-    availability: bool,
-    item_type: str,
-    service=Depends(get_service),
-    desc: str = None,
+    id_item: int = Path(),
+    name: Optional[str] = Query(None),
+    price: Optional[float] = Query(None),
+    stock: Optional[int] = Query(None), # ⬅️ Comme dans votre requête Curl
+    availability: Optional[bool] = Query(None),
+    item_type: Optional[str] = Query(None),
+    desc: Optional[str] = Query(None, alias="description"),
+    service=Depends(get_service)
 ):
     try:
         service.update_item(
+            id=id_item,
             name=name,
             desc=desc,
             price=price,
