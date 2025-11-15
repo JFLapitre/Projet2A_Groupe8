@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.App.init_app import auth_service, jwt_service
 from src.Model.JWTResponse import JWTResponse
 
-from .init_app import auth_service, jwt_service
-
-auth_router = APIRouter(prefix="/auth", tags=["Authentification"])
+auth_router = APIRouter(tags=["Authentification"])
 
 
-@auth_router.post("/jwt", status_code=status.HTTP_201_CREATED)
+@auth_router.post("/auth", status_code=status.HTTP_201_CREATED)
 def login(username: str, password: str) -> JWTResponse:
     """
     Authenticate with username and password and obtain a token

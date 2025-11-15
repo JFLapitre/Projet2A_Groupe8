@@ -2,10 +2,10 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
-from .AuthController import auth_router
-from .MenuController import menu_router
-from .OrderController import order_router
-from .UserController import user_router
+from .routers.AuthController import auth_router
+from .routers.MenuController import menu_router
+from .routers.OrderController import order_router
+from .routers.UserController import user_router
 
 
 def run_app():

@@ -3,51 +3,15 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
+from src.App.auth import admin_required
+from src.App.init_app import admin_menu_service
 from src.Model.abstract_bundle import AbstractBundle
 from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
 from src.Model.one_item_bundle import OneItemBundle
 from src.Model.predefined_bundle import PredefinedBundle
 
-from .auth import admin_required
-from .init_app import admin_menu_service
-
 AnyBundle = Union[PredefinedBundle, DiscountedBundle, OneItemBundle]
-
-
-"""class ItemCreate(BaseModel):
-    name: str
-    description: str
-    price: float
-    stock: int
-    availability: bool = True
-    item_type: str
-
-
-class ItemUpdate(BaseModel):
-    name: str
-    description: str
-    price: float
-    stock: int
-    availability: bool
-    item_type: str
-
-
-class PredefinedBundleCreate(BaseModel):
-    name: str
-    description: str
-    price: float
-    availability: bool = True
-    composition: List[int]  # Liste des IDs des items
-
-
-class DiscountedBundleCreate(BaseModel):
-    name: str
-    description: str
-    discount: float
-    required_item_types: List[str]"""
-
-
 menu_router = APIRouter(prefix="/menu", tags=["Menu management"], dependencies=[Depends(admin_required)])
 
 
@@ -151,6 +115,8 @@ def get_bundle(bundle_id: int, dao=Depends(get_bundle_dao)):
     if not bundle:
         raise HTTPException(status_code=404, detail=f"Bundle {bundle_id} not found")
     return bundle
+
+
 """
 @menu_router.post("/bundles", status_code=status.HTTP_201_CREATED)
 def create_bundle(
@@ -195,6 +161,8 @@ def create_bundle(
     except Exception as e:
         handle_service_error(e)
 """
+
+
 @menu_router.delete("/bundles/{bundle_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_bundle(bundle_id: int, service=Depends(get_service)):
     try:

@@ -119,3 +119,9 @@ class AdminUserService:
         Retrieves a list of all users with the 'driver' type.
         """
         return self.user_dao.find_all(user_type="driver")
+
+    def find_user_by_id(self):
+        """
+        Retrieves a user by its id.
+        """
+        return self.user_dao.find_user_by_id()
