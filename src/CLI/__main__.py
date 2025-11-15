@@ -24,6 +24,7 @@ def _build_services() -> Dict:
             "driver": getattr(init_app, "driver_service", None),
         }
 
+        # Vérifie s’il en manque
         missing = [k for k, v in services.items() if v is None]
         if missing:
             print(f"[WARN] Some services missing: {', '.join(missing)}")
@@ -36,17 +37,20 @@ def _build_services() -> Dict:
 
 
 def run_cli():
-    """Starts CLI"""
+    """Lance le CLI complet (auth + menus)."""
     session = Session()
     services = _build_services()
 
+    # Étape 1 — Authentification
     auth_view = AuthView(session, services)
     authenticated = auth_view.display()
     if not authenticated:
         print("Goodbye.")
         return
 
+    # Step 2 — Dispatch to main view based on role
     if session.role == "customer":
+        # CustomerMainView est la seule classe à lancer
         view = CustomerMainView(session, services)
         view.display()
 
