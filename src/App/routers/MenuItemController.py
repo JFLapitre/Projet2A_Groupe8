@@ -78,7 +78,7 @@ def update_item(
     id_item: int = Path(),
     name: Optional[str] = Query(None),
     price: Optional[float] = Query(None),
-    stock: Optional[int] = Query(None), # ⬅️ Comme dans votre requête Curl
+    stock: Optional[int] = Query(None),
     availability: Optional[bool] = Query(None),
     item_type: Optional[str] = Query(None),
     desc: Optional[str] = Query(None, alias="description"),

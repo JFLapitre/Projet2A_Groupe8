@@ -221,15 +221,9 @@ class BundleDAO(BaseModel):
             logging.error(f"Failed to add one item bundle: {e}")
             return None
 
-    def update_bundle(self, bundle: Union[PredefinedBundle, DiscountedBundle, OneItemBundle]) -> bool:
+    def update_bundle(self, bundle: Union[PredefinedBundle, DiscountedBundle]) -> bool:
         """
         Update an existing bundle.
-
-        Args:
-            bundle: Bundle object to update
-
-        Returns:
-            bool: True if update was successful, False otherwise
         """
         try:
             if isinstance(bundle, PredefinedBundle):
@@ -238,7 +232,8 @@ class BundleDAO(BaseModel):
                     UPDATE bundle
                     SET name = %(name)s,
                         description = %(description)s,
-                        price = %(price)s
+                        price = %(price)s,
+                        availability = %(availability)s -- J'ajoute l'availability si elle est modifiable
                     WHERE id_bundle = %(id_bundle)s
                     """,
                     {
@@ -246,9 +241,26 @@ class BundleDAO(BaseModel):
                         "name": bundle.name,
                         "description": bundle.description,
                         "price": bundle.price,
+                        "availability": bundle.availability,
                     },
                     None,
                 )
+
+                self.db_connector.sql_query(
+                    "DELETE FROM bundle_item WHERE id_bundle = %(id_bundle)s", {"id_bundle": bundle.id_bundle}, None
+                )
+
+                for item in bundle.composition:
+                    item_id = item.id_item if hasattr(item, "id_item") else item
+                    self.db_connector.sql_query(
+                        """
+                        INSERT INTO bundle_item (id_bundle, id_item)
+                        VALUES (%(id_bundle)s, %(id_item)s)
+                        """,
+                        {"id_bundle": bundle.id_bundle, "id_item": item_id},
+                        None,
+                    )
+
             elif isinstance(bundle, DiscountedBundle):
                 self.db_connector.sql_query(
                     """
@@ -266,38 +278,6 @@ class BundleDAO(BaseModel):
                         "discount": bundle.discount,
                         "required_item_types": bundle.required_item_types,
                     },
-                    None,
-                )
-            elif isinstance(bundle, OneItemBundle):
-                self.db_connector.sql_query(
-                    """
-                    UPDATE bundle
-                    SET name = %(name)s,
-                        description = %(description)s,
-                        price = %(price)s
-                    WHERE id_bundle = %(id_bundle)s
-                    """,
-                    {
-                        "id_bundle": bundle.id_bundle,
-                        "name": bundle.name,
-                        "description": bundle.description,
-                        "price": bundle.price,
-                    },
-                    None,
-                )
-
-            self.db_connector.sql_query(
-                "DELETE FROM bundle_item WHERE id_bundle = %(id_bundle)s", {"id_bundle": bundle.id_bundle}, None
-            )
-
-            for item in bundle.composition:
-                item_id = item.id_item if hasattr(item, "id_item") else item
-                self.db_connector.sql_query(
-                    """
-                    INSERT INTO bundle_item (id_bundle, id_item)
-                    VALUES (%(id_bundle)s, %(id_item)s)
-                    """,
-                    {"id_bundle": bundle.id_bundle, "id_item": item_id},
                     None,
                 )
 

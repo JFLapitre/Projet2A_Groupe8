@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
@@ -37,49 +39,38 @@ class AdminMenuService:
     from typing import Optional
 
     def update_item(
-        self, 
-        id: int, 
-        # Tous les champs à l'exception de l'ID sont maintenant optionnels
-        name: Optional[str] = None, 
-        desc: Optional[str] = None, 
-        price: Optional[float] = None, 
-        stock: Optional[int] = None, 
-        availability: Optional[bool] = None, 
+        self,
+        id: int,
+        name: Optional[str] = None,
+        desc: Optional[str] = None,
+        price: Optional[float] = None,
+        stock: Optional[int] = None,
+        availability: Optional[bool] = None,
         item_type: Optional[str] = None
     ) -> None:
         """
         Finds an existing item by ID and updates only the fields that are not None.
         """
-        
-        # 1. Trouver l'item existant
         item = self.item_dao.find_item_by_id(id)
         if not item:
             raise ValueError(f"No item found with ID {id}.")
 
-        # --- 2. Mise à jour Conditionnelle et Validation ---
-        
-        # Champ PRICE (avec validation)
         if price is not None:
             if price < 0:
                 raise ValueError("Price must be positive.")
             item.price = price
-        
-        # Champ STOCK (avec validation)
+
         if stock is not None:
             if stock < 0:
                 raise ValueError("Stock cannot be negative.")
-            item.stock = stock # Mise à jour temporaire
-            
-        # Champ AVAILABILITY
-        if availability is not None:
-            item.availability = availability # Mise à jour temporaire
+            item.stock = stock
 
-        # Validation finale après toutes les mises à jour
-        # Les valeurs de 'item' sont maintenant soit les anciennes, soit les nouvelles.
+        if availability is not None:
+            item.availability = availability
+
         if item.stock == 0 and item.availability:
             raise ValueError("Zero stock implies non-availability.")
 
-        # Champs simples (Mis à jour APRES les validations stock/availability)
         if name is not None:
             item.name = name
         if desc is not None:
@@ -87,7 +78,6 @@ class AdminMenuService:
         if item_type is not None:
             item.item_type = item_type
 
-        # --- 3. Enregistrement ---
         updated_item = self.item_dao.update_item(item)
         if not updated_item:
             raise Exception(f"Failed to update item: {id}")
@@ -174,3 +164,106 @@ class AdminMenuService:
         Retrieves a list of all bundles from the database.
         """
         return self.bundle_dao.find_all_bundles()
+
+
+    def update_predefined_bundle(
+        self,
+        id: int,  # ID du bundle à modifier (Obligatoire)
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        item_ids: Optional[List[int]] = None,  # Nouvelle composition optionnelle
+        availability: Optional[bool] = None,
+        price: Optional[float] = None,
+    ) -> None:
+        """
+        Finds an existing predefined bundle by ID and updates only the fields that are not None.
+        """
+        # 1. Récupérer le bundle existant
+        bundle = self.bundle_dao.find_bundle_by_id(id)
+        if not bundle:
+            raise ValueError(f"No bundle found with ID {id}.")
+            
+        if not isinstance(bundle, PredefinedBundle):
+            raise TypeError(f"Bundle with ID {id} is not a predefined bundle.")
+
+        # 2. Mise à jour conditionnelle et validation
+
+        # Mise à jour des champs simples
+        if name is not None:
+            bundle.name = name
+        if description is not None:
+            bundle.description = description
+        if availability is not None:
+            bundle.availability = availability
+
+        # Mise à jour du prix avec validation (doit être > 0)
+        if price is not None:
+            if price <= 0:
+                raise ValueError("Price must be positive.")
+            bundle.price = price
+
+        # Mise à jour de la composition (validation métier : au moins 2 items)
+        if item_ids is not None:
+            if not item_ids or len(item_ids) < 2:
+                raise ValueError("Composition must contain at least 2 items.")
+
+            # Récupération et validation des IDs
+            composition: list = self.item_dao.get_items_by_ids(item_ids)
+            if not composition or len(composition) != len(item_ids):
+                raise ValueError("One or more item IDs provided in the composition were not found.")
+                
+            bundle.composition = composition # Mise à jour de la composition
+
+        # 3. Enregistrement via la DAO
+        updated_bundle = self.bundle_dao.update_bundle(bundle) # Appel à la méthode DAO unique
+        if not updated_bundle:
+            raise Exception(f"Failed to update predefined bundle: {id}")
+
+    def update_discounted_bundle(
+    self,
+    id: int,  # ID du bundle à modifier (Obligatoire)
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    required_item_types: Optional[List[str]] = None,  # Nouveaux types optionnels
+    discount: Optional[float] = None,
+    ) -> None:
+        """
+        Finds an existing discounted bundle by ID and updates only the fields that are not None.
+        """
+        # 1. Récupérer le bundle existant
+        bundle = self.bundle_dao.find_bundle_by_id(id)
+        if not bundle:
+            raise ValueError(f"No bundle found with ID {id}.")
+            
+        if not isinstance(bundle, DiscountedBundle):
+            raise TypeError(f"Bundle with ID {id} is not a discounted bundle.")
+
+        # 2. Mise à jour conditionnelle et validation
+
+        # Mise à jour des champs simples
+        if name is not None:
+            bundle.name = name
+        if description is not None:
+            bundle.description = description
+
+        # Mise à jour de la réduction avec validation (doit être entre 0 et 100 exclus)
+        if discount is not None:
+            if not (0 < discount < 100):
+                raise ValueError("Discount must be between 0 and 100 (exclusive).")
+            bundle.discount = discount
+
+        # Mise à jour des types d'items avec validation
+        if required_item_types is not None:
+            if not required_item_types:
+                raise ValueError("Item types cannot be empty.")
+            
+            if not all(isinstance(t, str) and t.strip() for t in required_item_types):
+                raise ValueError("All item types must be valid, non-empty strings.")
+
+            # Normalisation en minuscules pour la cohérence
+            bundle.required_item_types = [t.lower() for t in required_item_types]
+
+        # 3. Enregistrement via la DAO
+        updated_bundle = self.bundle_dao.update_bundle(bundle) # Appel à la méthode DAO unique
+        if not updated_bundle:
+            raise Exception(f"Failed to update discounted bundle: {id}")

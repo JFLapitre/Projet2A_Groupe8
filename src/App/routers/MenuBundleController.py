@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Path, HTTPException, Query, status
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_menu_service
@@ -93,6 +93,75 @@ def create_discounted_bundle(
     except Exception as e:
         handle_service_error(e)
 
+@menu_bundle_router.put("/bundles/predefined/{id_bundle}", status_code=status.HTTP_200_OK) # 🟢 Code 200 pour la mise à jour
+def update_predefined_bundle(
+    # 1. ID du bundle à mettre à jour (Obligatoire, lu du chemin)
+    id_bundle: int = Path(..., description="ID du bundle prédéfini à modifier"),
+    
+    # 2. Champs optionnels du bundle prédéfini (Lus du Query String pour coller à votre style)
+    name: Optional[str] = Query(None, description="Nouveau nom du bundle."),
+    desc: Optional[str] = Query(None, alias="description", description="Nouvelle description."),
+    price: Optional[float] = Query(None, description="Nouveau prix."),
+    availability: Optional[bool] = Query(None, description="Nouvelle disponibilité (true/false)."),
+    
+    # 🟢 Composition (Liste d'IDs d'items) - Lue du Query String (ex: &item_ids=1&item_ids=5)
+    item_ids: Optional[List[int]] = Query(
+        None, 
+        description="Nouvelle liste des IDs d'items dans la composition."
+    ),
+    
+    service=Depends(get_service),
+):
+    try:
+        # 3. Appel au service correct
+        service.update_predefined_bundle(
+            id=id_bundle,
+            name=name,
+            description=desc,
+            price=price,
+            availability=availability,
+            item_ids=item_ids, # Argument pour la composition
+        )
+        return {"message": f"Predefined bundle {id_bundle} updated successfully"}
+    except ValueError as e:
+        # Capture les erreurs de validation (Prix, Composition, Item non trouvé)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        handle_service_error(e)
+
+@menu_bundle_router.put("/bundles/discounted/{id_bundle}", status_code=status.HTTP_200_OK)
+def update_discounted_bundle(
+    # 1. ID du bundle à mettre à jour (Obligatoire, lu du chemin)
+    id_bundle: int = Path(..., description="ID du bundle réduit à modifier"),
+    
+    # 2. Champs optionnels (Lus du Query String)
+    name: Optional[str] = Query(None, description="Nouveau nom du bundle."),
+    desc: Optional[str] = Query(None, alias="description", description="Nouvelle description."),
+    discount: Optional[float] = Query(None, description="Nouveau pourcentage de réduction (ex: 10.5)."),
+    
+    # 🟢 Types d'Items Requis (Liste de chaînes)
+    required_item_types: Optional[List[str]] = Query(
+        None, 
+        description="Nouvelle liste des types d'items auxquels la réduction s'applique (ex: 'sushi', 'boisson')."
+    ),
+    
+    service=Depends(get_service),
+):
+    try:
+        # 3. Appel au service correct
+        service.update_discounted_bundle(
+            id=id_bundle,
+            name=name,
+            description=desc,
+            discount=discount,
+            required_item_types=required_item_types,
+        )
+        return {"message": f"Discounted bundle {id_bundle} updated successfully"}
+    except ValueError as e:
+        # Capture les erreurs de validation (Discount, Types d'items manquants)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        handle_service_error(e)
 
 @menu_bundle_router.delete("/bundles/{id_bundle}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_bundle(id_bundle: int, service=Depends(get_service)):
