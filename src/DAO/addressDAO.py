@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.DAO.DBConnector import DBConnector
 from src.Model.address import Address
@@ -10,8 +10,7 @@ from src.Model.address import Address
 class AddressDAO(BaseModel):
     db_connector: DBConnector
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def find_address_by_id(self, id_address: int) -> Optional[Address]:
         """Find an address by its ID.
