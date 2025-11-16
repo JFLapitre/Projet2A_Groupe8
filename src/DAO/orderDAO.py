@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.DAO.addressDAO import AddressDAO
 from src.DAO.bundleDAO import BundleDAO
@@ -19,8 +19,7 @@ class OrderDAO(BaseModel):
     address_dao: AddressDAO
     bundle_dao: BundleDAO
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def find_order_by_id(self, id_order: int) -> Optional[Order]:
         """Find an order by its ID.

@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
@@ -16,8 +16,7 @@ class BundleDAO(BaseModel):
     db_connector: DBConnector
     item_dao: ItemDAO
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def find_bundle_by_id(self, bundle_id: int) -> Optional[Union[PredefinedBundle, DiscountedBundle, OneItemBundle]]:
         """
@@ -167,8 +166,12 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'discount', NULL, %(discount)s, %(required_item_types)s)
                 RETURNING *;
                 """,
-                {"name": bundle.name, "description": bundle.description, "discount": bundle.discount,
-                "required_item_types": bundle.required_item_types},
+                {
+                    "name": bundle.name,
+                    "description": bundle.description,
+                    "discount": bundle.discount,
+                    "required_item_types": bundle.required_item_types,
+                },
                 "one",
             )
 
