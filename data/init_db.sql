@@ -68,7 +68,7 @@ CREATE TABLE fd.bundle (
     id_bundle SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(300),
-    bundle_type VARCHAR(20) NOT NULL, -- "predefined", "single_item" ou "discounted"
+    bundle_type VARCHAR(20) NOT NULL,
     required_item_types VARCHAR(30)[],
     price FLOAT, -- Peut être NULL pour les discounted bundles
     discount FLOAT -- Peut être NULL pour les predefined bundles
@@ -91,14 +91,6 @@ CREATE TABLE fd.order (
     price FLOAT,
     id_address INT REFERENCES fd.address(id_address),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Table order_bundle (table de jointure entre order et bundle)
-DROP TABLE IF EXISTS fd.order_bundle CASCADE;
-CREATE TABLE fd.order_bundle (
-    id_order INT REFERENCES fd.order(id_order) ON DELETE CASCADE,
-    id_bundle INT REFERENCES fd.bundle(id_bundle) ON DELETE CASCADE,
-    PRIMARY KEY (id_order, id_bundle)
 );
 
 -- Table delivery
