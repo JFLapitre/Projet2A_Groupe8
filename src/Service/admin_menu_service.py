@@ -167,55 +167,48 @@ class AdminMenuService:
 
 
     def update_predefined_bundle(
-        self,
-        id: int,  # ID du bundle à modifier (Obligatoire)
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        item_ids: Optional[List[int]] = None,  # Nouvelle composition optionnelle
-        availability: Optional[bool] = None,
-        price: Optional[float] = None,
-    ) -> None:
-        """
-        Finds an existing predefined bundle by ID and updates only the fields that are not None.
-        """
-        # 1. Récupérer le bundle existant
+    self,
+    id: int,  # ID du bundle à modifier (Obligatoire)
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    item_ids: Optional[List[int]] = None,
+    price: Optional[float] = None,
+) -> None:
+
         bundle = self.bundle_dao.find_bundle_by_id(id)
         if not bundle:
             raise ValueError(f"No bundle found with ID {id}.")
-            
+
         if not isinstance(bundle, PredefinedBundle):
             raise TypeError(f"Bundle with ID {id} is not a predefined bundle.")
 
-        # 2. Mise à jour conditionnelle et validation
-
-        # Mise à jour des champs simples
         if name is not None:
             bundle.name = name
         if description is not None:
             bundle.description = description
-        if availability is not None:
-            bundle.availability = availability
 
-        # Mise à jour du prix avec validation (doit être > 0)
+        if not hasattr(bundle, 'price') or bundle.price is None:
+            raise Exception(f"Price is missing on existing bundle {id}. Check DAO loading.")
+
         if price is not None:
             if price <= 0:
                 raise ValueError("Price must be positive.")
             bundle.price = price
 
-        # Mise à jour de la composition (validation métier : au moins 2 items)
+        if bundle.description is None:
+            bundle.description = ""
+
         if item_ids is not None:
             if not item_ids or len(item_ids) < 2:
                 raise ValueError("Composition must contain at least 2 items.")
 
-            # Récupération et validation des IDs
             composition: list = self.item_dao.get_items_by_ids(item_ids)
             if not composition or len(composition) != len(item_ids):
                 raise ValueError("One or more item IDs provided in the composition were not found.")
-                
-            bundle.composition = composition # Mise à jour de la composition
 
-        # 3. Enregistrement via la DAO
-        updated_bundle = self.bundle_dao.update_bundle(bundle) # Appel à la méthode DAO unique
+            bundle.composition = composition
+
+        updated_bundle = self.bundle_dao.update_bundle(bundle)
         if not updated_bundle:
             raise Exception(f"Failed to update predefined bundle: {id}")
 
@@ -256,7 +249,7 @@ class AdminMenuService:
         if required_item_types is not None:
             if not required_item_types:
                 raise ValueError("Item types cannot be empty.")
-            
+
             if not all(isinstance(t, str) and t.strip() for t in required_item_types):
                 raise ValueError("All item types must be valid, non-empty strings.")
 
