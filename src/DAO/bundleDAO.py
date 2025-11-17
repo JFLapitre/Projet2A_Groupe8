@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
@@ -16,18 +16,11 @@ class BundleDAO(BaseModel):
     db_connector: DBConnector
     item_dao: ItemDAO
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def find_bundle_by_id(self, bundle_id: int) -> Optional[Union[PredefinedBundle, DiscountedBundle, OneItemBundle]]:
         """
-        Find a bundle by its ID.
-
-        Args:
-            bundle_id: ID of the bundle to find
-
-        Returns:
-            Optional bundle object or None
+        Find a bundle by its ID, loading the composition only for relevant bundle types.
         """
         try:
             raw_bundle = self.db_connector.sql_query(
@@ -37,50 +30,46 @@ class BundleDAO(BaseModel):
             if not raw_bundle:
                 return None
 
-            raw_items = self.db_connector.sql_query(
-                """
-                SELECT i.*
-                FROM item i
-                JOIN bundle_item bi ON i.id_item = bi.id_item
-                WHERE bi.id_bundle = %(bundle_id)s
-                """,
-                {"bundle_id": bundle_id},
-                "all",
-            )
-
-            composition = []
-            for item_data in raw_items:
-                item = self.item_dao.find_item_by_id(item_data["id_item"])
-                if item:
-                    composition.append(item)
-
             bundle_type = raw_bundle["bundle_type"]
+            composition = []
+
+            if bundle_type == "predefined":
+                raw_items = self.db_connector.sql_query(
+                    """
+                    SELECT i.*
+                    FROM item i
+                    JOIN bundle_item bi ON i.id_item = bi.id_item
+                    WHERE bi.id_bundle = %(bundle_id)s
+                    """,
+                    {"bundle_id": bundle_id},
+                    "all",
+                )
+
+                for item_data in raw_items:
+                    item = self.item_dao.find_item_by_id(item_data["id_item"])
+                    if item:
+                        composition.append(item)
+
+            common_args = {
+                "id_bundle": raw_bundle["id_bundle"],
+                "name": raw_bundle["name"],
+                "description": raw_bundle["description"],
+            }
 
             if bundle_type == "predefined":
                 return PredefinedBundle(
-                    id_bundle=raw_bundle["id_bundle"],
-                    name=raw_bundle["name"],
-                    description=raw_bundle["description"],
+                    **common_args,
                     price=raw_bundle["price"],
                     composition=composition,
                 )
+
             elif bundle_type == "discount":
                 return DiscountedBundle(
-                    id_bundle=raw_bundle["id_bundle"],
-                    name=raw_bundle["name"],
-                    description=raw_bundle["description"],
+                    **common_args,
                     discount=raw_bundle["discount"],
                     required_item_types=raw_bundle["required_item_types"],
-                    composition=composition,
                 )
-            elif bundle_type == "single_item":
-                return OneItemBundle(
-                    id_bundle=raw_bundle["id_bundle"],
-                    name=raw_bundle["name"],
-                    description=raw_bundle["description"],
-                    price=raw_bundle["price"],
-                    composition=composition,
-                )
+
             else:
                 logging.warning(f"Unknown bundle type: {bundle_type}")
                 return None
@@ -167,8 +156,12 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'discount', NULL, %(discount)s, %(required_item_types)s)
                 RETURNING *;
                 """,
-                {"name": bundle.name, "description": bundle.description, "discount": bundle.discount,
-                "required_item_types": bundle.required_item_types},
+                {
+                    "name": bundle.name,
+                    "description": bundle.description,
+                    "discount": bundle.discount,
+                    "required_item_types": bundle.required_item_types,
+                },
                 "one",
             )
 
@@ -232,8 +225,7 @@ class BundleDAO(BaseModel):
                     UPDATE bundle
                     SET name = %(name)s,
                         description = %(description)s,
-                        price = %(price)s,
-                        availability = %(availability)s -- J'ajoute l'availability si elle est modifiable
+                        price = %(price)s
                     WHERE id_bundle = %(id_bundle)s
                     """,
                     {
@@ -241,7 +233,6 @@ class BundleDAO(BaseModel):
                         "name": bundle.name,
                         "description": bundle.description,
                         "price": bundle.price,
-                        "availability": bundle.availability,
                     },
                     None,
                 )

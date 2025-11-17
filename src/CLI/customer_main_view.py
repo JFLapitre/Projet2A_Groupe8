@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Dict, List
 
-# Imports des vues séparées
 from src.CLI.customer_address_checkout_view import AddressCheckoutView
 from src.CLI.customer_browse_menu_view import BrowseMenuView
 from src.CLI.session import Session

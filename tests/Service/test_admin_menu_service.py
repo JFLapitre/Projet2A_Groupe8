@@ -11,51 +11,37 @@ from src.Model.item import Item
 from src.Model.predefined_bundle import PredefinedBundle
 from src.Service.admin_menu_service import AdminMenuService
 
-# --- Fixtures ---
-
 
 @pytest.fixture
 def mock_db_connector():
-    """Provides a mock DBConnector."""
     return MagicMock(spec=DBConnector)
 
 
 @pytest.fixture
 def mock_item_dao():
-    """Provides a mock ItemDAO."""
     return MagicMock(spec=ItemDAO)
 
 
 @pytest.fixture
 def mock_bundle_dao():
-    """Provides a mock BundleDAO."""
     return MagicMock(spec=BundleDAO)
 
 
 @pytest.fixture
 def service(mock_db_connector, mock_item_dao, mock_bundle_dao, mocker):
-    """
-    Provides an AdminMenuService instance with mocked DAOs.
-    It patches the DAO constructors to inject our mocks when the service is initialized.
-    """
-    # Patch the *constructors* within the module where they are called (admin_menu_service)
     mocker.patch("src.Service.admin_menu_service.ItemDAO", return_value=mock_item_dao)
     mocker.patch("src.Service.admin_menu_service.BundleDAO", return_value=mock_bundle_dao)
-
-    # Now, when AdminMenuService is created, it will receive the mocks
     admin_service = AdminMenuService(db_connector=mock_db_connector)
     return admin_service
 
 
 @pytest.fixture
 def sample_item():
-    """Provides a reusable sample Item for tests."""
     return Item(id=1, name="Test Item", description="Desc", price=10.0, stock=5, availability=True, item_type="TypeA")
 
 
 @pytest.fixture
 def sample_item_list(sample_item):
-    """Provides a reusable list of Items for bundle compositions."""
     item2 = Item(
         id=2, name="Test Item 2", description="Desc 2", price=20.0, stock=10, availability=True, item_type="TypeB"
     )
@@ -64,17 +50,12 @@ def sample_item_list(sample_item):
 
 @pytest.fixture
 def sample_item_types():
-    """Provides a reusable list of item types for discounted bundles."""
     return ["Boisson", "Plat", "Dessert"]
 
 
 @pytest.fixture
 def sample_bundle():
-    """Provides a mock bundle for deletion/find tests."""
     return MagicMock(spec=AbstractBundle)
-
-
-# --- Item Function Tests ---
 
 
 def test_create_item_success(service: AdminMenuService, mock_item_dao: MagicMock):
@@ -83,10 +64,7 @@ def test_create_item_success(service: AdminMenuService, mock_item_dao: MagicMock
 
     service.create_item("New Item", "Desc", 15.0, 10, True, "TypeB")
 
-    # Check that the DAO was called with an Item object
     mock_item_dao.add_item.assert_called_once_with(ANY)
-
-    # Check attributes of the object passed to the DAO
     called_item = mock_item_dao.add_item.call_args[0][0]
     assert isinstance(called_item, Item)
     assert called_item.name == "New Item"
@@ -113,7 +91,7 @@ def test_create_item_validation_zero_stock_available(service: AdminMenuService):
 
 def test_create_item_dao_failure(service: AdminMenuService, mock_item_dao: MagicMock):
     """Tests that an Exception is raised if the DAO fails to create the item."""
-    mock_item_dao.add_item.return_value = None  # Simulate DAO failure
+    mock_item_dao.add_item.return_value = None
 
     with pytest.raises(Exception, match="Failed to create item: New Item"):
         service.create_item("New Item", "Desc", 15.0, 10, True, "TypeB")
@@ -129,7 +107,6 @@ def test_update_item_success(service: AdminMenuService, mock_item_dao: MagicMock
     mock_item_dao.find_item_by_id.assert_called_once_with(1)
     mock_item_dao.update_item.assert_called_once_with(sample_item)
 
-    # Check that the service modified the item *before* calling update_item
     assert sample_item.name == "Updated Name"
     assert sample_item.price == 20.0
     assert sample_item.stock == 15
@@ -152,10 +129,27 @@ def test_update_item_validation_price(service: AdminMenuService, mock_item_dao: 
         service.update_item(1, "Name", "Desc", -1.0, 10, True, "TypeA")
 
 
+def test_update_item_validation_negative_stock(service: AdminMenuService, mock_item_dao: MagicMock, sample_item: Item):
+    """Tests updating stock to a negative value."""
+    mock_item_dao.find_item_by_id.return_value = sample_item
+    with pytest.raises(ValueError, match="Stock cannot be negative."):
+        service.update_item(1, stock=-5)
+
+
+def test_update_item_validation_zero_stock_available(
+    service: AdminMenuService, mock_item_dao: MagicMock, sample_item: Item
+):
+    """Tests updating stock to 0 while availability remains True."""
+    sample_item.availability = True
+    mock_item_dao.find_item_by_id.return_value = sample_item
+    with pytest.raises(ValueError, match="Zero stock implies non-availability."):
+        service.update_item(1, stock=0)
+
+
 def test_update_item_dao_failure(service: AdminMenuService, mock_item_dao: MagicMock, sample_item: Item):
     """Tests that an Exception is raised if the DAO fails to update."""
     mock_item_dao.find_item_by_id.return_value = sample_item
-    mock_item_dao.update_item.return_value = None  # Simulate DAO failure
+    mock_item_dao.update_item.return_value = None
 
     with pytest.raises(Exception, match="Failed to update item: 1"):
         service.update_item(1, "Updated Name", "Desc", 20.0, 15, True, "TypeC")
@@ -183,7 +177,7 @@ def test_delete_item_not_found(service: AdminMenuService, mock_item_dao: MagicMo
 def test_delete_item_dao_failure(service: AdminMenuService, mock_item_dao: MagicMock, sample_item: Item):
     """Tests that an Exception is raised if the DAO fails to delete."""
     mock_item_dao.find_item_by_id.return_value = sample_item
-    mock_item_dao.delete_item.return_value = False  # Simulate DAO failure
+    mock_item_dao.delete_item.return_value = False
 
     with pytest.raises(Exception, match="Failed to delete item: 1"):
         service.delete_item(1)
@@ -199,44 +193,125 @@ def test_list_items(service: AdminMenuService, mock_item_dao: MagicMock, sample_
     mock_item_dao.find_all_items.assert_called_once()
 
 
-# --- Bundle Function Tests ---
-
-
 def test_create_predefined_bundle_success(
-    service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_list: list
+    service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item_list: list
 ):
     """Tests successful creation of a predefined bundle."""
+    mock_item_dao.get_items_by_ids.return_value = sample_item_list
     mock_bundle_dao.add_predefined_bundle.return_value = MagicMock(spec=PredefinedBundle)
 
-    service.create_predefined_bundle("Menu Midi", "Desc", sample_item_list, True, 15.0)
+    item_ids = [1, 2]
+    service.create_predefined_bundle("Menu Midi", "Desc", item_ids, True, 15.0)
 
+    mock_item_dao.get_items_by_ids.assert_called_once_with(item_ids)
     mock_bundle_dao.add_predefined_bundle.assert_called_once_with(ANY)
+
     called_bundle = mock_bundle_dao.add_predefined_bundle.call_args[0][0]
     assert isinstance(called_bundle, PredefinedBundle)
     assert called_bundle.name == "Menu Midi"
     assert called_bundle.price == 15.0
 
 
-def test_create_predefined_bundle_validation_price(service: AdminMenuService, sample_item_list: list):
+def test_create_predefined_bundle_validation_price(service: AdminMenuService):
     """Tests that price <= 0 raises a ValueError."""
     with pytest.raises(ValueError, match="Price must be positive."):
-        service.create_predefined_bundle("Bad Menu", "Desc", sample_item_list, True, 0)
+        service.create_predefined_bundle("Bad Menu", "Desc", [1, 2], True, 0)
 
 
 def test_create_predefined_bundle_validation_composition(service: AdminMenuService):
     """Tests that an empty composition raises a ValueError."""
-    with pytest.raises(ValueError, match="Composition cannot be empty."):
+    with pytest.raises(ValueError, match="Composition must contain at least 2 items."):
         service.create_predefined_bundle("Bad Menu", "Desc", [], True, 15.0)
 
 
+def test_create_predefined_bundle_composition_mismatch(
+    service: AdminMenuService, mock_item_dao: MagicMock, sample_item
+):
+    """Tests when one of the requested IDs is not found."""
+    mock_item_dao.get_items_by_ids.return_value = [sample_item]
+    with pytest.raises(ValueError, match="One or more item IDs provided in the composition were not found."):
+        service.create_predefined_bundle("Menu", "Desc", [1, 99], True, 15.0)
+
+
 def test_create_predefined_bundle_dao_failure(
-    service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_list: list
+    service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item_list: list
 ):
     """Tests DAO failure during predefined bundle creation."""
+    mock_item_dao.get_items_by_ids.return_value = sample_item_list
     mock_bundle_dao.add_predefined_bundle.return_value = None
 
     with pytest.raises(Exception, match="Failed to create predefined bundle: Menu Midi"):
-        service.create_predefined_bundle("Menu Midi", "Desc", sample_item_list, True, 15.0)
+        service.create_predefined_bundle("Menu Midi", "Desc", [1, 2], True, 15.0)
+
+
+def test_update_predefined_bundle_success(
+    service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item_list: list
+):
+    """Tests successful update of a predefined bundle."""
+    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    mock_item_dao.get_items_by_ids.return_value = sample_item_list
+    mock_bundle_dao.update_bundle.return_value = True
+
+    service.update_predefined_bundle(1, name="New Name", price=20.0, item_ids=[1, 2], description="")
+
+    assert bundle.name == "New Name"
+    assert bundle.price == 20.0
+    assert len(bundle.composition) == 2
+    assert bundle.description == ""
+    mock_bundle_dao.update_bundle.assert_called_once_with(bundle)
+
+
+def test_update_predefined_bundle_not_found(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests updating a non-existent bundle raises a ValueError."""
+    mock_bundle_dao.find_bundle_by_id.return_value = None
+    with pytest.raises(ValueError, match="No bundle found with ID 999."):
+        service.update_predefined_bundle(999)
+
+
+def test_update_predefined_bundle_wrong_type(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests validation when trying to update a DiscountedBundle as a PredefinedBundle."""
+    wrong_bundle = MagicMock(spec=DiscountedBundle)
+    mock_bundle_dao.find_bundle_by_id.return_value = wrong_bundle
+    with pytest.raises(TypeError, match="is not a predefined bundle"):
+        service.update_predefined_bundle(1)
+
+
+def test_update_predefined_bundle_price_missing(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests safety check for missing price attribute on existing bundle."""
+    bundle = MagicMock(spec=PredefinedBundle)
+    del bundle.price
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    with pytest.raises(Exception, match="Price is missing on existing bundle"):
+        service.update_predefined_bundle(1, name="Test")
+
+
+def test_update_predefined_bundle_negative_price(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests validation for negative price update."""
+    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    with pytest.raises(ValueError, match="Price must be positive"):
+        service.update_predefined_bundle(1, price=-5.0)
+
+
+def test_update_predefined_bundle_composition_error(
+    service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item
+):
+    """Tests invalid composition update (mismatch IDs)."""
+    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    mock_item_dao.get_items_by_ids.return_value = [sample_item]
+    with pytest.raises(ValueError, match="One or more item IDs provided in the composition were not found"):
+        service.update_predefined_bundle(1, item_ids=[1, 99])
+
+
+def test_update_predefined_bundle_dao_failure(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests DAO failure during predefined bundle update."""
+    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    mock_bundle_dao.update_bundle.return_value = False
+    with pytest.raises(Exception, match="Failed to update predefined bundle"):
+        service.update_predefined_bundle(1, name="Fail")
 
 
 def test_create_discounted_bundle_success(
@@ -247,10 +322,8 @@ def test_create_discounted_bundle_success(
 
     service.create_discounted_bundle("Menu Complet", "Desc", sample_item_types, 25.0)
 
-    # Check that the DAO was called correctly
     mock_bundle_dao.add_discounted_bundle.assert_called_once_with(ANY)
 
-    # Check the attributes of the DiscountedBundle object passed to the DAO
     called_bundle = mock_bundle_dao.add_discounted_bundle.call_args[0][0]
     assert isinstance(called_bundle, DiscountedBundle)
     assert called_bundle.name == "Menu Complet"
@@ -274,6 +347,75 @@ def test_create_discounted_bundle_validation_item_types_empty(service: AdminMenu
     """Tests that an empty required_item_types list raises a ValueError."""
     with pytest.raises(ValueError, match="Item types cannot be empty."):
         service.create_discounted_bundle("Bad Discount", "Desc", [], 20.0)
+
+
+def test_create_discounted_bundle_validation_invalid_strings(service: AdminMenuService):
+    """Tests validation for empty or whitespace-only strings in item types."""
+    with pytest.raises(ValueError, match="All item types must be valid, non-empty strings"):
+        service.create_discounted_bundle("Bad", "Desc", ["Main", "  "], 20.0)
+
+
+def test_create_discounted_bundle_dao_failure(
+    service: AdminMenuService, mock_bundle_dao: MagicMock, sample_item_types: list
+):
+    """Tests DAO failure during discounted bundle creation."""
+    mock_bundle_dao.add_discounted_bundle.return_value = None
+    with pytest.raises(Exception, match="Failed to create discounted bundle"):
+        service.create_discounted_bundle("Fail", "Desc", sample_item_types, 20.0)
+
+
+def test_update_discounted_bundle_success(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests successful update of a discounted bundle."""
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["a"])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    mock_bundle_dao.update_bundle.return_value = True
+
+    service.update_discounted_bundle(2, name="New", discount=15, required_item_types=["B", "C"])
+
+    assert bundle.name == "New"
+    assert bundle.discount == 15
+    assert bundle.required_item_types == ["b", "c"]
+    mock_bundle_dao.update_bundle.assert_called_once_with(bundle)
+
+
+def test_update_discounted_bundle_not_found(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests updating a non-existent bundle raises a ValueError."""
+    mock_bundle_dao.find_bundle_by_id.return_value = None
+    with pytest.raises(ValueError, match="No bundle found with ID 999"):
+        service.update_discounted_bundle(999)
+
+
+def test_update_discounted_bundle_wrong_type(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests validation when trying to update a PredefinedBundle as a DiscountedBundle."""
+    wrong_bundle = MagicMock(spec=PredefinedBundle)
+    mock_bundle_dao.find_bundle_by_id.return_value = wrong_bundle
+    with pytest.raises(TypeError, match="is not a discounted bundle"):
+        service.update_discounted_bundle(2)
+
+
+def test_update_discounted_bundle_invalid_discount(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests validation for invalid discount value update."""
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["a"])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
+        service.update_discounted_bundle(2, discount=150)
+
+
+def test_update_discounted_bundle_invalid_item_types(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests validation for invalid item types update."""
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["a"])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    with pytest.raises(ValueError, match="Item types cannot be empty"):
+        service.update_discounted_bundle(2, required_item_types=[])
+
+
+def test_update_discounted_bundle_dao_failure(service: AdminMenuService, mock_bundle_dao: MagicMock):
+    """Tests DAO failure during discounted bundle update."""
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["a"])
+    mock_bundle_dao.find_bundle_by_id.return_value = bundle
+    mock_bundle_dao.update_bundle.return_value = False
+    with pytest.raises(Exception, match="Failed to update discounted bundle"):
+        service.update_discounted_bundle(2, name="Fail")
 
 
 def test_delete_bundle_success(service: AdminMenuService, mock_bundle_dao: MagicMock, sample_bundle: MagicMock):

@@ -17,7 +17,6 @@ def _build_services() -> Dict:
             "auth": getattr(init_app, "auth_service", None),
             "item": getattr(init_app, "item_service", None),
             "order": getattr(init_app, "order_service", None),
-            "delivery": getattr(init_app, "delivery_service", None),
             "user": getattr(init_app, "admin_user_service", None),
             "jwt": getattr(init_app, "jwt_service", None),
             "address": getattr(init_app, "address_service", None),

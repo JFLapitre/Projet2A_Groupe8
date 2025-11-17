@@ -56,7 +56,6 @@ def list_bundles(service=Depends(get_service)):
 def create_predefined_bundle(
     name: str = Query(),
     price: float = Query(),
-    availability: bool = Query(),
     item_ids: List[int] = Query(...),
     desc: Optional[str] = Query(None, alias="description"),
     service=Depends(get_service),
@@ -66,7 +65,6 @@ def create_predefined_bundle(
             name=name,
             description=desc,
             price=price,
-            availability=availability,
             item_ids=item_ids,
         )
         return {"message": "Predefined bundle created"}
@@ -102,7 +100,6 @@ def update_predefined_bundle(
     name: Optional[str] = Query(None, description="Nouveau nom du bundle."),
     desc: Optional[str] = Query(None, alias="description", description="Nouvelle description."),
     price: Optional[float] = Query(None, description="Nouveau prix."),
-    availability: Optional[bool] = Query(None, description="Nouvelle disponibilité (true/false)."),
     
     # 🟢 Composition (Liste d'IDs d'items) - Lue du Query String (ex: &item_ids=1&item_ids=5)
     item_ids: Optional[List[int]] = Query(
@@ -119,7 +116,6 @@ def update_predefined_bundle(
             name=name,
             description=desc,
             price=price,
-            availability=availability,
             item_ids=item_ids, # Argument pour la composition
         )
         return {"message": f"Predefined bundle {id_bundle} updated successfully"}
