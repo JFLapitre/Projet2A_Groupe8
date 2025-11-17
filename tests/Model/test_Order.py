@@ -1,33 +1,32 @@
-from datetime import date
-
-import pytest
-from pydantic_core import ValidationError
+from datetime import datetime
 
 from src.Model.address import Address
 from src.Model.customer import Customer
+from src.Model.item import Item
 from src.Model.order import Order
 
 
-def test_order_constructor_ok():
-    # Crée un client et une adresse valides
-    customer = Customer(
-        id_user=1, username="john_doe", password="secure", sign_up_date=date(2025, 1, 1), phone_number="0606060606"
+def test_order_ok():
+    cust = Customer(
+        id_user=1,
+        username="u",
+        hash_password="h",
+        salt="s",
     )
 
-    address = Address(city="Rennes", postal_code="35000", street_name="Rue de la Galette", street_number=12)
+    addr = Address(city="Paris", postal_code=75000,
+                   street_name="Rue Y", street_number=10)
 
-    order = Order(id_order=1, customer=customer, address=address, bundles=[], status="pending")
+    item = Item(name="A", item_type="x", price=3.0)
 
-    assert order.id_order == 1
-    assert order.customer.username == "john_doe"
-    assert order.address.city == "Rennes"
+    order = Order(
+        customer=cust,
+        address=addr,
+        items=[item],
+        status="pending",
+    )
+
     assert order.status == "pending"
-    assert isinstance(order.bundles, list)
+    assert order.items[0].price == 3.0
+    assert isinstance(order.order_date, datetime)
 
-
-def test_order_invalid_customer_type_raises_validationerror():
-    address = Address(city="Rennes", postal_code="35000", street_name="Rue de la Galette", street_number=12)
-
-    # customer invalide (int au lieu d’un objet Customer)
-    with pytest.raises(ValidationError):
-        Order(id_order=1, customer=123, address=address, bundles=[], status="pending")

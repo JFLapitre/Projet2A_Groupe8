@@ -79,7 +79,7 @@ class AuthView:
     def _register(self) -> bool:
         print("\n=== Registration ===")
         username = input("Username: ").strip()
-        print("The password must be at least 8 caracters long and have all the caracters' types "
+        print("Enter a password. Your password must be at least 8 caracters long and have all the caracters' types "
                 + "(capital letter, lower letter, digit and special)")
         password = input("Password: ").strip()
         phone_number = input("Phone number: ").strip()

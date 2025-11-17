@@ -5,18 +5,45 @@ from src.Model.item import Item
 from src.Model.predefined_bundle import PredefinedBundle
 
 
-def test_predefined_bundle_constructor_ok():
-    item = Item(id_item=1, name="Galette", item_type="main", price=4.5)
-    bundle = PredefinedBundle(id_bundle=1, name="Classic", composition=[item], price=4.5)
+def test_predefined_bundle_ok():
+    item1 = Item(name="Galette", item_type="main", price=4.5, description="Sarrasin complète")
+    item2 = Item(name="Cidre", item_type="drink", price=3.0)
 
-    assert bundle.id_bundle == 1
-    assert bundle.name == "Classic"
-    assert bundle.price == 4.5
-    assert isinstance(bundle.composition, list)
-    assert bundle.composition[0].name == "Galette"
+    bundle = PredefinedBundle(
+        id_bundle=10,
+        name="Menu Breton",
+        composition=[item1, item2],
+        price=6.0,
+    )
+
+    assert bundle.id_bundle == 10
+    assert bundle.name == "Menu Breton"
+    assert bundle.price == 6.0
+    assert len(bundle.composition) == 2
 
 
-def test_predefined_bundle_invalid_price_type():
-    item = Item(id_item=1, name="Galette", item_type="main", price=4.5)
+def test_predefined_bundle_invalid_price():
+    item = Item(name="Galette", item_type="main", price=4.5)
+
     with pytest.raises(ValidationError):
-        PredefinedBundle(id_bundle=1, name="Classic", composition=[item], price="four")
+        PredefinedBundle(
+            id_bundle=10,
+            name="Menu Breton",
+            composition=[item],
+            price="six euros",   # ❌ invalide
+        )
+
+
+def test_predefined_bundle_description():
+    item1 = Item(name="Galette", item_type="main", price=4.5, description="Complète")
+    item2 = Item(name="Cidre", item_type="drink", price=3.0)
+
+    bundle = PredefinedBundle(
+        id_bundle=1,
+        name="Menu",
+        composition=[item1, item2],
+        price=7.0,
+    )
+
+    assert bundle.compute_description() == "Galette: Complète, Cidre"
+

@@ -1,4 +1,3 @@
-# src/Model/one_item_bundle.py
 from typing import List
 
 from pydantic import Field

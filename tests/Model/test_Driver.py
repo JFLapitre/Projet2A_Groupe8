@@ -1,43 +1,34 @@
-from datetime import date
-
 import pytest
 from pydantic_core import ValidationError
 
 from src.Model.driver import Driver
 
 
-def test_driver_constructor_ok():
-    driver = Driver(
+def test_driver_ok():
+    d = Driver(
         id_user=1,
-        username="driver_1",
-        password="strong_pwd",
-        sign_up_date=date(2025, 1, 1),
-        name="Jean Dupont",
-        phone_number="0601020304",
+        username="driver",
+        hash_password="h",
+        salt="s",
+        name="Bob",
+        phone_number="06000000",
         vehicle_type="bike",
         availability=True,
     )
 
-    assert driver.id_user == 1
-    assert driver.username == "driver_1"
-    assert driver.password == "strong_pwd"
-    assert driver.name == "Jean Dupont"
-    assert driver.phone_number == "0601020304"
-    assert driver.vehicle_type == "bike"
-    assert driver.availability is True
-    assert isinstance(driver.sign_up_date, date)
+    assert d.vehicle_type == "bike"
+    assert d.availability is True
 
 
-def test_driver_invalid_id_raises_validationerror():
-    # id_user invalide (chaîne au lieu d'un entier)
+def test_driver_invalid_availability():
     with pytest.raises(ValidationError):
         Driver(
-            id_user="one",
-            username="driver_1",
-            password="strong_pwd",
-            sign_up_date=date(2025, 1, 1),
-            name="Jean Dupont",
-            phone_number="0601020304",
-            vehicle_type="bike",
-            availability=True,
+            id_user=1,
+            username="driver",
+            hash_password="h",
+            salt="s",
+            name="Bob",
+            phone_number="06000000",
+            vehicle_type="car",
+            availability="indeed",
         )

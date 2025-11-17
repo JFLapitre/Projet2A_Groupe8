@@ -3,6 +3,14 @@ from src.Model.item import Item
 
 
 class PredefinedBundle(AbstractBundle):
+    """
+    A bundle with a predefined price and a fixed list of items.
+
+    Attributes:
+        composition (list[Item]): Items contained in the bundle.
+        price (float): Predefined total price.
+    """
+
     composition: list[Item]
     price: float
 
