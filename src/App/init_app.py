@@ -8,7 +8,6 @@ from src.Service.admin_menu_service import AdminMenuService
 from src.Service.admin_order_service import AdminOrderService  # Ajouté pour l'ancienne utilisation
 from src.Service.admin_user_service import AdminUserService
 from src.Service.authentication_service import AuthenticationService
-from src.Service.delivery_service import DeliveryService
 from src.Service.driver_service import DriverService
 from src.Service.JWTService import JwtService
 from src.Service.order_service import OrderService
@@ -30,7 +29,6 @@ admin_user_service = AdminUserService(db_connector=db_connector, password_servic
 driver_service = DriverService(db_connector=db_connector)
 address_service = AddressService(db_connector=db_connector)
 order_service = OrderService(db_connector=db_connector)
-delivery_service = DeliveryService(db_connector=db_connector)
 
 # Services qui dépendent d'autres services ou DAOs pour l'initialisation (basé sur votre ancien code)
 admin_order_service = AdminOrderService(db_connector=db_connector)
@@ -46,7 +44,6 @@ services = {
     "driver": driver_service,
     "address": address_service,
     "order": order_service,
-    "delivery": delivery_service,
     "admin_order": admin_order_service,
     "admin_menu": admin_menu_service,
 }

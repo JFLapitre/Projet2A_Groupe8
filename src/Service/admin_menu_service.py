@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
@@ -46,7 +46,7 @@ class AdminMenuService:
         price: Optional[float] = None,
         stock: Optional[int] = None,
         availability: Optional[bool] = None,
-        item_type: Optional[str] = None
+        item_type: Optional[str] = None,
     ) -> None:
         """
         Finds an existing item by ID and updates only the fields that are not None.
@@ -101,13 +101,12 @@ class AdminMenuService:
         """
         if price <= 0:
             raise ValueError("Price must be positive.")
-        if not item_ids: 
+        if not item_ids:
             raise ValueError("Composition must contain at least 2 items.")
 
         composition: list = self.item_dao.get_items_by_ids(item_ids)
 
         if not composition or len(composition) != len(item_ids):
-
             raise ValueError("One or more item IDs provided in the composition were not found.")
 
         new_bundle = PredefinedBundle(
@@ -117,9 +116,9 @@ class AdminMenuService:
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")
 
-
-    def create_discounted_bundle(self, name: str, description: str, required_item_types: list[str], 
-    discount: float) -> None:
+    def create_discounted_bundle(
+        self, name: str, description: str, required_item_types: list[str], discount: float
+    ) -> None:
         """
         Validates and creates a new bundle that applies a discount.
         """
@@ -133,10 +132,7 @@ class AdminMenuService:
             raise ValueError("All item types must be valid, non-empty strings.")
 
         new_bundle = DiscountedBundle(
-            name=name,
-            description=description,
-            required_item_types=required_item_types,
-            discount=discount
+            name=name, description=description, required_item_types=required_item_types, discount=discount
         )
 
         created_bundle = self.bundle_dao.add_discounted_bundle(new_bundle)
@@ -165,16 +161,14 @@ class AdminMenuService:
         """
         return self.bundle_dao.find_all_bundles()
 
-
     def update_predefined_bundle(
-    self,
-    id: int,  # ID du bundle à modifier (Obligatoire)
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    item_ids: Optional[List[int]] = None,
-    price: Optional[float] = None,
-) -> None:
-
+        self,
+        id: int,  # ID du bundle à modifier (Obligatoire)
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        item_ids: Optional[List[int]] = None,
+        price: Optional[float] = None,
+    ) -> None:
         bundle = self.bundle_dao.find_bundle_by_id(id)
         if not bundle:
             raise ValueError(f"No bundle found with ID {id}.")
@@ -187,7 +181,7 @@ class AdminMenuService:
         if description is not None:
             bundle.description = description
 
-        if not hasattr(bundle, 'price') or bundle.price is None:
+        if not hasattr(bundle, "price") or bundle.price is None:
             raise Exception(f"Price is missing on existing bundle {id}. Check DAO loading.")
 
         if price is not None:
@@ -213,12 +207,12 @@ class AdminMenuService:
             raise Exception(f"Failed to update predefined bundle: {id}")
 
     def update_discounted_bundle(
-    self,
-    id: int,  # ID du bundle à modifier (Obligatoire)
-    name: Optional[str] = None,
-    description: Optional[str] = None,
-    required_item_types: Optional[List[str]] = None,  # Nouveaux types optionnels
-    discount: Optional[float] = None,
+        self,
+        id: int,  # ID du bundle à modifier (Obligatoire)
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        required_item_types: Optional[List[str]] = None,  # Nouveaux types optionnels
+        discount: Optional[float] = None,
     ) -> None:
         """
         Finds an existing discounted bundle by ID and updates only the fields that are not None.
@@ -227,7 +221,7 @@ class AdminMenuService:
         bundle = self.bundle_dao.find_bundle_by_id(id)
         if not bundle:
             raise ValueError(f"No bundle found with ID {id}.")
-            
+
         if not isinstance(bundle, DiscountedBundle):
             raise TypeError(f"Bundle with ID {id} is not a discounted bundle.")
 
@@ -257,6 +251,6 @@ class AdminMenuService:
             bundle.required_item_types = [t.lower() for t in required_item_types]
 
         # 3. Enregistrement via la DAO
-        updated_bundle = self.bundle_dao.update_bundle(bundle) # Appel à la méthode DAO unique
+        updated_bundle = self.bundle_dao.update_bundle(bundle)  # Appel à la méthode DAO unique
         if not updated_bundle:
             raise Exception(f"Failed to update discounted bundle: {id}")

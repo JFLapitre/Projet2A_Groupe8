@@ -13,7 +13,7 @@ def generate_bulk_items(db_connector, item_count=5000):
     Génère et insère un grand nombre d'articles en une seule requête (bulk insert).
     """
     # Indique que nous MODIFIONS ces variables globales
-    global next_item_id, max_item_id 
+    global next_item_id, max_item_id
 
     print(f"Génération de {item_count} articles...")
     realistic_dishes = [
@@ -75,7 +75,7 @@ def generate_bulk_items(db_connector, item_count=5000):
 
         # CORRECTION: Mettre à jour les variables globales
         next_item_id += item_count
-        max_item_id = next_item_id - 1 # Met à jour l'ID max pour la prochaine fonction
+        max_item_id = next_item_id - 1  # Met à jour l'ID max pour la prochaine fonction
 
     except Exception as e:
         print(f"Erreur lors de l'insertion de masse des articles : {e}")
@@ -88,7 +88,7 @@ def generate_discounted_bundles(db_connector, bundle_count=1000):
     """
     # Indique que nous MODIFIONS cette variable globale
     global next_bundle_id
-    
+
     print(f"Génération de {bundle_count} bundles de réduction...")
     realistic_bundles = [
         {"name": "Lunch Deal", "types": ["main", "drink"]},
@@ -122,7 +122,7 @@ def generate_discounted_bundles(db_connector, bundle_count=1000):
         {"name": "Deli Box", "types": ["main", "dessert"]},
         {"name": "Full Experience", "types": ["starter", "main", "side", "dessert", "drink"]},
     ]
-    
+
     liste_complete = realistic_bundles * (bundle_count // len(realistic_bundles) + 1)
     random.shuffle(liste_complete)
     bundle_sql_values = []
@@ -136,7 +136,7 @@ def generate_discounted_bundles(db_connector, bundle_count=1000):
         types_list = bundle_data["types"]
         formatted_types = ", ".join([f"'{t}'" for t in types_list])
         sql_array = f"ARRAY[{formatted_types}]"
-        
+
         bundle_sql_values.append(f"({bundle_id}, '{name}', '', '{bundle_type}', {sql_array}, NULL, {discount})")
 
     full_query = "INSERT INTO fd.bundle (id_bundle, name, description, bundle_type, required_item_types, price, discount) VALUES "
@@ -146,10 +146,10 @@ def generate_discounted_bundles(db_connector, bundle_count=1000):
     try:
         db_connector.sql_query(full_query, return_type=None)
         print(f"{bundle_count} bundles de réduction ajoutés avec succès.")
-        
+
         # CORRECTION: Mettre à jour la variable globale
         next_bundle_id += bundle_count
-        
+
     except Exception as e:
         print(f"Erreur lors de l'insertion de masse des bundles : {e}")
         raise
@@ -172,7 +172,6 @@ def generate_predefined_bundles(db_connector, bundle_count=500, items_per_bundle
         "Burger Menu",
         "Evening Offer",
         "Student Menu",
-
         "Family Menu",
         "Chef’s Selection",
         "Lunch Special",
@@ -182,7 +181,6 @@ def generate_predefined_bundles(db_connector, bundle_count=500, items_per_bundle
         "Gourmet Menu",
         "Weekend Deal",
         "Daily Special",
-
         "Sweet Break",
         "Snack Combo",
         "Couple Menu",
@@ -193,14 +191,12 @@ def generate_predefined_bundles(db_connector, bundle_count=500, items_per_bundle
         "Tasting Menu",
         "Sharing Menu",
         "Premium Menu",
-
         "Morning Deal",
         "Grab & Go",
         "Dinner Box",
         "Full Experience",
         "Seasonal Menu",
     ]
-
 
     bundle_sql_values = []
     bundle_item_sql_values = []
@@ -229,7 +225,7 @@ def generate_predefined_bundles(db_connector, bundle_count=500, items_per_bundle
     try:
         print(f"Insertion de {len(bundle_sql_values)} bundles prédéfinis...")
         db_connector.sql_query(bundle_query, return_type=None)
-        
+
         print(f"Insertion de {len(bundle_item_sql_values)} associations bundle-item...")
         db_connector.sql_query(bundle_item_query, return_type=None)
 

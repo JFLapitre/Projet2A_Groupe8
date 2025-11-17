@@ -107,7 +107,6 @@ class DriverService:
         service = ApiMapsService()
         return service.Driveritinerary(adresses)
 
-
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """
         Marks a delivery as 'completed' and sets the delivery time.

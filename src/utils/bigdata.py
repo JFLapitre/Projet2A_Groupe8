@@ -17,7 +17,6 @@ class ResetDatabase:
         self.fake = Faker("fr_FR")
         self.db_connector = DBConnector()
 
-
     def lancer(self):
         print("Database reset")
 
