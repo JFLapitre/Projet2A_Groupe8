@@ -14,21 +14,25 @@ if TYPE_CHECKING:
 
 class BrowseMenuView:
     """
-    Handles all menu browsing and item selection logic for the customer.
+    CLI view handling all menu browsing and item selection logic for a customer.
     """
 
-    def __init__(self, services: Dict, cart: List["Bundle"]):
+    def __init__(self, services: Dict, cart: List["Bundle"]) -> None:
         """
-        Initializes the Browse Menu View.
+        Initialize the Browse Menu View with services and the customer's cart.
+
+        Args:
+            services (Dict): Dictionary of available services (expects 'item').
+            cart (List[Bundle]): Reference to the customer's cart list.
         """
         self.item_service: "ItemService" = services.get("item")
-        self.cart = cart
+        self.cart: List["Bundle"] = cart
         self.all_items: Optional[List["Item"]] = None
 
-    def display(self):
+    def display(self) -> None:
         """
-        Displays the top-level menu types (Discounted, Special, Single Item)
-        and dispatches to the corresponding selection methods.
+        Display the top-level menu types (Discounted, Special, Single Item)
+        and dispatch to the corresponding selection methods.
         """
         while True:
             print("\n=== 🍔 Choose a Menu Type ===")
@@ -36,7 +40,7 @@ class BrowseMenuView:
             print("2) ⭐  Special Bundle")
             print("3) 🧃  Single Item")
             print("B) Back")
-            choice = input("Select an option: ").strip().lower()
+            choice: str = input("Select an option: ").strip().lower()
 
             if choice == "1":
                 self._choose_discounted_bundle()
@@ -51,18 +55,22 @@ class BrowseMenuView:
 
     def _show_item_description_if_requested(self, choice: str, available_items: List["Item"]) -> bool:
         """
-        Checks if the choice is a request for item description (e.g., '1D', '2+D') and displays it.
+        Display the item description if the user requested it (e.g., '1D' or '2+D').
+
+        Args:
+            choice (str): The raw user input.
+            available_items (List[Item]): List of items currently available for selection.
 
         Returns:
-            bool: True if a description was handled, False otherwise.
+            bool: True if a description was shown, False otherwise.
         """
         if choice.lower().endswith(("d", "+d")):
-            num_str = choice[:-1].rstrip(" +").strip()
+            num_str: str = choice[:-1].rstrip(" +").strip()
             if num_str.isdigit():
                 try:
-                    item_idx = int(num_str) - 1
+                    item_idx: int = int(num_str) - 1
                     item = available_items[item_idx]
-                    desc = item.description or "No description available."
+                    desc: str = item.description or "No description available."
                     print(f"   ℹ️ {item.name} description: {desc}")
                     return True
                 except IndexError:
@@ -77,9 +85,12 @@ class BrowseMenuView:
                 return True
         return False
 
-    def _add_bundle_to_cart(self, bundle: "Bundle"):
+    def _add_bundle_to_cart(self, bundle: "Bundle") -> None:
         """
-        Adds the selected bundle (or item, acting as a bundle) to the cart and confirms.
+        Add a bundle or single item (wrapped as a bundle) to the cart and confirm.
+
+        Args:
+            bundle (Bundle): The bundle or single item to add.
         """
         self.cart.append(bundle)
         print(f"✅ Added '{bundle.name}' — {bundle.compute_price():.2f}€")
@@ -88,28 +99,33 @@ class BrowseMenuView:
         self, required_type: str, available_items: List["Item"], user_bundle: DiscountedBundle
     ) -> bool:
         """
-        Handles the loop for selecting a single item of a specific required type.
+        Handle the loop for selecting a single item of a required type.
+
+        Args:
+            required_type (str): The type of item to select.
+            available_items (List[Item]): List of items filtered by type.
+            user_bundle (DiscountedBundle): The bundle being configured.
 
         Returns:
-            bool: True if an item was successfully selected, False if the process was cancelled.
+            bool: True if an item was successfully selected, False if cancelled.
         """
         while True:
             print(f"\n- Select your {required_type} (Enter Number+D to get item description):")
             for idx_item, item in enumerate(available_items, start=1):
                 print(f"   {idx_item}) {item.name} - {(1 - user_bundle.discount) * item.price:.2f}€")
 
-            item_choice = input(f"Choice for {required_type}: ").strip()
+            item_choice: str = input(f"Choice for {required_type}: ").strip()
 
             if self._show_item_description_if_requested(item_choice, available_items):
                 continue
 
             try:
-                item_idx = int(item_choice) - 1
+                item_idx: int = int(item_choice) - 1
                 if 0 <= item_idx < len(available_items):
                     selected_item = available_items[item_idx]
                     user_bundle.composition.append(selected_item)
                     print(f"   ✅ Added {selected_item.name}.")
-                    return True  # Success
+                    return True
                 else:
                     print("⚠️ Invalid item number.")
             except ValueError:
@@ -123,12 +139,15 @@ class BrowseMenuView:
 
     def _configure_discounted_bundle(self, selected_bundle: DiscountedBundle) -> Optional[DiscountedBundle]:
         """
-        Guides the user through selecting items for all required types of the bundle.
+        Guide the user through selecting items for all required types of a discounted bundle.
+
+        Args:
+            selected_bundle (DiscountedBundle): Template bundle to configure.
 
         Returns:
-            Optional[DiscountedBundle]: The fully configured bundle or None if cancelled/failed.
+            Optional[DiscountedBundle]: Fully configured bundle or None if cancelled/failed.
         """
-        user_bundle = DiscountedBundle(
+        user_bundle: DiscountedBundle = DiscountedBundle(
             id_bundle=len(self.cart) + 1,
             name=selected_bundle.name,
             discount=selected_bundle.discount,
@@ -140,7 +159,7 @@ class BrowseMenuView:
             self.all_items = self.item_service.list_items()
 
         for required_type in user_bundle.required_item_types:
-            available_items = [i for i in self.all_items if i.item_type == required_type]
+            available_items: List["Item"] = [i for i in self.all_items if i.item_type == required_type]
 
             if not available_items:
                 print(f"[ERROR] No items available for type: {required_type}. Bundle cancelled.")
@@ -151,12 +170,12 @@ class BrowseMenuView:
 
         return user_bundle
 
-    def _choose_discounted_bundle(self):
+    def _choose_discounted_bundle(self) -> None:
         """
-        Allows the user to select and configure a discounted bundle (dynamic composition).
+        Allow the user to select and configure a discounted bundle (dynamic composition).
         """
         try:
-            bundles = [
+            bundles: List[DiscountedBundle] = [
                 b
                 for b in self.item_service.list_bundles()
                 if isinstance(b, DiscountedBundle) and getattr(b, "required_item_types", None)
@@ -175,17 +194,17 @@ class BrowseMenuView:
             for idx, b in enumerate(bundles, start=1):
                 print(f"{idx}) {b.name} — {b.discount * 100:.0f}% off")
 
-            choice = input("Select bundle number or B to back: ").strip().lower()
+            choice: str = input("Select bundle number or B to back: ").strip().lower()
             if choice == "b":
                 return
 
             try:
-                idx = int(choice) - 1
+                idx: int = int(choice) - 1
                 selected_bundle = bundles[idx]
 
                 print(f"\n[INFO] Starting configuration for '{selected_bundle.name}'.")
 
-                user_bundle = self._configure_discounted_bundle(selected_bundle)
+                user_bundle: Optional[DiscountedBundle] = self._configure_discounted_bundle(selected_bundle)
 
                 if user_bundle:
                     self._add_bundle_to_cart(user_bundle)
@@ -199,15 +218,22 @@ class BrowseMenuView:
 
     def _handle_predefined_description(self, choice: str, bundles: List["PredefinedBundle"]) -> bool:
         """
-        Checks if the choice is a request for bundle description (e.g., '1D', '2+D') and displays it.
+        Display a predefined bundle description if requested (e.g., '1D' or '2+D').
+
+        Args:
+            choice (str): User input.
+            bundles (List[PredefinedBundle]): List of available bundles.
+
+        Returns:
+            bool: True if description was shown, False otherwise.
         """
         if choice.lower().endswith(("d", "+d")):
-            num_str = choice[:-1].rstrip(" +").strip()
+            num_str: str = choice[:-1].rstrip(" +").strip()
             if num_str.isdigit():
                 try:
-                    idx = int(num_str) - 1
+                    idx: int = int(num_str) - 1
                     selected_bundle = bundles[idx]
-                    desc = selected_bundle.compute_description()
+                    desc: str = selected_bundle.compute_description()
                     print(f"   ℹ️ {selected_bundle.name} description:")
                     print(f"   {desc}")
                     return True
@@ -223,12 +249,12 @@ class BrowseMenuView:
                 return True
         return False
 
-    def _choose_special_bundle(self):
+    def _choose_special_bundle(self) -> None:
         """
-        Allows the user to select a predefined special bundle.
+        Allow the user to select a predefined special bundle.
         """
         try:
-            bundles = [
+            bundles: List[PredefinedBundle] = [
                 b
                 for b in self.item_service.list_bundles()
                 if isinstance(b, PredefinedBundle) and getattr(b, "composition", None)
@@ -246,7 +272,7 @@ class BrowseMenuView:
             for idx, b in enumerate(bundles, start=1):
                 print(f"{idx}) {b.name} — {b.price:.2f}€")
 
-            choice = input("Select a bundle number, number+D for description, or B to back: ").strip()
+            choice: str = input("Select a bundle number, number+D for description, or B to back: ").strip()
 
             if self._handle_predefined_description(choice, bundles):
                 continue
@@ -255,7 +281,7 @@ class BrowseMenuView:
                 return
 
             try:
-                idx = int(choice) - 1
+                idx: int = int(choice) - 1
                 selected_bundle = bundles[idx]
                 self._add_bundle_to_cart(selected_bundle)
                 return
@@ -267,18 +293,21 @@ class BrowseMenuView:
 
     def _select_item_in_category(self, filtered_items: List["Item"], chosen_type: str) -> bool:
         """
-        Handles the loop for selecting a specific item within the chosen category,
-        wrapping it into a OneItemBundle.
+        Handle selecting a specific item within a chosen category, wrapped in OneItemBundle.
+
+        Args:
+            filtered_items (List[Item]): Items available in this category.
+            chosen_type (str): Category name.
 
         Returns:
-            bool: True if an item was successfully selected and added to cart, False if back was chosen.
+            bool: True if item selected and added to cart, False if user cancelled.
         """
         while True:
             print(f"\n=== Items — {chosen_type} (Enter Number+D to get item description) ===")
             for idx_item, item in enumerate(filtered_items, start=1):
                 print(f"{idx_item}) {item.name} - {item.price:.2f}€")
 
-            item_choice = input("Select item number or B to back: ").strip()
+            item_choice: str = input("Select item number or B to back: ").strip()
 
             if self._show_item_description_if_requested(item_choice, filtered_items):
                 continue
@@ -287,10 +316,10 @@ class BrowseMenuView:
                 return False
 
             try:
-                idx_item = int(item_choice) - 1
+                idx_item: int = int(item_choice) - 1
                 selected_item = filtered_items[idx_item]
 
-                one_item_bundle = OneItemBundle(
+                one_item_bundle: OneItemBundle = OneItemBundle(
                     id_bundle=len(self.cart) + 1, name=selected_item.name, item=selected_item
                 )
                 self._add_bundle_to_cart(one_item_bundle)
@@ -303,13 +332,13 @@ class BrowseMenuView:
                 print(f"[ERROR] {e}")
                 return True
 
-    def _choose_single_item(self):
+    def _choose_single_item(self) -> None:
         """
-        Allows the user to select a single item, wrapping it into a OneItemBundle.
+        Allow the user to select a single item, wrapping it in a OneItemBundle.
         """
         try:
-            items = self.item_service.list_items()
-            item_types = sorted(set(i.item_type for i in items))
+            items: List["Item"] = self.item_service.list_items()
+            item_types: List[str] = sorted(set(i.item_type for i in items))
             self.all_items = items
         except Exception as e:
             logging.error(f"Cannot fetch items: {e}")
@@ -321,15 +350,15 @@ class BrowseMenuView:
             for idx, t in enumerate(item_types, start=1):
                 print(f"{idx}) {t}")
 
-            choice = input("Select a category or B to back: ").strip().lower()
+            choice: str = input("Select a category or B to back: ").strip().lower()
 
             if choice == "b":
                 return
 
             try:
-                idx = int(choice) - 1
-                chosen_type = item_types[idx]
-                filtered_items = [i for i in items if i.item_type == chosen_type]
+                idx: int = int(choice) - 1
+                chosen_type: str = item_types[idx]
+                filtered_items: List["Item"] = [i for i in items if i.item_type == chosen_type]
 
                 if not filtered_items:
                     print(f"No items found in category {chosen_type}.")

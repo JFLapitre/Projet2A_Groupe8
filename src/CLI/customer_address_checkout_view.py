@@ -13,36 +13,36 @@ if TYPE_CHECKING:
 
 class AddressCheckoutView:
     """
-    Handles the final checkout, address validation, order creation, and cart clearing.
+    CLI view for final checkout, address validation, and order creation.
     """
 
-    def __init__(self, services: Dict, session: "Session", cart: List["Bundle"]):
+    def __init__(self, services: Dict, session: "Session", cart: List["Bundle"]) -> None:
         """
-        Initializes the Address Checkout View.
+        Initialize the Address Checkout View.
 
         Args:
-            services: Dictionary of all available services (needs 'address', 'order').
-            session: The active user session.
-            cart: Reference to the customer's current cart list.
+            services (Dict): Dictionary of services (expects 'address', 'order', 'api_maps').
+            session (Session): Current user session.
+            cart (List[Bundle]): Reference to customer's cart.
         """
         self.address_service: "AddressService" = services.get("address")
         self.api_maps_service: "ApiMapsService" = services.get("api_maps")
         self.order_service: "OrderService" = services.get("order")
         self.session = session
-        self.cart = cart
+        self.cart: List["Bundle"] = cart
 
     def _get_address_input(self) -> Dict[str, Optional[str]]:
         """
-        Prompts the user for address components.
+        Prompt user to input delivery address components.
 
         Returns:
-            Dict[str, Optional[str]]: Dictionary containing address components.
+            Dict[str, Optional[str]]: Address data from user input.
         """
         print("\n📦 Enter delivery address:")
-        street_number_input = input("Street number (if exists): ").strip()
-        street_name = input("Street name: ").strip()
-        city = input("City: ").strip()
-        postal_code_input = input("Postal code: ").strip()
+        street_number_input: str = input("Street number (if exists): ").strip()
+        street_name: str = input("Street name: ").strip()
+        city: str = input("City: ").strip()
+        postal_code_input: str = input("Postal code: ").strip()
 
         return {
             "street_number_input": street_number_input,
@@ -53,22 +53,20 @@ class AddressCheckoutView:
 
     def _process_address_validation(self) -> Optional["Address"]:
         """
-        Handles the loop for address input, validation (API), confirmation,
-        and creation/retrieval in the database.
+        Handle address input, validation via API, confirmation, and DB creation/retrieval.
 
         Returns:
-            Optional[Address]: The confirmed Address object or None if cancelled/failed.
+            Optional[Address]: Final Address object if confirmed, None if cancelled.
         """
-        final_address_obj = None
+        final_address_obj: Optional["Address"] = None
 
         while final_address_obj is None:
-            address_data = self._get_address_input()
+            address_data: Dict[str, Optional[str]] = self._get_address_input()
 
             try:
-                postal_code = int(address_data["postal_code_input"])
-                street_number = address_data["street_number_input"] if address_data["street_number_input"] else None
+                postal_code: int = int(address_data["postal_code_input"])
+                street_number: Optional[str] = address_data["street_number_input"] or None
 
-                # 1. API Validation
                 validation_result = self.api_maps_service.validate_address_api(
                     street_name=address_data["street_name"],
                     city=address_data["city"],
@@ -76,40 +74,33 @@ class AddressCheckoutView:
                     street_number=street_number,
                 )
 
-                status = validation_result.get("status")
+                status: str = validation_result.get("status")
 
                 if status == "INVALID":
                     print(f"[ERROR] {validation_result.get('message')}. Veuillez réessayer.")
                     continue
 
-                # 'components' exists if status is VALID or AMBIGUOUS
-                components = validation_result["components"]
-
-                display_street_number = components["street_number"] or ""
-                display_address = (
+                components: Dict[str, Optional[str]] = validation_result["components"]
+                display_street_number: str = components["street_number"] or ""
+                display_address: str = (
                     f"{display_street_number} {components['street_name']}, "
                     f"{components['postal_code']} {components['city']}"
                 ).strip()
 
                 if status == "AMBIGUOUS":
                     print(f"\n⚠️  Address is ambiguous (Google suggests: {validation_result.get('formatted_address')})")
-                    confirm_ambiguous = (
-                        input("   Do you want to use the address components entered? (Y/N): ").strip().lower()
-                    )
+                    confirm_ambiguous: str = input("   Do you want to use the address components entered? (Y/N): ").strip().lower()
                     if confirm_ambiguous != "y":
                         continue
 
-                # --- Final Confirmation ---
                 print(f"\n❓ Do you confirm the delivery address: **{display_address}**?")
-                final_confirm = input("Confirm delivery address? (Y/N): ").strip().lower()
-
+                final_confirm: str = input("Confirm delivery address? (Y/N): ").strip().lower()
                 if final_confirm != "y":
                     print("Delivery address confirmation cancelled.")
                     return None
 
                 print("✅ Address confirmed.")
 
-                # 2. Database Creation/Retrieval
                 final_address_obj = self.address_service.get_or_create_address(
                     street_name=components["street_name"],
                     city=components["city"],
@@ -130,16 +121,16 @@ class AddressCheckoutView:
 
         return final_address_obj
 
-    def validate_order(self):
+    def validate_order(self) -> None:
         """
-        Initiates the checkout process, including address validation and order creation.
-        If successful, clears the cart. Returns to main menu on failure or cancellation.
+        Perform final checkout, including address validation, order creation,
+        and clearing the cart upon success.
         """
         if not self.cart:
             print("🛒 Your cart is empty.")
             return
 
-        total = sum(b.compute_price() for b in self.cart)
+        total: float = sum(b.compute_price() for b in self.cart)
         print("\n=== 💳 Review Your Order ===")
         for b in self.cart:
             print(f"- {b.name}: {b.compute_price():.2f}€")
@@ -148,18 +139,15 @@ class AddressCheckoutView:
                     print(f"    • {item.name}")
         print(f"\n💰 Total to pay: {total:.2f}€")
 
-        confirm = input("Proceed to checkout? (Y/N): ").strip().lower()
+        confirm: str = input("Proceed to checkout? (Y/N): ").strip().lower()
         if confirm != "y":
             print("Order cancelled.")
             return
 
-        # 1. Process Address
-        final_address_obj = self._process_address_validation()
-
+        final_address_obj: Optional["Address"] = self._process_address_validation()
         if final_address_obj is None:
             return
 
-        # 2. Create Order
         try:
             created_order = self.order_service.create_order(self.session.user_id, final_address_obj.id_address)
             for bundle in self.cart:
@@ -167,12 +155,11 @@ class AddressCheckoutView:
 
             print(f"\n🎉 Order #{created_order.id_order} confirmed!")
 
-            delivery_address = (
+            delivery_address: str = (
                 f"{final_address_obj.street_number or ''} {final_address_obj.street_name}, {final_address_obj.city}"
             ).strip()
             print(f"🧾 Total: {total:.2f}€ — {len(self.cart)} items delivered to {delivery_address}.")
 
-            # 3. Clear Cart upon success
             self.cart.clear()
 
         except Exception as e:

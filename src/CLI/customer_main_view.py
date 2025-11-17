@@ -10,29 +10,29 @@ if TYPE_CHECKING:
 
 class CustomerMainView:
     """
-    Main CLI view for the customer dashboard, managing the session, the cart,
-    and dispatching control to sub-views.
+    Main CLI view for the customer dashboard, managing session, cart,
+    and delegating to sub-views.
     """
 
-    def __init__(self, session: Session, services: Dict = None):
+    def __init__(self, session: Session, services: Dict = None) -> None:
         """
-        Initializes the Customer Main View and its associated sub-views.
+        Initialize the Customer Main View and associated sub-views.
 
         Args:
-            session: The active user session.
-            services: Dictionary of all available services.
+            session (Session): The active user session.
+            services (Dict, optional): Dictionary of available services.
         """
-        self.session = session
-        self.services = services or {}
+        self.session: Session = session
+        self.services: Dict = services or {}
         self.cart: List["Bundle"] = []
 
-        # Instantiate sub-views, injecting services, session, and cart
-        self.menu_view = BrowseMenuView(self.services, self.cart)
-        self.checkout_view = AddressCheckoutView(self.services, self.session, self.cart)
+        # Instantiate sub-views, passing services, session, and cart
+        self.menu_view: BrowseMenuView = BrowseMenuView(self.services, self.cart)
+        self.checkout_view: AddressCheckoutView = AddressCheckoutView(self.services, self.session, self.cart)
 
-    def display(self):
+    def display(self) -> None:
         """
-        Displays the main customer dashboard and handles top-level user selection.
+        Display the main customer dashboard and handle top-level user selection.
         """
         while True:
             print("\n=== 🛵 EJR Eats — Order Dashboard ===")
@@ -41,40 +41,40 @@ class CustomerMainView:
             print("3) 💳  Validate Order")
             print("B) 🔚  Logout")
 
-            choice = input("Select an option: ").strip().lower()
+            choice: str = input("Select an option: ").strip().lower()
             if choice == "1":
                 self.menu_view.display()
             elif choice == "2":
                 self._check_order()
             elif choice == "3":
                 self.checkout_view.validate_order()
-            elif choice in ("b"):
+            elif choice == "b":
                 print("👋 Logging out...")
                 break
             else:
                 print("⚠️  Invalid choice, please try again.")
 
-    def _check_order(self):
+    def _check_order(self) -> None:
         """
-        Displays the current contents of the customer's cart and allows items removal.
+        Display current cart contents and allow the user to remove items.
         """
         if not self.cart:
             print("🛒 Your cart is empty.")
             return
 
-        total = sum(b.compute_price() for b in self.cart)
+        total: float = sum(b.compute_price() for b in self.cart)
         print("\n=== 🧾 Your Current Cart ===")
         for idx, b in enumerate(self.cart, start=1):
             print(f"{idx}) {b.name} — {b.compute_price():.2f}€")
 
         print(f"\n💰 Total: {total:.2f}€")
 
-        choice = input("Enter number to remove an item, or B to go back: ").strip().lower()
+        choice: str = input("Enter number to remove an item, or B to go back: ").strip().lower()
         if choice.isdigit():
             try:
-                idx = int(choice) - 1
+                idx: int = int(choice) - 1
                 if 0 <= idx < len(self.cart):
-                    removed = self.cart.pop(idx)
+                    removed: "Bundle" = self.cart.pop(idx)
                     print(f"🗑️ Removed '{removed.name}' from cart.")
                 else:
                     print("⚠️ Invalid item number.")
