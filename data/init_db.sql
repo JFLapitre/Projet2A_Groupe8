@@ -29,7 +29,7 @@ DROP TABLE IF EXISTS fd.customer CASCADE;
 CREATE TABLE fd.customer (
     id_user INT PRIMARY KEY REFERENCES fd.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL
+    phone_number VARCHAR(40) NOT NULL
 );
 
 -- Table admin
@@ -37,7 +37,7 @@ DROP TABLE IF EXISTS fd.admin CASCADE;
 CREATE TABLE fd.admin (
     id_user INT PRIMARY KEY REFERENCES fd.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL
+    phone_number VARCHAR(40) NOT NULL
 );
 
 -- Table driver
@@ -45,7 +45,7 @@ DROP TABLE IF EXISTS fd.driver CASCADE;
 CREATE TABLE fd.driver (
     id_user INT PRIMARY KEY REFERENCES fd.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(40) NOT NULL,
     vehicle_type VARCHAR(50),
     availability BOOLEAN DEFAULT TRUE
 );
