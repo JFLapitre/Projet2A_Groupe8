@@ -248,7 +248,13 @@ def test_update_predefined_bundle_success(
     service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item_list: list
 ):
     """Tests successful update of a predefined bundle."""
-    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    bundle = MagicMock(spec=PredefinedBundle)
+    bundle.id_bundle = 1
+    bundle.name = "Old"
+    bundle.description = "Desc"
+    bundle.price = 10.0
+    bundle.composition = []
+
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_item_dao.get_items_by_ids.return_value = sample_item_list
     mock_bundle_dao.update_bundle.return_value = True
@@ -257,7 +263,7 @@ def test_update_predefined_bundle_success(
 
     assert bundle.name == "New Name"
     assert bundle.price == 20.0
-    assert len(bundle.composition) == 2
+    assert bundle.composition == sample_item_list
     assert bundle.description == ""
     mock_bundle_dao.update_bundle.assert_called_once_with(bundle)
 
@@ -288,7 +294,8 @@ def test_update_predefined_bundle_price_missing(service: AdminMenuService, mock_
 
 def test_update_predefined_bundle_negative_price(service: AdminMenuService, mock_bundle_dao: MagicMock):
     """Tests validation for negative price update."""
-    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    bundle = MagicMock(spec=PredefinedBundle)
+    bundle.price = 10.0
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     with pytest.raises(ValueError, match="Price must be positive"):
         service.update_predefined_bundle(1, price=-5.0)
@@ -298,7 +305,11 @@ def test_update_predefined_bundle_composition_error(
     service: AdminMenuService, mock_bundle_dao: MagicMock, mock_item_dao: MagicMock, sample_item
 ):
     """Tests invalid composition update (mismatch IDs)."""
-    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    bundle = MagicMock(spec=PredefinedBundle)
+    bundle.composition = []
+    bundle.description = "Desc"
+    bundle.price = 10.0  # <-- FIXED: Add required price attribute
+
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_item_dao.get_items_by_ids.return_value = [sample_item]
     with pytest.raises(ValueError, match="One or more item IDs provided in the composition were not found"):
@@ -307,7 +318,10 @@ def test_update_predefined_bundle_composition_error(
 
 def test_update_predefined_bundle_dao_failure(service: AdminMenuService, mock_bundle_dao: MagicMock):
     """Tests DAO failure during predefined bundle update."""
-    bundle = PredefinedBundle(id_bundle=1, name="Old", description="Desc", price=10.0, composition=[])
+    bundle = MagicMock(spec=PredefinedBundle)
+    bundle.price = 10.0
+    bundle.description = "Desc"  # <-- FIXED: Add required description attribute
+
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.update_bundle.return_value = False
     with pytest.raises(Exception, match="Failed to update predefined bundle"):
