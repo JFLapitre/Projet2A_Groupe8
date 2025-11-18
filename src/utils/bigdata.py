@@ -1,5 +1,7 @@
 import random
+import re
 
+import phonenumbers
 from dotenv import load_dotenv
 from faker import Faker
 
@@ -18,16 +20,18 @@ class ResetDatabase:
         self.fake = Faker("fr_FR")
         self.db_connector = DBConnector()
         self.service = PasswordService()
-        self.fake = Faker()
 
     def generate_bulk_users(self, user_count=10000):
         next_id = 14
         user_sql_values = []
         customer_sql_values = []
-        admin_sql_values = []
         driver_sql_values = []
 
-        user_types = ["customer", "admin", "driver"]
+        target_drivers = 100
+        target_customers = user_count - target_drivers
+        user_types = ["driver"] * target_drivers + ["customer"] * target_customers
+        random.shuffle(user_types)
+
         vehicle_types = ["car", "bike"]
 
         for i in range(user_count):
@@ -36,22 +40,26 @@ class ResetDatabase:
             name = self.fake.name().replace("'", "''")
             username = self.fake.user_name().replace("'", "''")
             phone_number = self.fake.phone_number()
+
+            phone_number_clean = re.sub(r"[^\d+]", "", phone_number)
+            if phone_number_clean.startswith("+"):
+                number = phonenumbers.parse(phone_number_clean, None)
+            else:
+                number = phonenumbers.parse(phone_number_clean, "FR")
+
+            phone_number = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
+
             password = self.fake.password()
             salt = self.service.create_salt()
             hashed_password = self.service.hash_password(password, salt)
-            user_type = random.choice(user_types)
+            user_type = user_types[i]
             sign_up_date = self.fake.date()
 
-            safe_username = username.replace("'", "''")
-
             user_sql_values.append(
-                f"({id_user}, '{safe_username}', '{hashed_password}', '{salt}', '{user_type}', '{sign_up_date}')"
+                f"({id_user}, '{username}', '{hashed_password}', '{salt}', '{user_type}', '{sign_up_date}')"
             )
             if user_type == "customer":
                 customer_sql_values.append(f"({id_user}, '{name}', '{phone_number}')")
-
-            elif user_type == "admin":
-                admin_sql_values.append(f"({id_user}, '{name}', '{phone_number}')")
 
             elif user_type == "driver":
                 vehicle = random.choice(vehicle_types)
@@ -66,9 +74,6 @@ class ResetDatabase:
         full_query_customer = "INSERT INTO fd.customer (id_user, name, phone_number) VALUES "
         full_query_customer += ", ".join(customer_sql_values) + ";"
 
-        full_query_admin = "INSERT INTO fd.admin (id_user, name, phone_number) VALUES "
-        full_query_admin += ", ".join(admin_sql_values) + ";"
-
         full_query_driver = "INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) VALUES "
         full_query_driver += ", ".join(driver_sql_values) + ";"
 
@@ -77,17 +82,18 @@ class ResetDatabase:
             print(f"{user_count} users successfully added.")
 
             self.db_connector.sql_query(full_query_customer, return_type=None)
-            print(f"{len(customer_sql_values)} clients ajoutés.")
-
-            self.db_connector.sql_query(full_query_admin, return_type=None)
-            print(f"{len(admin_sql_values)} admins ajoutés.")
+            print(f"{len(customer_sql_values)} customer added.")
 
             self.db_connector.sql_query(full_query_driver, return_type=None)
-            print(f"{len(driver_sql_values)} chauffeurs ajoutés.")
+            print(f"{len(driver_sql_values)} drivers added.")
 
         except Exception as e:
-            print(f"Erreur lors de l'insertion de masse des users : {e}")
+            print(f"Error during mass insertion of users : {e}")
             raise
+
+    def generate_bulk_orders(self, order_count = 1000):
+        pass
+
 
     def lancer(self):
         print("Database reset")
