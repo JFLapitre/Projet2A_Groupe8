@@ -15,6 +15,7 @@ class AbstractBundle(BaseModel, ABC):
 
     id_bundle: Optional[int] = None
     name: str
+    description: Optional[str] = None
 
     @abstractmethod
     def compute_price(self) -> float:
