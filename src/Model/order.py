@@ -21,6 +21,7 @@ class Order(BaseModel):
         status (str): Order status.
         order_date (datetime): Creation timestamp (defaults to now).
     """
+
     id_order: Optional[int] = None
     customer: Customer
     address: Address

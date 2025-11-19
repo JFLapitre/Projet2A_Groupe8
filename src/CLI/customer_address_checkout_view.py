@@ -89,7 +89,9 @@ class AddressCheckoutView:
 
                 if status == "AMBIGUOUS":
                     print(f"\n⚠️  Address is ambiguous (Google suggests: {validation_result.get('formatted_address')})")
-                    confirm_ambiguous: str = input("   Do you want to use the address components entered? (Y/N): ").strip().lower()
+                    confirm_ambiguous: str = (
+                        input("   Do you want to use the address components entered? (Y/N): ").strip().lower()
+                    )
                     if confirm_ambiguous != "y":
                         continue
 

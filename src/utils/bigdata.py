@@ -91,9 +91,8 @@ class ResetDatabase:
             print(f"Error during mass insertion of users : {e}")
             raise
 
-    def generate_bulk_orders(self, order_count = 1000):
+    def generate_bulk_orders(self, order_count=1000):
         pass
-
 
     def lancer(self):
         print("Database reset")

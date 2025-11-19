@@ -115,11 +115,7 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'predefined', %(price)s, NULL)
                 RETURNING *;
                 """,
-                {
-                    "name": bundle.name,
-                    "description": getattr(bundle, "description", None),
-                    "price": bundle.price
-                },
+                {"name": bundle.name, "description": getattr(bundle, "description", None), "price": bundle.price},
                 "one",
             )
 
@@ -194,11 +190,7 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'single_item', %(price)s, NULL)
                 RETURNING *;
                 """,
-                {
-                    "name": bundle.name,
-                    "description": getattr(bundle, "description", None),
-                    "price": bundle.price
-                },
+                {"name": bundle.name, "description": getattr(bundle, "description", None), "price": bundle.price},
                 "one",
             )
 

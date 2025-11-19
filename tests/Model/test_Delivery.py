@@ -95,7 +95,7 @@ def test_delivery_invalid_driver_type_raises_validationerror():
     with pytest.raises(ValidationError):
         Delivery(
             id_delivery=1,
-            driver="invalid_driver",   # ❌ doit être Driver
+            driver="invalid_driver",  # ❌ doit être Driver
             orders=[order],
             status="in_progress",
             delivery_time=datetime(2025, 1, 2),

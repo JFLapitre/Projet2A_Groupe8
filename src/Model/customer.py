@@ -16,6 +16,7 @@ class Customer(AbstractUser):
         phone_number(Optional[str]): Phone number of the Admin.
         model_config(ConfigDict): TypedDict for configuring Pydantic behaviour.
     """
+
     name: str = ""
     sign_up_date: date = Field(default_factory=date.today)
     phone_number: Optional[str] = None

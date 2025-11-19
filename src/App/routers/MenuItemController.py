@@ -82,7 +82,7 @@ def update_item(
     availability: Optional[bool] = Query(None),
     item_type: Optional[str] = Query(None),
     desc: Optional[str] = Query(None, alias="description"),
-    service=Depends(get_service)
+    service=Depends(get_service),
 ):
     try:
         service.update_item(

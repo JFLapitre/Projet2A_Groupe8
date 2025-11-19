@@ -14,8 +14,7 @@ def test_order_ok():
         salt="s",
     )
 
-    addr = Address(city="Paris", postal_code=75000,
-                   street_name="Rue Y", street_number=10)
+    addr = Address(city="Paris", postal_code=75000, street_name="Rue Y", street_number=10)
 
     item = Item(name="A", item_type="x", price=3.0)
 
@@ -29,4 +28,3 @@ def test_order_ok():
     assert order.status == "pending"
     assert order.items[0].price == 3.0
     assert isinstance(order.order_date, datetime)
-

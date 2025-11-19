@@ -48,16 +48,19 @@ def create_admin_user(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
-        service.create_admin_account(
-            username=username, password=password, name=name, phone_number=phone_number
-        )
+        service.create_admin_account(username=username, password=password, name=name, phone_number=phone_number)
     except Exception as e:
         handle_service_error(e)
 
 
 @user_router.post("/driver", status_code=status.HTTP_201_CREATED, dependencies=[Depends(admin_required)])
 def create_driver_user(
-    username: str, password: str, name: str, phone_number: str, vehicle_type: str, service=Depends(get_admin_user_service)
+    username: str,
+    password: str,
+    name: str,
+    phone_number: str,
+    vehicle_type: str,
+    service=Depends(get_admin_user_service),
 ) -> APIUser:
     """
     Performs validation and creates a new Driver account.
@@ -78,6 +81,7 @@ def create_driver_user(
         )
     except Exception as e:
         handle_service_error(e)
+
 
 @user_router.put("/{id_user}")
 def update_driver_availability(id_user: int, availability: bool, service=Depends(get_admin_user_service)):
