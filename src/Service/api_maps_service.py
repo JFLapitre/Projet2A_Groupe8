@@ -13,7 +13,6 @@ from src.DAO.itemDAO import ItemDAO
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 
-# Initialisations
 db = DBConnector()
 user_dao = UserDAO(db_connector=db)
 address_dao = AddressDAO(db_connector=db)
@@ -100,20 +99,18 @@ class ApiMapsService:
         location_type = result["geometry"]["location_type"]
         formatted_address = result["formatted_address"]
 
-        # Si l'adresse est vague (juste la ville, la rue, etc.)
         if location_type not in ["ROOFTOP", "RANGE_INTERPOLATED"]:
             return {
                 "status": "AMBIGUOUS",
                 "formatted_address": formatted_address,
                 "components": {
-                    "street_name": street_name,  # Garde les composants d'origine
+                    "street_name": street_name,
                     "city": city,
                     "postal_code": postal_code,
                     "street_number": street_number,
                 },
             }
 
-        # L'adresse est précise et correcte
         return {
             "status": "VALID",
             "formatted_address": formatted_address,

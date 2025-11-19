@@ -23,8 +23,6 @@ def mock_password_service() -> MagicMock:
     Provides a mock for the PasswordService.
     """
     mock_ps = MagicMock(spec=PasswordService)
-
-    # check_password_strength returns None by default, which is considered success by the service
     mock_ps.check_password_strength.return_value = None
     mock_ps.create_salt.return_value = "generated_mock_salt"
     mock_ps.hash_password.return_value = "generated_mock_hash"
@@ -39,7 +37,6 @@ def mock_user_dao(request) -> mock.MagicMock:
     """
     mock_instance = mock.MagicMock()
     mock_instance.find_user_by_username.return_value = None
-    # Simulate adding the user and returning the created object
     mock_instance.add_user.side_effect = lambda user: user
     patcher = mock.patch("src.Service.authentication_service.UserDAO", return_value=mock_instance)
     patcher.start()
@@ -71,9 +68,6 @@ def service(
     injected with the necessary mocks.
     """
     return AuthenticationService(db_connector=mock_db_connector, password_service=mock_password_service)
-
-
-# --- Tests for login() method ---
 
 
 def test_login_successful(
@@ -129,9 +123,6 @@ def test_login_incorrect_password(
     mock_password_service.hash_password.assert_called_with(wrong_password, "jambon")
 
 
-# --- Tests for register_customer() method ---
-
-
 def test_register_customer_successful(
     service: AuthenticationService, mock_user_dao: MagicMock, mock_password_service: MagicMock
 ):
@@ -144,17 +135,13 @@ def test_register_customer_successful(
 
     try:
         new_user = service.register_customer(username, password, phone)
-
-        # Assertions
         mock_user_dao.find_user_by_username.assert_called_with(username)
         mock_password_service.check_password_strength.assert_called_with(password)
         mock_user_dao.add_user.assert_called_once_with(ANY)
-
-        # Verification of the created Customer object
         created_user_arg = mock_user_dao.add_user.call_args[0][0]
+
         assert isinstance(created_user_arg, Customer)
         assert created_user_arg.username == username
-        # The service formats the phone number to INTERNATIONAL format
         assert created_user_arg.phone_number == "+33 6 12 34 56 78"
         assert new_user is created_user_arg
 
@@ -174,7 +161,6 @@ def test_register_customer_successful_phone_unformatted(
 
     new_user = service.register_customer(username, password, phone)
 
-    # Verify that the phone number was formatted correctly
     created_user_arg = mock_user_dao.add_user.call_args[0][0]
     assert created_user_arg.phone_number == "+33 6 12 34 56 78"
 
@@ -200,7 +186,7 @@ def test_register_customer_username_exists(
     "invalid_username, error_match",
     [
         ("short", "Username must constain at least 6 caracters."),
-        ("user!x", "Username may only contain letters"),  # Changed to 'user!x' (6 chars) to bypass length check first
+        ("user!x", "Username may only contain letters"),
         ("user space", "Username may only contain letters"),
         ("user@name", "Username may only contain letters"),
     ],
@@ -208,7 +194,7 @@ def test_register_customer_username_exists(
 def test_register_customer_invalid_username(
     service: AuthenticationService,
     mock_user_dao: MagicMock,
-    mock_password_service: MagicMock,  # Added fixture to fix AttributeError
+    mock_password_service: MagicMock,
     invalid_username,
     error_match,
 ):
@@ -234,14 +220,13 @@ def test_register_customer_invalid_username(
 def test_register_customer_invalid_phone_number(
     service: AuthenticationService,
     mock_user_dao: MagicMock,
-    mock_password_service: MagicMock,  # Added fixture to fix AttributeError
+    mock_password_service: MagicMock,
     invalid_phone,
     error_match,
 ):
     """
     Tests that register raises ValueError for invalid phone numbers (using phonenumbers library).
     """
-    # Use a valid username to ensure failure is due to the phone number
     valid_username = "validuser"
 
     with pytest.raises(ValueError, match=error_match):

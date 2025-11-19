@@ -124,7 +124,6 @@ def mock_db_connector():
 @pytest.fixture
 def mock_user_dao():
     dao = MagicMock(spec=UserDAO)
-    # Create a real Driver object to pass Pydantic validation
     driver = Driver(
         id_user=10,
         username="driver_john",
@@ -143,9 +142,7 @@ def mock_user_dao():
 def mock_order_dao():
     dao = MagicMock(spec=OrderDAO)
 
-    # Helper to create valid Order objects
     def side_effect_find_order(oid):
-        # Create valid dependencies
         customer = Customer(
             id_user=50,
             username="cust_jane",
@@ -167,8 +164,8 @@ def mock_order_dao():
             total_price=50.0,
             customer=customer,
             address=address,
-            items=[item],  # List of Item objects, not just IDs or Mocks
-            bundle=None,  # Optional
+            items=[item],
+            bundle=None,
         )
 
     dao.find_order_by_id.side_effect = side_effect_find_order
@@ -226,7 +223,6 @@ def test_find_in_progress_deliveries_by_driver(delivery_dao: DeliveryDAO):
 
 def test_add_delivery_success(delivery_dao: DeliveryDAO, mocker):
     """Tests adding a new delivery."""
-    # Create valid objects for insertion
     driver = Driver(
         id_user=10,
         username="driver_john",
@@ -258,7 +254,6 @@ def test_add_delivery_success(delivery_dao: DeliveryDAO, mocker):
 def test_update_delivery_success(delivery_dao: DeliveryDAO):
     """Tests updating a delivery's status."""
     delivery = delivery_dao.find_delivery_by_id(1)
-    # Ensure we fetched a valid object before updating
     assert delivery is not None
 
     delivery.status = "completed"
@@ -302,7 +297,6 @@ def test_find_all_deliveries_error(delivery_dao: DeliveryDAO, mock_db_connector)
 def test_add_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
     """Tests error handling in add_delivery."""
     mock_db_connector.sql_query = lambda q, d, rt: exec('raise Exception("DB Error")')
-    # Create minimal valid objects to pass initial validation before DB call
     driver = Driver(
         id_user=10,
         username="u",

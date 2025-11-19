@@ -308,7 +308,7 @@ def test_update_predefined_bundle_composition_error(
     bundle = MagicMock(spec=PredefinedBundle)
     bundle.composition = []
     bundle.description = "Desc"
-    bundle.price = 10.0  # <-- FIXED: Add required price attribute
+    bundle.price = 10.0 
 
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_item_dao.get_items_by_ids.return_value = [sample_item]
@@ -320,7 +320,7 @@ def test_update_predefined_bundle_dao_failure(service: AdminMenuService, mock_bu
     """Tests DAO failure during predefined bundle update."""
     bundle = MagicMock(spec=PredefinedBundle)
     bundle.price = 10.0
-    bundle.description = "Desc"  # <-- FIXED: Add required description attribute
+    bundle.description = "Desc"  
 
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.update_bundle.return_value = False

@@ -247,7 +247,6 @@ class MockDBConnector:
         return None
 
 
-# --- PYTEST FIXTURES ---
 
 
 @pytest.fixture
@@ -262,7 +261,6 @@ def user_dao(mock_db):
     return UserDAO(mock_db)
 
 
-# --- NOMINAL TESTS ---
 
 
 def test_find_user_by_id(user_dao: UserDAO):
@@ -452,9 +450,6 @@ def test_find_all_filtered_drivers(user_dao: UserDAO):
     assert len(drivers) == 1
     assert drivers[0].username == "driver_bob"
     assert isinstance(drivers[0], Driver)
-
-
-# --- ERROR AND EDGE CASE TESTS ---
 
 
 def test_find_user_by_id_error(mock_db: MockDBConnector, user_dao: UserDAO):

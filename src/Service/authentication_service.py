@@ -74,7 +74,6 @@ class AuthenticationService:
             phone_number=phone_number,
         )
 
-        # Enregistre le customer en base
         created_customer = self.user_dao.add_user(new_customer)
 
         return created_customer

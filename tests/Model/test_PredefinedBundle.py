@@ -30,7 +30,7 @@ def test_predefined_bundle_invalid_price():
             id_bundle=10,
             name="Menu Breton",
             composition=[item],
-            price="six euros",  # ❌ invalide
+            price="six euros",
         )
 
 

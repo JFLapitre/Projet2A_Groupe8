@@ -10,7 +10,6 @@ from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
 
-# Import required classes for testing
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.address import Address
@@ -159,9 +158,7 @@ class MockDBConnector:
         return None
 
 
-# --- MOCK DATA FACTORIES ---
 
-# User data updated with hash/salt/sign_up_date
 MOCK_USERS = {
     1: Customer(
         id_user=1,
@@ -182,12 +179,10 @@ MOCK_USERS = {
         phone_number="0612345678",
     ),
 }
-# Address data updated with strict Address types
 MOCK_ADDRESSES = {
     10: Address(id_address=10, city="Paris", postal_code=75001, street_name="Rivoli Street", street_number=10),
     20: Address(id_address=20, city="Lyon", postal_code=69001, street_name="Republic Street", street_number=25),
 }
-# Item and Bundle data, where ID 2001 is a placeholder Item for validation success
 MOCK_ITEMS_BUNDLES = {
     1001: Item(id_item=1001, name="Item1", price=10.0, item_type="food", stock=1),
     1002: Item(id_item=1002, name="Item2", price=15.0, item_type="food", stock=1),
@@ -196,7 +191,6 @@ MOCK_ITEMS_BUNDLES = {
 }
 
 
-# --- 2. FIXTURES ---
 
 
 @pytest.fixture
@@ -258,9 +252,6 @@ def order_dao(mock_db: MagicMock, mock_item_dao, mock_user_dao, mock_address_dao
     )
 
 
-# --- 3. UNIT TESTS ---
-
-## Nominal Tests
 
 
 def test_find_order_by_id_nominal(order_dao: OrderDAO):
@@ -369,7 +360,6 @@ def test_delete_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockD
     assert len([oi for oi in mock_db_connector_impl.order_items if oi["id_order"] == 101]) == 0
 
 
-## Error/Edge Cases Tests
 
 
 def test_find_order_by_id_db_error(order_dao: OrderDAO, mock_db: MagicMock):
