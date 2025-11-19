@@ -125,11 +125,10 @@ def update_predefined_bundle(
 
 @menu_bundle_router.put("/bundles/discounted/{id_bundle}", status_code=status.HTTP_200_OK)
 def update_discounted_bundle(
-    # 1. ID du bundle à mettre à jour (Obligatoire, lu du chemin)
     id_bundle: int = Path(..., description="ID du bundle réduit à modifier"),
     # 2. Champs optionnels (Lus du Query String)
-    name: Optional[str] = Query(None, description="Nouveau nom du bundle."),
-    desc: Optional[str] = Query(None, alias="description", description="Nouvelle description."),
+    name: Optional[str] = Query(),
+    descritpion: Optional[str] = Query(),
     discount: Optional[float] = Query(None, description="Nouveau pourcentage de réduction (ex: 10.5)."),
     # 🟢 Types d'Items Requis (Liste de chaînes)
     required_item_types: Optional[List[str]] = Query(
@@ -142,7 +141,7 @@ def update_discounted_bundle(
         service.update_discounted_bundle(
             id=id_bundle,
             name=name,
-            description=desc,
+            desc=description,
             discount=discount,
             required_item_types=required_item_types,
         )

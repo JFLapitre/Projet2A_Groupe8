@@ -94,7 +94,7 @@ class AdminMenuService:
             raise Exception(f"Failed to delete item: {id}")
 
     def create_predefined_bundle(
-        self, name: str, description: str, item_ids: list[int], availability: bool, price: float
+        self, name: str, description: str, item_ids: list[int], price: float
     ) -> None:
         """
         Validates and creates a new predefined (fixed-price) bundle.
