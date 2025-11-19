@@ -1,116 +1,104 @@
--- Suppression du schéma existant s'il existe
+-- Schema setup
 DROP SCHEMA IF EXISTS tests CASCADE;
 CREATE SCHEMA tests;
 
--- Table user
-DROP TABLE IF EXISTS tests.user CASCADE;
+-- Users table
 CREATE TABLE tests.user (
     id_user SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL UNIQUE,
     hash_password VARCHAR(100) NOT NULL,
     salt VARCHAR(128) NOT NULL,
-    user_type VARCHAR(10) NOT NULL,
+    user_type VARCHAR(10) NOT NULL, -- 'customer', 'driver', 'admin'
     sign_up_date DATE 
 );
 
--- Table address
-DROP TABLE IF EXISTS tests.address CASCADE;
+-- Addresses table
 CREATE TABLE tests.address (
     id_address SERIAL PRIMARY KEY,
     city VARCHAR(20) NOT NULL,
     postal_code VARCHAR(5) NOT NULL,
     street_name VARCHAR(50) NOT NULL,
-    street_number INT NOT NULL
+    street_number VARCHAR(10) NOT NULL
 );
 
-
--- Table customer
-DROP TABLE IF EXISTS tests.customer CASCADE;
+-- Customer details
 CREATE TABLE tests.customer (
     id_user INT PRIMARY KEY REFERENCES tests.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL
+    phone_number VARCHAR(40) NOT NULL
 );
 
--- Table admin
-DROP TABLE IF EXISTS tests.admin CASCADE;
+-- Admin details
 CREATE TABLE tests.admin (
     id_user INT PRIMARY KEY REFERENCES tests.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL
+    phone_number VARCHAR(40) NOT NULL
 );
 
--- Table driver
-DROP TABLE IF EXISTS tests.driver CASCADE;
+-- Driver details
 CREATE TABLE tests.driver (
     id_user INT PRIMARY KEY REFERENCES tests.user(id_user) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(40) NOT NULL,
     vehicle_type VARCHAR(50),
     availability BOOLEAN DEFAULT TRUE
 );
 
--- Table item
-DROP TABLE IF EXISTS tests.item CASCADE;
+-- Items table
 CREATE TABLE tests.item (
     id_item SERIAL PRIMARY KEY,
-    name VARCHAR(20) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     description VARCHAR(300),
-    item_type VARCHAR(20) NOT NULL,
+    item_type VARCHAR(20) NOT NULL, -- 'starter', 'main', 'dessert', 'drink', 'side'
     price FLOAT NOT NULL,
     stock INT NOT NULL,
     availability BOOLEAN NOT NULL
 );
 
--- Table bundle
-DROP TABLE IF EXISTS tests.bundle CASCADE;
+-- Bundles table
 CREATE TABLE tests.bundle (
     id_bundle SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(300),
-    bundle_type VARCHAR(20) NOT NULL, -- "predefined", "single_item" ou "discount"
+    bundle_type VARCHAR(20) NOT NULL, -- 'predefined', 'discount'
     required_item_types VARCHAR(30)[],
-    price FLOAT, -- Peut être NULL pour les discounted bundles
-    discount FLOAT -- Peut être NULL pour les predefined bundles
+    price FLOAT, -- NULL for 'discount' bundles
+    discount FLOAT -- NULL for 'predefined' bundles
 );
 
--- Table bundle_item (pour les predefined bundles)
-DROP TABLE IF EXISTS tests.bundle_item CASCADE;
+-- Predefined Bundle items (Link bundle <-> item)
 CREATE TABLE tests.bundle_item (
     id_bundle INT REFERENCES tests.bundle(id_bundle) ON DELETE CASCADE,
     id_item INT REFERENCES tests.item(id_item) ON DELETE CASCADE,
     PRIMARY KEY (id_bundle, id_item)
 );
 
--- Table order
-DROP TABLE IF EXISTS tests.order CASCADE;
+-- Orders table
 CREATE TABLE tests.order (
     id_order SERIAL PRIMARY KEY,
     id_user INT REFERENCES tests.user(id_user) ON DELETE CASCADE,
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL, -- 'pending', 'validated', 'in_progress', 'delivered'
+    price FLOAT,
     id_address INT REFERENCES tests.address(id_address),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table order_bundle (table de jointure entre order et bundle)
-DROP TABLE IF EXISTS tests.order_bundle CASCADE;
-CREATE TABLE tests.order_bundle (
+-- Order items (Link order <-> item)
+CREATE TABLE tests.order_item (
+    id_order_item SERIAL PRIMARY KEY,
     id_order INT REFERENCES tests.order(id_order) ON DELETE CASCADE,
-    id_bundle INT REFERENCES tests.bundle(id_bundle) ON DELETE CASCADE,
-    PRIMARY KEY (id_order, id_bundle)
+    id_item INT REFERENCES tests.item(id_item) ON DELETE CASCADE
 );
 
--- Table delivery
-DROP TABLE IF EXISTS tests.delivery CASCADE;
+-- Deliveries table
 CREATE TABLE tests.delivery (
     id_delivery SERIAL PRIMARY KEY,
     id_driver INT REFERENCES tests.driver(id_user) ON DELETE SET NULL,
-    status VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL, -- 'pending', 'in_progress', 'completed'
     delivery_time TIMESTAMP
 );
 
--- Table delivery_order (table de jointure entre delivery et order)
-DROP TABLE IF EXISTS tests.delivery_order CASCADE;
+-- Delivery orders (Link delivery <-> order)
 CREATE TABLE tests.delivery_order (
     id_delivery INT REFERENCES tests.delivery(id_delivery) ON DELETE CASCADE,
     id_order INT REFERENCES tests.order(id_order) ON DELETE CASCADE,
