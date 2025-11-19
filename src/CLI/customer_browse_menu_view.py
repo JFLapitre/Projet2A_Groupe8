@@ -320,7 +320,7 @@ class BrowseMenuView:
                 selected_item = filtered_items[idx_item]
 
                 one_item_bundle: OneItemBundle = OneItemBundle(
-                    id_bundle=len(self.cart) + 1, name=selected_item.name, item=selected_item
+                    id_bundle=len(self.cart) + 1, name=selected_item.name, composition=[selected_item]
                 )
                 self._add_bundle_to_cart(one_item_bundle)
                 return True
