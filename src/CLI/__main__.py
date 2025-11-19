@@ -21,6 +21,7 @@ def _build_services() -> Dict:
             "jwt": getattr(init_app, "jwt_service", None),
             "address": getattr(init_app, "address_service", None),
             "driver": getattr(init_app, "driver_service", None),
+            "api_maps": getattr(init_app, "api_maps_service", None),
         }
 
         missing = [k for k, v in services.items() if v is None]
