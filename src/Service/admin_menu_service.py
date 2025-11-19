@@ -163,7 +163,7 @@ class AdminMenuService:
 
     def update_predefined_bundle(
         self,
-        id: int,  # ID du bundle à modifier (Obligatoire)
+        id: int,
         name: Optional[str] = None,
         description: Optional[str] = None,
         item_ids: Optional[List[int]] = None,
@@ -208,16 +208,15 @@ class AdminMenuService:
 
     def update_discounted_bundle(
         self,
-        id: int,  # ID du bundle à modifier (Obligatoire)
+        id: int,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        required_item_types: Optional[List[str]] = None,  # Nouveaux types optionnels
+        required_item_types: Optional[List[str]] = None,
         discount: Optional[float] = None,
     ) -> None:
         """
         Finds an existing discounted bundle by ID and updates only the fields that are not None.
         """
-        # 1. Récupérer le bundle existant
         bundle = self.bundle_dao.find_bundle_by_id(id)
         if not bundle:
             raise ValueError(f"No bundle found with ID {id}.")
@@ -225,21 +224,16 @@ class AdminMenuService:
         if not isinstance(bundle, DiscountedBundle):
             raise TypeError(f"Bundle with ID {id} is not a discounted bundle.")
 
-        # 2. Mise à jour conditionnelle et validation
-
-        # Mise à jour des champs simples
         if name is not None:
             bundle.name = name
         if description is not None:
             bundle.description = description
 
-        # Mise à jour de la réduction avec validation (doit être entre 0 et 100 exclus)
         if discount is not None:
             if not (0 < discount < 100):
                 raise ValueError("Discount must be between 0 and 100 (exclusive).")
             bundle.discount = discount
 
-        # Mise à jour des types d'items avec validation
         if required_item_types is not None:
             if not required_item_types:
                 raise ValueError("Item types cannot be empty.")
@@ -247,10 +241,8 @@ class AdminMenuService:
             if not all(isinstance(t, str) and t.strip() for t in required_item_types):
                 raise ValueError("All item types must be valid, non-empty strings.")
 
-            # Normalisation en minuscules pour la cohérence
             bundle.required_item_types = [t.lower() for t in required_item_types]
 
-        # 3. Enregistrement via la DAO
-        updated_bundle = self.bundle_dao.update_bundle(bundle)  # Appel à la méthode DAO unique
+        updated_bundle = self.bundle_dao.update_bundle(bundle)
         if not updated_bundle:
             raise Exception(f"Failed to update discounted bundle: {id}")
