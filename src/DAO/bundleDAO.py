@@ -53,7 +53,6 @@ class BundleDAO(BaseModel):
             common_args = {
                 "id_bundle": raw_bundle["id_bundle"],
                 "name": raw_bundle["name"],
-                "description": raw_bundle["description"],
             }
 
             if bundle_type == "predefined":
@@ -116,7 +115,11 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'predefined', %(price)s, NULL)
                 RETURNING *;
                 """,
-                {"name": bundle.name, "description": bundle.description, "price": bundle.price},
+                {
+                    "name": bundle.name,
+                    "description": getattr(bundle, "description", None),
+                    "price": bundle.price
+                },
                 "one",
             )
 
@@ -158,7 +161,7 @@ class BundleDAO(BaseModel):
                 """,
                 {
                     "name": bundle.name,
-                    "description": bundle.description,
+                    "description": getattr(bundle, "description", None),
                     "discount": bundle.discount,
                     "required_item_types": bundle.required_item_types,
                 },
@@ -191,7 +194,11 @@ class BundleDAO(BaseModel):
                 VALUES (%(name)s, %(description)s, 'single_item', %(price)s, NULL)
                 RETURNING *;
                 """,
-                {"name": bundle.name, "description": bundle.description, "price": bundle.price},
+                {
+                    "name": bundle.name,
+                    "description": getattr(bundle, "description", None),
+                    "price": bundle.price
+                },
                 "one",
             )
 
@@ -231,7 +238,7 @@ class BundleDAO(BaseModel):
                     {
                         "id_bundle": bundle.id_bundle,
                         "name": bundle.name,
-                        "description": bundle.description,
+                        "description": getattr(bundle, "description", None),
                         "price": bundle.price,
                     },
                     None,
@@ -265,7 +272,7 @@ class BundleDAO(BaseModel):
                     {
                         "id_bundle": bundle.id_bundle,
                         "name": bundle.name,
-                        "description": bundle.description,
+                        "description": getattr(bundle, "description", None),
                         "discount": bundle.discount,
                         "required_item_types": bundle.required_item_types,
                     },
