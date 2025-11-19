@@ -14,7 +14,6 @@ class ResetDatabase:
         print("Ré-initialisation de la base de données")
 
         try:
-            # Lecture des fichiers SQL
             with open("data/init_db.sql", encoding="utf-8") as init_db:
                 init_db_as_string = init_db.read()
 

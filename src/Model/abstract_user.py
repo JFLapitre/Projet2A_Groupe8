@@ -16,6 +16,7 @@ class AbstractUser(BaseModel, ABC):
         salt (str): Salt for authentification with hash password.
         sign_up_date (Optional[datetime]): Date of last authentification.
     """
+
     id_user: Optional[int] = None
     username: str
     hash_password: str

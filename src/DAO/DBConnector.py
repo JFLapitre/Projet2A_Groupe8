@@ -51,7 +51,7 @@ class DBConnector:
                         return cursor.fetchall()
         except Exception as e:
             print("ERROR")
-            print(f"PostgreSQL Error Code: {getattr(e, 'pgcode', 'N/A')}")  # Ceci affichera 23505
+            print(f"PostgreSQL Error Code: {getattr(e, 'pgcode', 'N/A')}")
             print(
                 f"PostgreSQL Constraint: {getattr(e, 'diag', 'N/A').constraint_name if hasattr(e, 'diag') and e.diag else 'N/A'}"
             )

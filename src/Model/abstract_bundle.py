@@ -12,8 +12,10 @@ class AbstractBundle(BaseModel, ABC):
         id_bundle (Optional[int]): Unique identifier for the bundle.
         name (str): Name of the bundle.
     """
+
     id_bundle: Optional[int] = None
     name: str
+    description: Optional[str] = None
 
     @abstractmethod
     def compute_price(self) -> float:

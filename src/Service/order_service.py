@@ -45,7 +45,7 @@ class OrderService:
             customer=customer,
             address=address,
             items=[],
-            price=0.0,  # prix initial à 0
+            price=0.0,
             status="pending",
             order_date=datetime.now(),
         )
@@ -79,18 +79,15 @@ class OrderService:
         if order.status != "pending":
             raise ValueError(f"Cannot modify an order with status '{order.status}'.")
 
-        # Vérifier disponibilité des items
         not_available = [item.name for item in bundle.composition if not item.availability]
         if not_available:
             raise ValueError(
                 f"Bundle '{getattr(bundle, 'name', 'unknown')}' is unavailable because items {not_available} are not available."
             )
 
-        # Ajouter les items à la commande
         for item in bundle.composition:
             order.items.append(item)
 
-        # Ajouter le prix du bundle
         order.price += bundle.compute_price()
 
         if not self.order_dao.update_order(order):
@@ -110,7 +107,6 @@ class OrderService:
         if not order.items:
             raise ValueError("Cannot validate an empty order.")
 
-        # Vérification des stocks
         items_needed = {}
         for item in order.items:
             items_needed[item.id_item] = items_needed.get(item.id_item, 0) + 1

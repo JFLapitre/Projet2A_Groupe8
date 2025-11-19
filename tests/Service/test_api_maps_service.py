@@ -5,9 +5,6 @@ import requests
 
 from src.Service.api_maps_service import ApiMapsService
 
-# --- Mock Fixtures ---
-
-
 @pytest.fixture
 def mock_os_getenv_with_key(mocker):
     """
@@ -39,8 +36,6 @@ def service_with_key(mock_load_dotenv, mock_os_getenv_with_key):
     """
     return ApiMapsService()
 
-
-# --- Simulated Response Data Fixtures ---
 
 
 @pytest.fixture
@@ -93,8 +88,6 @@ def mock_geocode_response_not_found():
     return {"status": "ZERO_RESULTS", "results": []}
 
 
-# --- Initialization Tests ---
-
 
 def test_init_success(service_with_key):
     """Tests successful initialization when the API key is found."""
@@ -103,11 +96,8 @@ def test_init_success(service_with_key):
 
 def test_init_api_key_missing(mock_load_dotenv, mock_os_getenv_missing_key):
     """Tests that a ValueError is raised if the API key is missing."""
-    with pytest.raises(ValueError, match="GOOGLE_MAPS_API_KEY introuvable"):  # Message in French from service
+    with pytest.raises(ValueError, match="GOOGLE_MAPS_API_KEY introuvable"):
         ApiMapsService()
-
-
-# --- Driveritinerary Tests ---
 
 
 def test_driver_itinerary_api_key_missing(service_with_key):
@@ -128,16 +118,13 @@ def test_driver_itinerary_success(mock_get, service_with_key: ApiMapsService, mo
     waypoints = ["Avenue de la Paix, Rennes", "Rue du Test, Bruz"]
     service_with_key.Driveritinerary(waypoints)
 
-    # Check the call to requests.get
     mock_get.assert_called_once()
     call_url = mock_get.call_args[0][0]
 
-    # Check that all key components are in the URL
     assert "https://maps.googleapis.com/maps/api/directions/json" in call_url
     assert "waypoints=Avenue+de+la+Paix%2C+Rennes%7CRue+du+Test%2C+Bruz" in call_url
     assert "key=FAKE_API_KEY_123" in call_url
 
-    # Check the output (duration and distance)
     captured = capsys.readouterr()
     assert "Distance totale : 6.00 km" in captured.out
     assert "Durée totale : 0h 6min 0s" in captured.out
@@ -152,12 +139,9 @@ def test_driver_itinerary_api_error(mock_get, service_with_key: ApiMapsService, 
 
     service_with_key.Driveritinerary(["Invalid Address"])
 
-    # Check the error output
     captured = capsys.readouterr()
     assert "Erreur : NOT_FOUND" in captured.out
 
-
-# --- validate_address_api Tests ---
 
 
 @patch("requests.get")
@@ -171,10 +155,8 @@ def test_validate_address_api_success_valid(mock_get, service_with_key: ApiMapsS
         street_name="Test St", city="Lyon", postal_code=69001, street_number="123"
     )
 
-    # Check the API call
     mock_get.assert_called_once()
 
-    # Check the result
     assert result["status"] == "VALID"
     assert "123 Test St, 69001 Lyon, France" in result["formatted_address"]
     assert result["components"]["postal_code"] == 69001
@@ -214,12 +196,10 @@ def test_validate_address_api_missing_required_fields(service_with_key: ApiMapsS
     Tests client-side validation for missing required fields.
     """
     with patch("requests.get") as mock_get:
-        # Case 1: missing city
         result1 = service_with_key.validate_address_api(street_name="Rue", city="", postal_code=35000)
         assert result1["status"] == "INVALID"
         assert "required" in result1["message"]
 
-        # requests.get should not be called
         mock_get.assert_not_called()
 
 

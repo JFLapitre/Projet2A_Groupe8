@@ -27,15 +27,13 @@ class AddressService:
         This assumes the address components have already been validated.
         """
 
-        # 1. Try to find the address first
         existing_address = self.address_dao.find_address_by_components(
             city=city, postal_code=postal_code, street_name=street_name, street_number=street_number
         )
 
         if existing_address:
-            return existing_address  # Return the existing one
+            return existing_address
 
-        # 2. If not found, create it
         try:
             new_address = Address(
                 street_name=street_name,
@@ -52,7 +50,6 @@ class AddressService:
             return created_address
 
         except Exception as e:
-            # Raise exception if database insertion fails
             raise ValueError(f"Database error while saving address: {e}") from e
 
     def get_address_by_id(self, address_id: int) -> Optional[Address]:

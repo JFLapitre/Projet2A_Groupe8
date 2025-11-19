@@ -145,7 +145,6 @@ class AddressDAO(BaseModel):
                  """
             params = {
                 "city": city,
-                # CORRECTION : Conversion explicite en string pour la BDD
                 "postal_code": str(postal_code),
                 "street_name": street_name,
             }

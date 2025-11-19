@@ -14,6 +14,7 @@ class Address(BaseModel):
         street_name (str): Name of the street.
         street_number (Optional[str | int]): Street number if exists.
     """
+
     id_address: Optional[int] = None
     city: str
     postal_code: int

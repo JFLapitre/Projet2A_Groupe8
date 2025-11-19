@@ -21,11 +21,11 @@ class ItemDAO:
         if not item_ids:
             return []
 
-        placeholders = ', '.join(['%s'] * len(item_ids))
+        placeholders = ", ".join(["%s"] * len(item_ids))
 
         query = f"SELECT * FROM item WHERE id_item IN ({placeholders})"
 
-        raw_items = self.db_connector.sql_query(query, item_ids, "all") 
+        raw_items = self.db_connector.sql_query(query, item_ids, "all")
 
         if not raw_items:
             return []

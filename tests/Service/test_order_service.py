@@ -17,7 +17,6 @@ from src.Model.item import Item
 from src.Model.order import Order
 from src.Service.order_service import OrderService
 
-# --- Fixtures ---
 
 
 @pytest.fixture
@@ -61,7 +60,6 @@ def service(mock_db_connector, mock_item_dao, mock_user_dao, mock_address_dao, m
     """
     Provides an OrderService instance with all DAO dependencies mocked.
     """
-    # Patch all DAO constructors called within OrderService.__init__
     mocker.patch("src.Service.order_service.ItemDAO", return_value=mock_item_dao)
     mocker.patch("src.Service.order_service.UserDAO", return_value=mock_user_dao)
     mocker.patch("src.Service.order_service.AddressDAO", return_value=mock_address_dao)
@@ -70,9 +68,6 @@ def service(mock_db_connector, mock_item_dao, mock_user_dao, mock_address_dao, m
 
     order_service = OrderService(db_connector=mock_db_connector)
     return order_service
-
-
-# --- Data Fixtures ---
 
 
 @pytest.fixture
@@ -127,7 +122,6 @@ def sample_item_unavailable():
 def sample_bundle_1(sample_item_1, sample_item_2):
     """Provides a mock Bundle with available items."""
     bundle = MagicMock(spec=AbstractBundle)
-    # Assurer que l'objet Mock a la composition et le prix calculable
     bundle.composition = [sample_item_1, sample_item_2]
     bundle.compute_price.return_value = 7.0
     bundle.name = "Menu 1"
@@ -170,13 +164,11 @@ def sample_order_pending(sample_customer, sample_address):
 @pytest.fixture
 def sample_order_pending_with_items(sample_customer, sample_address, sample_item_1, sample_item_2):
     """Provides a 'pending' order that already contains items (from bundle 1)."""
-    # Recréer pour éviter les effets de bord entre les tests
     order = MagicMock(spec=Order)
     order.id = 503
     order.customer = sample_customer
     order.address = sample_address
     order.status = "pending"
-    # Items de sample_bundle_1 (Item 1, Item 2)
     order.items = [sample_item_1, sample_item_2]
     order.price = 7.0
     return order
@@ -193,8 +185,6 @@ def sample_order_validated(sample_customer, sample_address, sample_item_1):
     order.items = [sample_item_1]
     return order
 
-
-# --- Test Create Order ---
 
 
 def test_create_order_success(
@@ -239,7 +229,7 @@ def test_create_order_customer_not_found(service: OrderService, mock_user_dao: M
 
 def test_create_order_user_not_customer(service: OrderService, mock_user_dao: MagicMock):
     """Tests that a ValueError is raised if the user is not a Customer instance."""
-    not_a_customer = MagicMock(spec=Driver)  # Is a User, but not a Customer
+    not_a_customer = MagicMock(spec=Driver)
     mock_user_dao.find_user_by_id.return_value = not_a_customer
     with pytest.raises(ValueError, match="No valid customer found with ID 2"):
         service.create_order(customer_id=2, address_id=10)
@@ -272,9 +262,6 @@ def test_create_order_dao_failure(
         service.create_order(customer_id=1, address_id=10)
 
 
-# --- Test Cancel Order ---
-
-
 def test_cancel_order_success(service: OrderService, mock_order_dao: MagicMock, sample_order_pending: Order):
     """Tests successful cancellation (deletion) of an order."""
     mock_order_dao.find_order_by_id.return_value = sample_order_pending
@@ -299,16 +286,13 @@ def test_cancel_order_not_found(service: OrderService, mock_order_dao: MagicMock
 def test_cancel_order_dao_failure(service: OrderService, mock_order_dao: MagicMock, sample_order_pending: Order):
     """Tests a failure in the DAO layer during deletion."""
     mock_order_dao.find_order_by_id.return_value = sample_order_pending
-    mock_order_dao.delete_order.return_value = False  # Simulate DAO failure
+    mock_order_dao.delete_order.return_value = False
 
     result = service.cancel_order(order_id=501)
 
     mock_order_dao.find_order_by_id.assert_called_once_with(501)
     mock_order_dao.delete_order.assert_called_once_with(501)
     assert result is False
-
-
-# --- Test Add Bundle to Order ---
 
 
 def test_add_bundle_to_order_success(
@@ -324,17 +308,13 @@ def test_add_bundle_to_order_success(
     """
     mock_order_dao.find_order_by_id.return_value = sample_order_pending
     mock_order_dao.update_order.return_value = sample_order_pending
-    # Simuler le second appel pour la recherche post-update
     mock_order_dao.find_order_by_id.side_effect = [sample_order_pending, sample_order_pending]
 
-    # Initial state
     assert len(sample_order_pending.items) == 0
     assert sample_order_pending.price == 0.0
 
-    # CHANGEMENT: Appel avec l'objet bundle directement
     result = service.add_bundle_to_order(order_id=501, bundle=sample_bundle_1)
 
-    # Final state
     assert len(sample_order_pending.items) == 2
     assert sample_order_pending.items[0] == sample_item_1
     assert sample_order_pending.items[1] == sample_item_2
@@ -354,12 +334,11 @@ def test_add_bundle_to_order_item_not_available(
     """
     mock_order_dao.find_order_by_id.return_value = sample_order_pending
 
-    # CHANGEMENT: Message d'erreur exact du service: 'items ['Milkshake']'
     with pytest.raises(ValueError, match="unavailable because items \\['Milkshake'\\] are not available"):
         service.add_bundle_to_order(order_id=501, bundle=sample_bundle_unavailable)
 
     mock_order_dao.update_order.assert_not_called()
-    assert len(sample_order_pending.items) == 0  # Items not added
+    assert len(sample_order_pending.items) == 0
 
 
 def test_add_bundle_to_order_order_not_found(
@@ -367,7 +346,6 @@ def test_add_bundle_to_order_order_not_found(
 ):
     """Tests adding a bundle when the order is not found."""
     mock_order_dao.find_order_by_id.return_value = None
-    # CHANGEMENT: Appel avec l'objet bundle
     with pytest.raises(ValueError, match="No order found with ID 99."):
         service.add_bundle_to_order(order_id=99, bundle=sample_bundle_1)
 
@@ -377,7 +355,6 @@ def test_add_bundle_to_order_not_pending(
 ):
     """Tests adding a bundle to an already validated order."""
     mock_order_dao.find_order_by_id.return_value = sample_order_validated
-    # CHANGEMENT: Appel avec l'objet bundle
     with pytest.raises(ValueError, match="Cannot modify an order with status 'validated'."):
         service.add_bundle_to_order(order_id=502, bundle=sample_bundle_1)
 
@@ -392,17 +369,13 @@ def test_add_bundle_to_order_dao_failure(
     Tests an exception if the order update fails after adding the bundle.
     """
     mock_order_dao.find_order_by_id.return_value = sample_order_pending
-    mock_order_dao.update_order.return_value = None  # Simulate DAO failure
+    mock_order_dao.update_order.return_value = None
 
-    # CHANGEMENT: Appel avec l'objet bundle
     with pytest.raises(Exception, match="Failed to update the order."):
         service.add_bundle_to_order(order_id=501, bundle=sample_bundle_1)
 
-    assert len(sample_order_pending.items) == 2  # Items were added in memory
+    assert len(sample_order_pending.items) == 2
     mock_order_dao.update_order.assert_called_once()
-
-
-# --- Test Validate Order ---
 
 
 def test_validate_order_success_simple(
@@ -414,7 +387,6 @@ def test_validate_order_success_simple(
     sample_item_2: Item,
 ):
     """Tests successful validation of an order, checking stock reduction."""
-    # Arrange
     sample_item_1.stock = 10
     sample_item_2.stock = 5
     sample_order_pending_with_items.status = "pending"
@@ -427,10 +399,8 @@ def test_validate_order_success_simple(
     mock_item_dao.update_item.return_value = True
     mock_order_dao.update_order.return_value = True
 
-    # Act
     result = service.validate_order(order_id=503)
 
-    # Assert
     assert sample_item_1.stock == 9
     assert sample_item_2.stock == 4
     assert mock_item_dao.update_item.call_count == 2
@@ -447,7 +417,6 @@ def test_validate_order_success_complex_stock(
     sample_item_2: Item,
 ):
     """Tests validation with multiple bundles and duplicate items."""
-    # Arrange (Total needed: Item 1 x3, Item 2 x1)
     sample_item_1.stock = 10
     sample_item_2.stock = 5
 
@@ -462,10 +431,8 @@ def test_validate_order_success_complex_stock(
     mock_item_dao.update_item.return_value = True
     mock_order_dao.update_order.return_value = True
 
-    # Act
     service.validate_order(order_id=504)
 
-    # Assert
     assert sample_item_1.stock == 7
     assert sample_item_2.stock == 4
     assert complex_order.status == "validated"
@@ -480,7 +447,6 @@ def test_validate_order_stock_to_zero(
     sample_item_2: Item,
 ):
     """Tests that item availability is set to False when stock hits 0."""
-    # Arrange
     sample_item_1.stock = 1
     sample_item_1.availability = True
     sample_item_2.stock = 1
@@ -494,10 +460,8 @@ def test_validate_order_stock_to_zero(
     mock_item_dao.update_item.return_value = True
     mock_order_dao.update_order.return_value = True
 
-    # Act
     service.validate_order(order_id=503)
 
-    # Assert
     assert sample_item_1.stock == 0
     assert sample_item_1.availability is False
     assert sample_item_2.stock == 0
@@ -513,7 +477,6 @@ def test_validate_order_not_enough_stock(
     sample_item_2: Item,
 ):
     """Tests that a ValueError is raised if stock is insufficient."""
-    # Arrange
     sample_item_1.stock = 10
     sample_item_2.stock = 0
     sample_order_pending_with_items.status = "pending"
@@ -523,7 +486,6 @@ def test_validate_order_not_enough_stock(
         lambda id: sample_item_1 if id == 1 else (sample_item_2 if id == 2 else None)
     )
 
-    # Act / Assert
     with pytest.raises(ValueError, match="Not enough stock for item 'Fries'. Needed: 1, Available: 0."):
         service.validate_order(order_id=503)
 
@@ -543,7 +505,6 @@ def test_validate_order_item_not_found_in_db(
     mock_order_dao.find_order_by_id.return_value = sample_order_pending_with_items
     mock_item_dao.find_item_by_id.side_effect = lambda id: sample_item_1 if id == 1 else None
 
-    # CHANGEMENT: Message d'erreur exact du service
     with pytest.raises(Exception, match="Item ID 2 required for order no longer exists."):
         service.validate_order(order_id=503)
 
@@ -588,10 +549,8 @@ def test_validate_order_item_update_fails(
     mock_item_dao.find_item_by_id.side_effect = (
         lambda id: sample_item_1 if id == 1 else (sample_item_2 if id == 2 else None)
     )
-    # Item 1 succeeds, Item 2 fails
     mock_item_dao.update_item.side_effect = [True, False]
 
-    # CHANGEMENT: Message d'erreur exact du service
     with pytest.raises(Exception, match="Failed to update stock for item 2."):
         service.validate_order(order_id=503)
 
@@ -614,8 +573,8 @@ def test_validate_order_status_update_fails(
     mock_item_dao.find_item_by_id.side_effect = (
         lambda id: sample_item_1 if id == 1 else (sample_item_2 if id == 2 else None)
     )
-    mock_item_dao.update_item.return_value = True  # Stock updates succeed
-    mock_order_dao.update_order.return_value = None  # Simulate DAO failure
+    mock_item_dao.update_item.return_value = True
+    mock_order_dao.update_order.return_value = None
 
     with pytest.raises(Exception, match="Stock was updated, but failed to validate the order status."):
         service.validate_order(order_id=503)
@@ -623,9 +582,6 @@ def test_validate_order_status_update_fails(
     assert mock_item_dao.update_item.call_count == 2
     assert sample_order_pending_with_items.status == "validated"
     mock_order_dao.update_order.assert_called_once()
-
-
-# --- Test Get/List Orders ---
 
 
 def test_get_order_details_success(service: OrderService, mock_order_dao: MagicMock, sample_order_validated: Order):

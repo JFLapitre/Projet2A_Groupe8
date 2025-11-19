@@ -13,8 +13,6 @@ from src.Model.delivery import Delivery
 from src.Model.order import Order
 from src.Service.admin_order_service import AdminOrderService
 
-# --- Fixtures pour Mocks DAO ---
-
 
 @pytest.fixture
 def mock_db_connector():
@@ -58,8 +56,6 @@ def mock_delivery_dao():
     return MagicMock(spec=DeliveryDAO)
 
 
-# --- Fixture pour le Service ---
-
 
 @pytest.fixture
 def service(
@@ -76,23 +72,18 @@ def service(
     Provides an AdminOrderService instance with mocked DAOs.
     Injects delivery_dao manually as it is called but not initialized in the service.
     """
-    # Patch des constructeurs DAO appelés dans __init__
     mocker.patch("src.Service.admin_order_service.ItemDAO", return_value=mock_item_dao)
     mocker.patch("src.Service.admin_order_service.UserDAO", return_value=mock_user_dao)
     mocker.patch("src.Service.admin_order_service.AddressDAO", return_value=mock_address_dao)
     mocker.patch("src.Service.admin_order_service.BundleDAO", return_value=mock_bundle_dao)
     mocker.patch("src.Service.admin_order_service.OrderDAO", return_value=mock_order_dao)
 
-    # Création du service
     admin_service = AdminOrderService(db_connector=mock_db_connector)
 
-    # Correction de l'incohérence/Injection manuelle du mock de delivery_dao
     admin_service.delivery_dao = mock_delivery_dao
 
     return admin_service
 
-
-# --- Fixtures de Données ---
 
 
 @pytest.fixture
@@ -124,8 +115,6 @@ def sample_delivery_completed():
     """Provides a mock Delivery with 'completed' status."""
     return MagicMock(spec=Delivery, status="completed", id=51)
 
-
-# --- Tests de list_waiting_orders() ---
 
 
 def test_list_waiting_orders_filters_pending(
@@ -177,8 +166,6 @@ def test_list_waiting_orders_returns_empty_list_if_dao_returns_empty(
     assert result == []
 
 
-# --- Tests de list_deliveries() ---
-
 
 def test_list_deliveries_success(
     service: AdminOrderService,
@@ -191,7 +178,6 @@ def test_list_deliveries_success(
     """
     expected_deliveries = [sample_delivery_inprogress, sample_delivery_completed]
 
-    # Correction: Assigner explicitement la méthode list_deliveries au mock
     mock_delivery_dao.list_deliveries = MagicMock(return_value=expected_deliveries)
 
     result = service.list_deliveries()
@@ -205,7 +191,6 @@ def test_list_deliveries_returns_empty_list(service: AdminOrderService, mock_del
     """
     Tests that an empty list is returned if the DAO finds no deliveries.
     """
-    # Correction: Assigner explicitement la méthode list_deliveries au mock
     mock_delivery_dao.list_deliveries = MagicMock(return_value=[])
 
     result = service.list_deliveries()

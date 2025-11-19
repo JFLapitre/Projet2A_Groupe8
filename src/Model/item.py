@@ -16,6 +16,7 @@ class Item(BaseModel):
         stock (Optional[int]): Stock available.
         availability (Optional[bool]): If the item is available for sale.
     """
+
     id_item: Optional[int] = None
     name: str
     item_type: str

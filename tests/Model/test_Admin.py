@@ -18,8 +18,7 @@ def test_admin_ok():
         sign_up_date=date.today(),
     )
 
-    addr = Address(city="Rennes", postal_code=35000,
-                   street_name="Rue X", street_number=7)
+    addr = Address(city="Rennes", postal_code=35000, street_name="Rue X", street_number=7)
 
     order = Order(
         id_order=1,

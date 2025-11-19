@@ -11,9 +11,6 @@ def service():
     return PasswordService()
 
 
-# --- Hashing and Salting Tests ---
-
-
 def test_hash_password_with_known_salt(service: PasswordService):
     """
     Tests hashing a known password/salt pair yields a known hash.
@@ -73,9 +70,6 @@ def test_create_salt_length(service: PasswordService):
     salt = service.create_salt()
     assert len(salt) == 64
     assert all(c in "0123456789abcdef" for c in salt)
-
-
-# --- Password Strength Tests ---
 
 
 def test_strength_valid_password(service: PasswordService):

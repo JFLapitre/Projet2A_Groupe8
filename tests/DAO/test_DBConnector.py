@@ -118,7 +118,6 @@ def test_sql_query_exception_handling(mock_connect, db_config):
     mock_conn = mock_connect.return_value.__enter__.return_value
     mock_cursor = mock_conn.cursor.return_value.__enter__.return_value
 
-    # We use a standard Exception to mock the structure, avoiding C-extension readonly attributes
     class MockDatabaseError(Exception):
         def __init__(self, msg):
             super().__init__(msg)
@@ -131,6 +130,5 @@ def test_sql_query_exception_handling(mock_connect, db_config):
 
     connector = DBConnector(config=db_config)
 
-    # Expect our MockDatabaseError to be re-raised
     with pytest.raises(MockDatabaseError):
         connector.sql_query("SELECT * FROM fail")
