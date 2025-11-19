@@ -36,8 +36,6 @@ class AdminMenuService:
         if not created_item:
             raise Exception(f"Failed to create item: {name}")
 
-    from typing import Optional
-
     def update_item(
         self,
         id: int,
@@ -109,9 +107,11 @@ class AdminMenuService:
         if not composition or len(composition) != len(item_ids):
             raise ValueError("One or more item IDs provided in the composition were not found.")
 
+        # CORRECTION ICI : Suppression de l'argument 'availability' qui n'existe plus
         new_bundle = PredefinedBundle(
-            name=name, description=description, composition=composition, price=price, availability=availability
+            name=name, description=description, composition=composition, price=price
         )
+        
         created_bundle = self.bundle_dao.add_predefined_bundle(new_bundle)
         if not created_bundle:
             raise Exception(f"Failed to create predefined bundle: {name}")
