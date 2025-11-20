@@ -108,8 +108,7 @@ class DriverService:
 
     def complete_delivery(self, delivery_id: int) -> Optional[Delivery]:
         """
-        Marks a delivery as 'completed' and sets the delivery time.
-        This replaces the skeleton 'validate_delivery' method.
+        Marks a delivery as 'delivered' and sets the delivery time.
         """
         delivery = self.delivery_dao.find_delivery_by_id(delivery_id)
         if not delivery:
@@ -118,7 +117,7 @@ class DriverService:
         if delivery.status != "in_progress":
             raise ValueError(f"Only 'in_progress' deliveries can be completed. Current status: {delivery.status}")
 
-        delivery.status = "completed"
+        delivery.status = "delivered"
         delivery.delivery_time = datetime.now()
 
         try:

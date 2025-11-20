@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -27,5 +27,5 @@ class Order(BaseModel):
     address: Address
     items: list[Item]
     price: Optional[float] = None
-    status: str
+    status: Literal["in_progress", "validated", "pending", "delivered"]
     order_date: datetime = Field(default_factory=datetime.now)

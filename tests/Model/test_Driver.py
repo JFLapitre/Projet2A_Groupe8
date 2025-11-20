@@ -32,3 +32,17 @@ def test_driver_invalid_availability():
             vehicle_type="car",
             availability="indeed",
         )
+
+
+def test_driver_invalid_vehicle_type():
+    with pytest.raises(ValidationError):
+        Driver(
+            id_user=1,
+            username="driver",
+            hash_password="h",
+            salt="s",
+            name="Bob",
+            phone_number="06000000",
+            vehicle_type="truck",
+            availability=True,
+        )

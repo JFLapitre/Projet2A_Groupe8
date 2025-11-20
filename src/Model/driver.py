@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import ConfigDict
 
@@ -18,7 +18,7 @@ class Driver(AbstractUser):
 
     name: str
     phone_number: Optional[str] = None
-    vehicle_type: str
+    vehicle_type: Literal["car", "bike", "scooter"]
     availability: bool
 
     model_config = ConfigDict(from_attributes=True)

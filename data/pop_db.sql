@@ -9,7 +9,7 @@ INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_
 (8, 'sophia_clark', '3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1', '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'customer', '2024-05-15'),
 (9, 'Bryanisinthekitchen', '8a4f5b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a', 'f1e2d3c4b5a6f7e8d9c0b1a2e3f4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0e1f2', 'driver', '2024-02-15'),
 (10, 'Maxivitesse', 'b1a0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0', 'a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1', 'driver', '2024-03-20'),
-(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4', 'admin', '2024-01-20'),
+(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'admin', '2024-01-20'),
 (12, 'ava_walker', 'f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8', 'e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5', 'customer', '2024-06-01'),
 (13, 'william_hall', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'customer', '2024-06-10');
 
@@ -34,9 +34,9 @@ INSERT INTO fd.admin (id_user, name, phone_number) VALUES
 (1, 'Groupe 8', '+33 7 69 52 27 94');
 
 INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
-(3, 'Bob Driver', '+33 6 45 67 89 01', 'Bike', TRUE),
-(9, 'Bryan Donato Da Costa', '+33 6 56 87 46 89', 'Car', TRUE),
-(10, 'Maxine Voinson', '+33 6 67 54 78 91', 'Car', TRUE);
+(3, 'Bob Driver', '+33 6 45 67 89 01', 'bike', TRUE),
+(9, 'Bryan Donato Da Costa', '+33 6 56 87 46 89', 'car', TRUE),
+(10, 'Maxine Voinson', '+33 6 67 54 78 91', 'car', TRUE);
 
 INSERT INTO fd.item (name, item_type, price, stock, availability) VALUES
 ('Banh mi', 'main', 10.50, 20, TRUE),
@@ -52,14 +52,22 @@ INSERT INTO fd.item (name, item_type, price, stock, availability) VALUES
 ('Fries', 'side', 3, 18, TRUE),
 ('Mozzarella sticks', 'side', 4, 15, TRUE);
 
-INSERT INTO fd.bundle (name, description, bundle_type, required_item_types,  price, discount) VALUES
-('Banh mi Menu', 'Banh mi + Drink + Dessert', 'predefined', NULL, 17.00, NULL),
-('Burger Menu', 'Burger + Fries + Drink', 'predefined', NULL, 16.00, NULL);
+INSERT INTO fd.bundle (name, description, bundle_type,  price, discount) VALUES
+('Banh mi Menu', 'Banh mi + Drink + Dessert', 'predefined', 17.00, NULL),
+('Burger Menu', 'Burger + Fries + Drink', 'predefined', 16.00, NULL);
 
-INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount) VALUES
-('Promo for couple', 'Buy 2 main, get 10% off', 'discount', ARRAY['main', 'main'], NULL, 0.10),
-('Main and drink', '', 'discount', ARRAY['main', 'drink'], NULL, 0.20),
-('Complete bundle', '', 'discount', ARRAY['starter', 'main', 'dessert'], NULL, 0.2);
+INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
+('Promo for couple', 'Buy 2 main, get 10% off', 'discount',  NULL, 0.10),
+('Main and drink', '', 'discount', NULL, 0.20),
+('Complete bundle', '', 'discount', NULL, 0.2);
+
+INSERT INTO fd.bundle_required_item (id_bundle, item_type, quantity_required) VALUES
+(3, 'main', 2),
+(4, 'main', 1),
+(4, 'drink', 1),
+(5, 'main', 1),
+(5, 'starter', 1),
+(5, 'dessert', 1);
 
 INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 (1, 1),
@@ -77,7 +85,7 @@ INSERT INTO fd.order (id_user, status, price, id_address, order_date) VALUES
 (4, 'in_progress', 15.5, 5, '2024-10-06 20:05:00'); 
 
 INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
-(3, 'completed', '2024-10-01 13:15:00'),
+(3, 'delivered', '2024-10-01 13:15:00'),
 (3, 'in_progress', NULL),
 (3, 'in_progress', NULL);
 
@@ -91,7 +99,6 @@ INSERT INTO fd.order_item (id_order, id_item) VALUES
 (1, 1),
 (1, 6),
 (2, 2),
-(2, 2),
 (2, 8),
 (3, 9),
 (3, 10),
@@ -102,96 +109,6 @@ INSERT INTO fd.order_item (id_order, id_item) VALUES
 (5, 11),
 (5, 6);
 
--- ÉTAPE 1: Insertion de 40 nouvelles livraisons (IDs 4 à 43)
-INSERT INTO fd.delivery (id_delivery, id_driver, status, delivery_time)
-SELECT
-    s.id,
-    -- Choisit aléatoirement un driver existant (assumant que fd.driver contient des IDs)
-    (SELECT id_user FROM fd.driver ORDER BY random() LIMIT 1),
-    -- Statut aléatoire: 40% en_cours, 40% delivered, 20% pending (non assigné)
-    CASE (random() * 10)::INT
-        WHEN 0 THEN 'pending'
-        WHEN 1 THEN 'pending'
-        WHEN 2 THEN 'delivered'
-        WHEN 3 THEN 'delivered'
-        WHEN 4 THEN 'delivered'
-        ELSE 'in_progress'
-    END,
-    NULL
-FROM generate_series(4, 43) AS s(id);
-
--- ÉTAPE 2: Insertion de 100 nouvelles commandes (IDs 6 à 105)
-INSERT INTO fd.order (id_order, id_user, status, id_address, order_date)
-SELECT
-    s.id,
-    -- Choisit un client aléatoire (basé sur le fait que fd.customer existe)
-    (SELECT id_user FROM fd.customer ORDER BY random() LIMIT 1),
-    CASE (random() * 3)::INT 
-        WHEN 0 THEN 'delivered' 
-        WHEN 1 THEN 'in_progress' 
-        ELSE 'pending' 
-    END,
-    -- Adresse aléatoire (ID 1 à 5)
-    (random() * 4)::INT + 1,
-    -- Date aléatoire au cours des 60 derniers jours
-    CURRENT_TIMESTAMP - (random() * '60 days'::interval)
-FROM generate_series(6, 105) AS s(id);
-
--- ÉTAPE 3: Association des items (order_item)
--- Associe aléatoirement 2 à 4 items aux 100 nouvelles commandes
-INSERT INTO fd.order_item (id_order, id_item)
-SELECT
-    id_order,
-    id_item
-FROM (
-    -- Génère une table temporaire avec les associations
-    SELECT 
-        s.id AS id_order,
-        (random() * 11)::INT + 1 AS id_item -- ID item aléatoire (1 à 12)
-    FROM 
-        generate_series(6, 105) AS s(id),  -- 100 nouvelles commandes
-        generate_series(1, (random() * 3)::INT + 2) -- 2 à 5 items par commande
-) AS random_items
-GROUP BY id_order, id_item;
-
--- ÉTAPE 4: Mise à jour des prix des nouvelles commandes (Calcul basé sur les items)
-UPDATE fd.order o
-SET price = (
-    SELECT SUM(i.price)
-    FROM fd.order_item oi
-    JOIN (
-        -- Liste des prix des items, nécessaire pour le calcul
-        SELECT 1 AS id_item, 10.50 AS price UNION ALL
-        SELECT 2, 14.00 UNION ALL
-        SELECT 3, 9.00 UNION ALL
-        SELECT 4, 8.50 UNION ALL
-        SELECT 5, 7.00 UNION ALL
-        SELECT 6, 6.00 UNION ALL
-        SELECT 7, 3.00 UNION ALL
-        SELECT 8, 2.00 UNION ALL
-        SELECT 9, 3.00 UNION ALL
-        SELECT 10, 11.00 UNION ALL
-        SELECT 11, 3.00 UNION ALL
-        SELECT 12, 4.00
-    ) AS i ON oi.id_item = i.id_item
-    WHERE oi.id_order = o.id_order
-)
-WHERE o.id_order >= 6; -- Met à jour uniquement les 100 nouvelles commandes
-
--- ÉTAPE 5: Association des commandes aux livraisons (delivery_order)
--- Lie toutes les nouvelles commandes qui ne sont pas 'pending' à une nouvelle livraison (IDs 4 à 43)
-INSERT INTO fd.delivery_order (id_delivery, id_order)
-SELECT
-    (random() * 39)::INT + 4, -- ID de livraison aléatoire (entre 4 et 43)
-    o.id_order
-FROM fd.order o
-WHERE o.id_order >= 6 -- Seules les nouvelles commandes
-  AND o.status IN ('delivered', 'in_progress');
-  
--- ÉTAPE 6: Réinitialisation des séquences
--- IMPORTANT: Assurez-vous que les séquences utilisent maintenant le nouvel ID maximum + 1
-SELECT setval('fd.order_id_order_seq', 106, true);
-SELECT setval('fd.delivery_id_delivery_seq', 44, true);
 
 SELECT setval('fd.user_id_user_seq', (SELECT MAX(id_user) FROM fd.user));
 SELECT setval('fd.address_id_address_seq', (SELECT MAX(id_address) FROM fd.address));
