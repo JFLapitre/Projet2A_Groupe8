@@ -21,7 +21,7 @@ INSERT INTO fd.address (city, postal_code, street_name, street_number) VALUES
 ('Rennes', '35000', 'Place Sainte-Anne', 100);
 
 INSERT INTO fd.customer (id_user, name, phone_number) VALUES
-(1, 'John Doe', '+33 6 01 02 03 04'),
+(4, 'John Doe', '+33 6 01 02 03 04'),
 (2, 'Jane Smith', '+33 6 12 34 56 78'),
 (5, 'Charlie Customer', '+33 6 23 45 67 89'),
 (6, 'Emma White', '+33 6 06 06 06 06'),
@@ -31,7 +31,7 @@ INSERT INTO fd.customer (id_user, name, phone_number) VALUES
 (13, 'William Hall', '+33 6 13 13 13 13');
 
 INSERT INTO fd.admin (id_user, name, phone_number) VALUES
-(4, 'Groupe 8', '+33 7 69 52 27 94');
+(1, 'Groupe 8', '+33 7 69 52 27 94');
 
 INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
 (3, 'Bob Driver', '+33 6 45 67 89 01', 'Bike', TRUE),
