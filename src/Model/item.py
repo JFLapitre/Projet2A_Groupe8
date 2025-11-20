@@ -19,7 +19,7 @@ class Item(BaseModel):
 
     id_item: Optional[int] = None
     name: str
-    item_type: Literal["main", "starter", "drink", "side"]
+    item_type: Literal["main", "starter", "drink", "side", "dessert"]
     price: float
     description: Optional[str] = None
     stock: Optional[int] = None

@@ -97,10 +97,12 @@ class AuthView:
             "and include uppercase, lowercase, digits, and special characters."
         )
         password: str = input("Password: ").strip()
+        print("Enter your name (First name and Last name)")
+        name: str = input("Name: ")
         phone_number: str = input("Phone number: ").strip()
 
         try:
-            user: "AbstractUser" = self.auth_service.register_customer(username, password, phone_number)
+            user: "AbstractUser" = self.auth_service.register_customer(username, password, name, phone_number)
         except ValueError as e:
             print(f"[ERROR] {e}")
             return False

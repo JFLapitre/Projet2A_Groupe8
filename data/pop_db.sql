@@ -91,7 +91,6 @@ INSERT INTO fd.order_item (id_order, id_item) VALUES
 (1, 1),
 (1, 6),
 (2, 2),
-(2, 2),
 (2, 8),
 (3, 9),
 (3, 10),

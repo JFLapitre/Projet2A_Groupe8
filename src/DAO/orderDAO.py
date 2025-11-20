@@ -213,9 +213,11 @@ class OrderDAO(BaseModel):
 
             for item in order.items:
                 self.db_connector.sql_query(
-                    """
-                    INSERT INTO order_item (id_order, id_item)
-                    VALUES (%(id_order)s, %(id_item)s)
+                """
+                INSERT INTO order_item (id_order, id_item, quantity)
+                    VALUES (%(id_order)s, %(id_item)s, 1)
+                    ON CONFLICT (id_order, id_item)
+                    DO UPDATE SET quantity = order_item.quantity + 1
                     """,
                     {
                         "id_order": order.id_order,
