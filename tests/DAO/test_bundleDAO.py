@@ -115,10 +115,7 @@ class MockDBConnector(DBConnector):
             self.next_id += 1
 
             bundle_type = "predefined"
-            if "discount" in q and "discount" in data: # Basic check, improved below
-                 # If it inserts into discount column, it's likely a discount bundle
-                 # But predefined inserts NULL into discount.
-                 # The query for predefined hardcodes 'predefined'.
+            if "discount" in q and "discount" in data: 
                  if "'discount'" in q:
                      bundle_type = "discount"
                  elif "'single_item'" in q:
