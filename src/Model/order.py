@@ -27,5 +27,5 @@ class Order(BaseModel):
     address: Address
     items: list[Item]
     price: Optional[float] = None
-    status: str
+    status: Literal["in_progress", "validated", "pending", "delivered"]
     order_date: datetime = Field(default_factory=datetime.now)

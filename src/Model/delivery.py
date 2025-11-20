@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel
 
@@ -22,5 +22,5 @@ class Delivery(BaseModel):
     id_delivery: Optional[int] = None
     driver: Optional[Driver]
     orders: list[Order]
-    status: str
+    status: Literal["delivered", "in_progress"]
     delivery_time: Optional[datetime] = None

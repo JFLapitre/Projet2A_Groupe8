@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel
 
@@ -19,7 +19,7 @@ class Item(BaseModel):
 
     id_item: Optional[int] = None
     name: str
-    item_type: str
+    item_type: Literal["main", "starter", "drink", "side"]
     price: float
     description: Optional[str] = None
     stock: Optional[int] = None
