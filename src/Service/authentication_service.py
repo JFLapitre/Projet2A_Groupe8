@@ -32,7 +32,7 @@ class AuthenticationService:
 
         return user
 
-    def register_customer(self, username: str, password: str, phone_number: str) -> Customer:
+    def register_customer(self, username: str, password: str, name: str, phone_number: str) -> Customer:
         """
         Registers a new customer.
         The password is first checked for strength, then securely hashed and salted before storage.
@@ -69,6 +69,7 @@ class AuthenticationService:
 
         new_customer = Customer(
             username=username,
+            name=name,
             hash_password=hashed_password,
             salt=salt,
             phone_number=phone_number,

@@ -112,9 +112,12 @@ CREATE TABLE fd.delivery_order (
 
 -- Table order_item
 DROP TABLE IF EXISTS fd.order_item CASCADE;
+
 CREATE TABLE fd.order_item (
-    id_order_item SERIAL PRIMARY KEY,
     id_order INT REFERENCES fd.order(id_order) ON DELETE CASCADE,
-    id_item INT REFERENCES fd.item(id_item) ON DELETE CASCADE
+    id_item INT REFERENCES fd.item(id_item) ON DELETE CASCADE,
+    quantity INT DEFAULT 1,
+    CONSTRAINT unique_order_item UNIQUE (id_order, id_item)
 );
+
 
