@@ -1,0 +1,21 @@
+meta {
+  name: GET Item 1
+  type: http
+  seq: 3
+}
+
+get {
+  url: https://user-joanes-509816-user-5000.user.lab.sspcloud.fr/items/1
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.body: isJson
+  res.body.name: eq "Banh mi"
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
