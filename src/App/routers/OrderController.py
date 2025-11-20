@@ -35,10 +35,32 @@ def find_order_by_id(id_order: int, dao=Depends(get_order_dao)):
 def get_pending_orders(admin_service=Depends(get_admin_order_service)):
     """
     Retrieves all orders with the status 'pending'.
-    This route is protected and accessible only to administrators.
+    Includes item names in the response.
     """
     try:
         pending_orders = admin_service.list_waiting_orders()
-        return pending_orders
+
+        # On transforme le résultat avant de le renvoyer
+        formatted = []
+        for order in pending_orders:
+            formatted.append(
+                {
+                    "id_order": order.id_order,
+                    "status": order.status,
+                    "address": {
+                        "streetnumber": order.address.street_number,
+                        "streetname": order.address.street_name,
+                        "city": order.address.city,
+                    }
+                    if order.address
+                    else None,
+                    "items": [item.name for item in order.items],
+                    "order_date": order.order_date,
+                    "price": order.price,
+                }
+            )
+
+        return formatted
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching orders: {e}") from e
