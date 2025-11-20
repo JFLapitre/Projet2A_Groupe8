@@ -108,11 +108,37 @@ class UserDAO:
 
             user_type = raw_user["user_type"]
             if user_type == "customer":
-                return Customer(**raw_user)
+                return Customer(
+                    id_user=raw_user["id_user"],
+                    username=raw_user["username"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
+                    sign_up_date=raw_user["sign_up_date"],
+                    name=raw_user["customer_name"],
+                    phone_number=raw_user["customer_phone"]
+                )
             elif user_type == "driver":
-                return Driver(**raw_user)
+                return Driver(
+                    id_user=raw_user["id_user"],
+                    username=raw_user["username"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
+                    sign_up_date=raw_user["sign_up_date"],
+                    name=raw_user["driver_name"],
+                    phone_number=raw_user["driver_phone"],
+                    vehicle_type=raw_user["vehicle_type"],
+                    availability=raw_user["availability"]
+                )
             elif user_type == "admin":
-                return Admin(**raw_user)
+                return Admin(
+                    id_user=raw_user["id_user"],
+                    username=raw_user["username"],
+                    hash_password=raw_user["hash_password"],
+                    salt=raw_user["salt"],
+                    sign_up_date=raw_user["sign_up_date"],
+                    name=raw_user["admin_name"],
+                    phone_number=raw_user["admin_phone"]
+                )
         except Exception as e:
             logging.error(f"Failed to fetch user {username}: {e}")
             return None
