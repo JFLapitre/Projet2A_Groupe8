@@ -39,3 +39,5 @@ The API is then documented on the endpoint /docs
 
 To test the API with bruno you can click here.
 [<img src="https://fetch.usebruno.com/button.svg" alt="Fetch in Bruno" style="width: 130px; height: 30px;" width="128" height="32">](https://fetch.usebruno.com?url=https%3A%2F%2Fgithub.com%2FJFLapitre%2FProjet2A_Groupe8.git "target=_blank rel=noopener noreferrer")
+
+You will then have to create a environment and to add a variable BASE_URL where you put your link to the API.
