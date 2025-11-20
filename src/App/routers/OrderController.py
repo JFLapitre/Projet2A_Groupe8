@@ -1,10 +1,7 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_order_service
-from src.Model.order import Order
 
 order_router = APIRouter(prefix="/orders", tags=["Consulting orders"], dependencies=[Depends(admin_required)])
 
@@ -40,7 +37,6 @@ def get_pending_orders(admin_service=Depends(get_admin_order_service)):
     try:
         pending_orders = admin_service.list_waiting_orders()
 
-        # On transforme le résultat avant de le renvoyer
         formatted = []
         for order in pending_orders:
             formatted_order = {
