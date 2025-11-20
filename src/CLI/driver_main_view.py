@@ -115,7 +115,7 @@ class DriverMainView(AbstractView):
         print(driver_service.get_delivery_details(delivery_id))
 
     def _complete_delivery(self):
-        delivery_service = self.services.get("delivery")
+        delivery_service = self.services.get("driver")
         delivery_id = int(self.prompt("Delivery ID to mark complete: "))
         try:
             delivery_service.complete_delivery(delivery_id)
