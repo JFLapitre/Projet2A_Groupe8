@@ -31,7 +31,7 @@ def find_order_by_id(id_order: int, dao=Depends(get_order_dao)):
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
 
-@order_router.get("/", status_code=status.HTTP_200_OK, response_model=List[Order])
+@order_router.get("/", status_code=status.HTTP_200_OK)
 def get_pending_orders(admin_service=Depends(get_admin_order_service)):
     """
     Retrieves all orders with the status 'pending'.
@@ -43,8 +43,7 @@ def get_pending_orders(admin_service=Depends(get_admin_order_service)):
         # On transforme le résultat avant de le renvoyer
         formatted = []
         for order in pending_orders:
-            formatted.append(
-                {
+            formatted_order = {
                     "id_order": order.id_order,
                     "status": order.status,
                     "address": {
@@ -54,11 +53,13 @@ def get_pending_orders(admin_service=Depends(get_admin_order_service)):
                     }
                     if order.address
                     else None,
+                    "Customer name": order.customer.name,
+                    "Customer phone_number": order.customer.phone_number,
                     "items": [item.name for item in order.items],
                     "order_date": order.order_date,
                     "price": order.price,
                 }
-            )
+            formatted.append(formatted_order)
 
         return formatted
 
