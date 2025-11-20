@@ -99,7 +99,7 @@ def update_item(
         handle_service_error(e)
 
 
-@menu_item_router.delete("/items/{id_item}", status_code=status.HTTP_204_NO_CONTENT)
+@menu_item_router.delete("/items/{id_item}", status_code=status.HTTP_200_OK)
 def delete_item(id_item: int, service=Depends(get_service)):
     try:
         service.delete_item(id_item)
