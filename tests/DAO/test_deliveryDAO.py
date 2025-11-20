@@ -22,7 +22,7 @@ class MockDBConnector(DBConnector):
             {
                 "id_delivery": 1,
                 "id_driver": 10,
-                "status": "pending",
+                "status": "in_progress",
                 "delivery_time": None,
             },
             {
@@ -155,7 +155,7 @@ def mock_order_dao():
             id_address=1, city="Paris", postal_code=75001, street_name="Rue de Rivoli", street_number="10"
         )
         item = Item(
-            id_item=1, name="Pizza", price=15.0, item_type="food", description="Yummy", stock=10, availability=True
+            id_item=1, name="Pizza", price=15.0, item_type="main", description="Yummy", stock=10, availability=True
         )
 
         return Order(
@@ -178,13 +178,12 @@ def delivery_dao(mock_db_connector, mock_user_dao, mock_order_dao) -> DeliveryDA
 
 
 def test_find_delivery_by_id_existing(delivery_dao: DeliveryDAO):
-    """Tests retrieving an existing delivery with its driver and orders."""
     delivery = delivery_dao.find_delivery_by_id(1)
 
     assert delivery is not None
     assert isinstance(delivery, Delivery)
     assert delivery.id_delivery == 1
-    assert delivery.status == "pending"
+    assert delivery.status == "in_progress"
 
     assert delivery.driver is not None
     assert delivery.driver.id_user == 10
@@ -196,13 +195,11 @@ def test_find_delivery_by_id_existing(delivery_dao: DeliveryDAO):
 
 
 def test_find_delivery_by_id_not_found(delivery_dao: DeliveryDAO):
-    """Tests retrieving a non-existent delivery."""
     delivery = delivery_dao.find_delivery_by_id(999)
     assert delivery is None
 
 
 def test_find_all_deliveries(delivery_dao: DeliveryDAO):
-    """Tests retrieving all deliveries."""
     deliveries = delivery_dao.find_all_deliveries()
 
     assert len(deliveries) == 2
@@ -213,16 +210,14 @@ def test_find_all_deliveries(delivery_dao: DeliveryDAO):
 
 
 def test_find_in_progress_deliveries_by_driver(delivery_dao: DeliveryDAO):
-    """Tests retrieving deliveries specific to a driver and status."""
     deliveries = delivery_dao.find_in_progress_deliveries_by_driver(10)
 
-    assert len(deliveries) == 1
-    assert deliveries[0].id_delivery == 2
-    assert deliveries[0].status == "in_progress"
+    assert len(deliveries) == 2
+    assert deliveries[1].id_delivery == 2
+    assert deliveries[1].status == "in_progress"
 
 
 def test_add_delivery_success(delivery_dao: DeliveryDAO, mocker):
-    """Tests adding a new delivery."""
     driver = Driver(
         id_user=10,
         username="driver_john",
@@ -236,27 +231,26 @@ def test_add_delivery_success(delivery_dao: DeliveryDAO, mocker):
 
     customer = Customer(id_user=50, username="cust", hash_password="pw", salt="s", name="C", phone_number="1")
     address = Address(city="P", postal_code=1, street_name="S")
-    item = Item(name="I", price=1.0, item_type="t")
+    item = Item(name="I", price=1.0, item_type="main")
 
     order1 = Order(id_order=200, status="pending", total_price=10.0, customer=customer, address=address, items=[item])
 
-    new_delivery = Delivery(driver=driver, orders=[order1], status="pending", delivery_time=None)
+    new_delivery = Delivery(driver=driver, orders=[order1], status="in_progress", delivery_time=None)
 
     created_delivery = delivery_dao.add_delivery(new_delivery)
 
     assert created_delivery is not None
     assert created_delivery.id_delivery == 3
-    assert created_delivery.status == "pending"
+    assert created_delivery.status == "in_progress"
     assert len(created_delivery.orders) == 1
     assert created_delivery.orders[0].id_order == 200
 
 
 def test_update_delivery_success(delivery_dao: DeliveryDAO):
-    """Tests updating a delivery's status."""
     delivery = delivery_dao.find_delivery_by_id(1)
     assert delivery is not None
 
-    delivery.status = "completed"
+    delivery.status = "delivered"
     delivery.delivery_time = datetime.now()
 
     result = delivery_dao.update_delivery(delivery)
@@ -264,12 +258,11 @@ def test_update_delivery_success(delivery_dao: DeliveryDAO):
     assert result is True
 
     updated_delivery = delivery_dao.find_delivery_by_id(1)
-    assert updated_delivery.status == "completed"
+    assert updated_delivery.status == "delivered"
     assert updated_delivery.delivery_time is not None
 
 
 def test_delete_delivery_success(delivery_dao: DeliveryDAO):
-    """Tests deleting a delivery."""
     result = delivery_dao.delete_delivery(1)
 
     assert result is True
@@ -277,25 +270,21 @@ def test_delete_delivery_success(delivery_dao: DeliveryDAO):
 
 
 def test_delete_delivery_not_found(delivery_dao: DeliveryDAO):
-    """Tests deleting a non-existent delivery."""
     result = delivery_dao.delete_delivery(999)
     assert result is False
 
 
 def test_find_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
-    """Tests error handling in find_delivery_by_id."""
     mock_db_connector.sql_query = lambda q, d, rt: exec('raise Exception("DB Error")')
     assert delivery_dao.find_delivery_by_id(1) is None
 
 
 def test_find_all_deliveries_error(delivery_dao: DeliveryDAO, mock_db_connector):
-    """Tests error handling in find_all_deliveries."""
     mock_db_connector.sql_query = lambda q, d, rt: exec('raise Exception("DB Error")')
     assert delivery_dao.find_all_deliveries() == []
 
 
 def test_add_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
-    """Tests error handling in add_delivery."""
     mock_db_connector.sql_query = lambda q, d, rt: exec('raise Exception("DB Error")')
     driver = Driver(
         id_user=10,
@@ -304,16 +293,15 @@ def test_add_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
         salt="s",
         name="d",
         phone_number="0",
-        vehicle_type="c",
+        vehicle_type="car",
         availability=True,
     )
-    delivery = Delivery(driver=driver, orders=[], status="new")
+    delivery = Delivery(driver=driver, orders=[], status="in_progress")
 
     assert delivery_dao.add_delivery(delivery) is None
 
 
 def test_update_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
-    """Tests error handling in update_delivery."""
     driver = Driver(
         id_user=10,
         username="u",
@@ -321,10 +309,10 @@ def test_update_delivery_error(delivery_dao: DeliveryDAO, mock_db_connector):
         salt="s",
         name="d",
         phone_number="0",
-        vehicle_type="c",
+        vehicle_type="car",
         availability=True,
     )
-    delivery = Delivery(id_delivery=1, driver=driver, orders=[], status="new")
+    delivery = Delivery(id_delivery=1, driver=driver, orders=[], status="in_progress")
 
     mock_db_connector.sql_query = lambda q, d, rt: exec('raise Exception("DB Error")')
     assert delivery_dao.update_delivery(delivery) is False

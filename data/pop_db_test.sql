@@ -102,7 +102,7 @@ INSERT INTO tests.delivery_order (id_delivery, id_order) VALUES (1, 2);
 
 -- Completed delivery (Order 3 -> Driver 7)
 INSERT INTO tests.delivery (id_driver, status, delivery_time) VALUES
-(7, 'completed', NOW() - INTERVAL '23 HOUR');
+(7, 'delivered', NOW() - INTERVAL '23 HOUR');
 
 INSERT INTO tests.delivery_order (id_delivery, id_order) VALUES (2, 3);
 
