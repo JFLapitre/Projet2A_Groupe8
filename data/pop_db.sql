@@ -9,7 +9,7 @@ INSERT INTO fd.user (id_user, username, hash_password, salt, user_type, sign_up_
 (8, 'sophia_clark', '3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1', '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'customer', '2024-05-15'),
 (9, 'Bryanisinthekitchen', '8a4f5b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a', 'f1e2d3c4b5a6f7e8d9c0b1a2e3f4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0e1f2', 'driver', '2024-02-15'),
 (10, 'Maxivitesse', 'b1a0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0', 'a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1', 'driver', '2024-03-20'),
-(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4', 'admin', '2024-01-20'),
+(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'admin', '2024-01-20'),
 (12, 'ava_walker', 'f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8', 'e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5', 'customer', '2024-06-01'),
 (13, 'william_hall', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'customer', '2024-06-10');
 
@@ -34,9 +34,9 @@ INSERT INTO fd.admin (id_user, name, phone_number) VALUES
 (1, 'Groupe 8', '+33 7 69 52 27 94');
 
 INSERT INTO fd.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
-(3, 'Bob Driver', '+33 6 45 67 89 01', 'Bike', TRUE),
-(9, 'Bryan Donato Da Costa', '+33 6 56 87 46 89', 'Car', TRUE),
-(10, 'Maxine Voinson', '+33 6 67 54 78 91', 'Car', TRUE);
+(3, 'Bob Driver', '+33 6 45 67 89 01', 'bike', TRUE),
+(9, 'Bryan Donato Da Costa', '+33 6 56 87 46 89', 'car', TRUE),
+(10, 'Maxine Voinson', '+33 6 67 54 78 91', 'car', TRUE);
 
 INSERT INTO fd.item (name, item_type, price, stock, availability) VALUES
 ('Banh mi', 'main', 10.50, 20, TRUE),
@@ -85,7 +85,7 @@ INSERT INTO fd.order (id_user, status, price, id_address, order_date) VALUES
 (4, 'in_progress', 15.5, 5, '2024-10-06 20:05:00'); 
 
 INSERT INTO fd.delivery (id_driver, status, delivery_time) VALUES
-(3, 'completed', '2024-10-01 13:15:00'),
+(3, 'delivered', '2024-10-01 13:15:00'),
 (3, 'in_progress', NULL),
 (3, 'in_progress', NULL);
 

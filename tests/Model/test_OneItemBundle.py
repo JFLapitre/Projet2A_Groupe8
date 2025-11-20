@@ -3,7 +3,8 @@ from src.Model.one_item_bundle import OneItemBundle
 
 
 def test_one_item_bundle_price_ok():
-    item = Item(name="A", item_type="x", price=10)
+    # Correction: item_type="main" au lieu de "x"
+    item = Item(name="A", item_type="main", price=10)
     bundle = OneItemBundle(name="Single", composition=[item])
 
     assert bundle.compute_price() == 10

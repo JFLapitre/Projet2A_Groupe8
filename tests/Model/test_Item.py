@@ -12,3 +12,8 @@ def test_item_ok():
 def test_item_invalid_price():
     with pytest.raises(ValidationError):
         Item(name="Burger", item_type="main", price="five")
+
+
+def test_item_invalid_type():
+    with pytest.raises(ValidationError):
+        Item(name="Burger", item_type="unknown_type", price=5.0)
