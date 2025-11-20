@@ -53,8 +53,15 @@ class DriverMainView(AbstractView):
             if not orders:
                 print("No pending orders.")
                 return
+
             for o in orders:
-                print(f"Order #{o.id_order} - Status: {o.status}")
+                address = (
+                    f"{o.address.street_number},{o.address.street_name}, {o.address.city}"
+                    if o.address
+                    else "No address"
+                )
+                print(f"Order #{o.id_order} - Status: {o.status} - Address: {address}")
+
         except Exception as e:
             self.print_error(f"Error retrieving orders: {e}")
 
