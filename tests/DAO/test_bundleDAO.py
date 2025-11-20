@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Literal, Optional, Union
 from unittest.mock import MagicMock
+from collections import Counter
 
 import pytest
 
@@ -73,7 +74,7 @@ class MockDBConnector(DBConnector):
         if "simulate_db_error" in q:
             raise Exception("Simulated Database Error")
 
-        if "select * from bundle where id_bundle" in q and return_type == "one":
+        if "select * from fd.bundle where id_bundle" in q and return_type == "one":
             if isinstance(data, dict):
                 bid = data.get("bundle_id")
                 for b in self.bundles:
@@ -81,17 +82,27 @@ class MockDBConnector(DBConnector):
                         return b.copy()
             return None
 
-        if "select i.* from item i join bundle_item bi" in q and return_type == "all":
+        if "select i.* from fd.item i join fd.bundle_item bi" in q and return_type == "all":
             if isinstance(data, dict):
                 bid = data.get("bundle_id")
                 item_ids = [bi["id_item"] for bi in self.bundle_items if bi["id_bundle"] == bid]
                 return [{"id_item": iid, "name": f"Item {iid}", "price": 5.0} for iid in item_ids]
             return []
 
-        if "select * from bundle" in q and return_type == "all":
-            return [b.copy() for b in self.bundles]
+        if "select item_type, quantity_required from fd.bundle_required_item" in q:
+             if isinstance(data, dict):
+                bid = data.get("bundle_id")
+                for b in self.bundles:
+                    if b["id_bundle"] == bid:
+                        types = b.get("required_item_types") or []
+                        counts = Counter(types)
+                        return [{"item_type": t, "quantity_required": c} for t, c in counts.items()]
+             return []
 
-        if "insert into bundle" in q and "returning" in q:
+        if "select id_bundle from fd.bundle" in q and return_type == "all":
+            return [{"id_bundle": b["id_bundle"]} for b in self.bundles]
+
+        if "insert into fd.bundle" in q and "returning" in q:
             if not isinstance(data, dict):
                 return None
 
@@ -99,11 +110,12 @@ class MockDBConnector(DBConnector):
             self.next_id += 1
 
             bundle_type = "predefined"
-            if "discount" in q and "required_item_types" in q:
-                bundle_type = "discount"
-            elif "'single_item'" in q:
-                bundle_type = "single_item"
-
+            if "discount" in q and "discount" in data: 
+                 if "'discount'" in q:
+                     bundle_type = "discount"
+                 elif "'single_item'" in q:
+                     bundle_type = "single_item"
+            
             new_bundle = {
                 "id_bundle": new_id,
                 "name": data["name"],
@@ -111,17 +123,29 @@ class MockDBConnector(DBConnector):
                 "bundle_type": bundle_type,
                 "price": data.get("price"),
                 "discount": data.get("discount"),
-                "required_item_types": data.get("required_item_types"),
+                "required_item_types": [],
             }
             self.bundles.append(new_bundle)
             return new_bundle
 
-        if "insert into bundle_item" in q:
+        if "insert into fd.bundle_item" in q:
             if isinstance(data, dict):
                 self.bundle_items.append({"id_bundle": data["id_bundle"], "id_item": data["id_item"]})
             return None
 
-        if "update bundle" in q:
+        if "insert into fd.bundle_required_item" in q:
+            if isinstance(data, dict):
+                bid = data.get("id_bundle")
+                item_type = data.get("item_type")
+                qty = data.get("quantity_required")
+                for b in self.bundles:
+                    if b["id_bundle"] == bid:
+                        if b["required_item_types"] is None:
+                            b["required_item_types"] = []
+                        b["required_item_types"].extend([item_type] * qty)
+            return None
+
+        if "update fd.bundle" in q:
             if isinstance(data, dict):
                 bid = data.get("id_bundle")
                 for b in self.bundles:
@@ -130,14 +154,23 @@ class MockDBConnector(DBConnector):
                         return True
             return None
 
-        if "delete from bundle_item" in q:
+        if "delete from fd.bundle_item" in q:
             if isinstance(data, dict):
                 bid = data.get("bundle_id") or data.get("id_bundle")
                 self.bundle_items = [bi for bi in self.bundle_items if bi["id_bundle"] != bid]
                 return True
             return None
 
-        if "delete from bundle" in q:
+        if "delete from fd.bundle_required_item" in q:
+             if isinstance(data, dict):
+                bid = data.get("bundle_id") or data.get("id_bundle")
+                for b in self.bundles:
+                    if b["id_bundle"] == bid:
+                        b["required_item_types"] = []
+                return True
+             return None
+
+        if "delete from fd.bundle" in q:
             if isinstance(data, dict):
                 bid = data.get("bundle_id")
                 self.bundles = [b for b in self.bundles if b["id_bundle"] != bid]
