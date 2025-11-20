@@ -1,6 +1,6 @@
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends, Path, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_menu_service
@@ -103,5 +103,6 @@ def update_item(
 def delete_item(id_item: int, service=Depends(get_service)):
     try:
         service.delete_item(id_item)
+        return {"message": f"Item {id_item} deleted successfully"}
     except Exception as e:
         handle_service_error(e)

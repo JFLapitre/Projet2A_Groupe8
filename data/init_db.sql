@@ -1,4 +1,3 @@
--- Suppression du schéma existant
 DROP SCHEMA IF EXISTS fd CASCADE;
 CREATE SCHEMA fd;
 
@@ -69,12 +68,20 @@ CREATE TABLE fd.bundle (
     name VARCHAR(100) NOT NULL,
     description VARCHAR(300),
     bundle_type VARCHAR(20) NOT NULL,
-    required_item_types VARCHAR(30)[],
-    price FLOAT, -- Peut être NULL pour les discounted bundles
-    discount FLOAT -- Peut être NULL pour les predefined bundles
+    price FLOAT, 
+    discount FLOAT 
 );
 
--- Table bundle_item (pour les predefined bundles)
+-- Table bundle_required_item_types
+DROP TABLE IF EXISTS fd.bundle_required_item CASCADE;
+CREATE TABLE fd.bundle_required_item (
+    id_bundle INT REFERENCES fd.bundle(id_bundle) ON DELETE CASCADE,
+    item_type VARCHAR(50) NOT NULL,
+    quantity_required INT NOT NULL,
+    PRIMARY KEY (id_bundle, item_type)
+);
+
+-- Table bundle_item 
 DROP TABLE IF EXISTS fd.bundle_item CASCADE;
 CREATE TABLE fd.bundle_item (
     id_bundle INT REFERENCES fd.bundle(id_bundle) ON DELETE CASCADE,
@@ -102,7 +109,7 @@ CREATE TABLE fd.delivery (
     delivery_time TIMESTAMP
 );
 
--- Table delivery_order (table de jointure entre delivery et order)
+-- Table delivery_order 
 DROP TABLE IF EXISTS fd.delivery_order CASCADE;
 CREATE TABLE fd.delivery_order (
     id_delivery INT REFERENCES fd.delivery(id_delivery) ON DELETE CASCADE,
@@ -119,5 +126,3 @@ CREATE TABLE fd.order_item (
     quantity INT DEFAULT 1,
     CONSTRAINT unique_order_item UNIQUE (id_order, id_item)
 );
-
-

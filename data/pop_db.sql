@@ -52,14 +52,22 @@ INSERT INTO fd.item (name, item_type, price, stock, availability) VALUES
 ('Fries', 'side', 3, 18, TRUE),
 ('Mozzarella sticks', 'side', 4, 15, TRUE);
 
-INSERT INTO fd.bundle (name, description, bundle_type, required_item_types,  price, discount) VALUES
-('Banh mi Menu', 'Banh mi + Drink + Dessert', 'predefined', NULL, 17.00, NULL),
-('Burger Menu', 'Burger + Fries + Drink', 'predefined', NULL, 16.00, NULL);
+INSERT INTO fd.bundle (name, description, bundle_type,  price, discount) VALUES
+('Banh mi Menu', 'Banh mi + Drink + Dessert', 'predefined', 17.00, NULL),
+('Burger Menu', 'Burger + Fries + Drink', 'predefined', 16.00, NULL);
 
-INSERT INTO fd.bundle (name, description, bundle_type, required_item_types, price, discount) VALUES
-('Promo for couple', 'Buy 2 main, get 10% off', 'discount', ARRAY['main', 'main'], NULL, 0.10),
-('Main and drink', '', 'discount', ARRAY['main', 'drink'], NULL, 0.20),
-('Complete bundle', '', 'discount', ARRAY['starter', 'main', 'dessert'], NULL, 0.2);
+INSERT INTO fd.bundle (name, description, bundle_type, price, discount) VALUES
+('Promo for couple', 'Buy 2 main, get 10% off', 'discount',  NULL, 0.10),
+('Main and drink', '', 'discount', NULL, 0.20),
+('Complete bundle', '', 'discount', NULL, 0.2);
+
+INSERT INTO fd.bundle_required_item (id_bundle, item_type, quantity_required) VALUES
+(3, 'main', 2),
+(4, 'main', 1),
+(4, 'drink', 1),
+(5, 'main', 1),
+(5, 'starter', 1),
+(5, 'dessert', 1);
 
 INSERT INTO fd.bundle_item (id_bundle, id_item) VALUES
 (1, 1),
