@@ -3,7 +3,6 @@ from src.Model.one_item_bundle import OneItemBundle
 
 
 def test_one_item_bundle_price_ok():
-    # Correction: item_type="main" au lieu de "x"
     item = Item(name="A", item_type="main", price=10)
     bundle = OneItemBundle(name="Single", composition=[item])
 

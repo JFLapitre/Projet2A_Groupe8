@@ -72,7 +72,7 @@ CREATE TABLE fd.bundle (
     discount FLOAT 
 );
 
--- Table bundle_required_item_types
+-- Table bundle_required_item
 DROP TABLE IF EXISTS fd.bundle_required_item CASCADE;
 CREATE TABLE fd.bundle_required_item (
     id_bundle INT REFERENCES fd.bundle(id_bundle) ON DELETE CASCADE,

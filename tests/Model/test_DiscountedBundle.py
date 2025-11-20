@@ -6,7 +6,6 @@ from src.Model.item import Item
 
 
 def test_discounted_bundle_ok():
-    # Correction: item_type valides
     it1 = Item(name="A", item_type="main", price=2.0)
     it2 = Item(name="B", item_type="side", price=3.0)
 
@@ -23,7 +22,6 @@ def test_discounted_bundle_ok():
 
 
 def test_invalid_discount_type():
-    # Correction: item_type valide
     it = Item(name="A", item_type="main", price=2.0)
 
     with pytest.raises(ValidationError):

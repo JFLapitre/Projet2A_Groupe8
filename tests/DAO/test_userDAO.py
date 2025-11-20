@@ -44,7 +44,7 @@ class MockDBConnector:
                 "customer_phone": None,
                 "driver_name": "Bob Driver",
                 "driver_phone": "1111111111",
-                "vehicle_type": "car",  # Correction: valeur valide
+                "vehicle_type": "car",
                 "availability": True,
                 "admin_name": None,
                 "admin_phone": None,
@@ -315,7 +315,7 @@ def test_add_driver(user_dao: UserDAO, mock_db: MockDBConnector):
         sign_up_date=date.today(),
         name="Mike",
         phone_number="1234567890",
-        vehicle_type="car",  # Correction: vehicle_type valide
+        vehicle_type="car",
         availability=False,
     )
 
@@ -383,7 +383,7 @@ def test_update_driver(user_dao: UserDAO):
         sign_up_date=date.today(),
         name="Bob Driver Updated",
         phone_number="2222222222",
-        vehicle_type="bike",  # Correction: vehicle_type valide
+        vehicle_type="bike",
         availability=False,
     )
 
@@ -525,7 +525,7 @@ def test_update_driver_error_on_child_query(mock_db: MockDBConnector, user_dao: 
         sign_up_date=date.today(),
         name="Bob",
         phone_number="1",
-        vehicle_type="car",  # Correction: vehicle_type valide
+        vehicle_type="car",
         availability=True,
     )
 
