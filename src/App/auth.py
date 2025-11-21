@@ -14,8 +14,8 @@ def get_user_dao_from_service():
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(JWTBearer())) -> AbstractUser:
     """
-    Dépendance qui décode le token et retourne l'objet utilisateur complet
-    (Admin, Customer, ou Driver) depuis la base de données.
+    A dependency that decodes the token and returns the full user object
+    (Admin, Customer, or Driver) from the database.
     """
     try:
         token = credentials.credentials
@@ -33,8 +33,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(JWTBear
 
 def admin_required(current_user: AbstractUser = Depends(get_current_user)) -> Admin:
     """
-    Dépendance qui vérifie que l'utilisateur authentifié est bien un Admin.
-    Si ce n'est pas le cas, elle lève une erreur 403.
+    This dependency verifies that the authenticated user is indeed an administrator.
+    If not, it gives a 403 error.
     """
     if not isinstance(current_user, Admin):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden: Admin rights required")

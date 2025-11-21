@@ -69,7 +69,6 @@ def test_integration_workflow_order(daos):
         phone_number="+33612345678",
         sign_up_date=date.today(),
     )
-    # Manually set private attributes required for DAO insertion
     new_customer._hash_password = "hashed_pass"
     new_customer._salt = "random_salt"
 

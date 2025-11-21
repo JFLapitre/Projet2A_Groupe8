@@ -1,7 +1,6 @@
 import os
 from unittest.mock import MagicMock, patch
 
-import psycopg2
 import pytest
 
 from src.DAO.DBConnector import DBConnector
