@@ -290,12 +290,12 @@ def test_add_customer(user_dao: UserDAO, mock_db: MockDBConnector):
     new_user = Customer(
         id_user=0,
         username="alice",
-        hash_password="random_hash",
-        salt="random_salt_value",
         sign_up_date=date.today(),
         name="Alice",
         phone_number="0123456789",
     )
+    new_user._hash_password = "random_hash"
+    new_user._salt = "random_salt_value"
 
     added_user = user_dao.add_user(new_user)
     assert added_user is not None
@@ -310,14 +310,14 @@ def test_add_driver(user_dao: UserDAO, mock_db: MockDBConnector):
     new_driver = Driver(
         id_user=0,
         username="trucker_mike",
-        hash_password="driver_hash",
-        salt="driver_salt",
         sign_up_date=date.today(),
         name="Mike",
         phone_number="1234567890",
         vehicle_type="car",
         availability=False,
     )
+    new_driver._hash_password = "driver_hash"
+    new_driver._salt = "driver_salt"
 
     added_driver = user_dao.add_user(new_driver)
     assert added_driver is not None
@@ -331,12 +331,12 @@ def test_add_admin(user_dao: UserDAO, mock_db: MockDBConnector):
     new_admin = Admin(
         id_user=0,
         username="new_chief",
-        hash_password="admin_hash",
-        salt="admin_salt",
         sign_up_date=date.today(),
         name="New Chief",
         phone_number="1122334455",
     )
+    new_admin._hash_password = "admin_hash"
+    new_admin._salt = "admin_salt"
 
     added_admin = user_dao.add_user(new_admin)
     assert added_admin is not None
@@ -352,12 +352,13 @@ def test_update_customer(user_dao: UserDAO):
     updated_user = Customer(
         id_user=1,
         username="janjak_updated",
-        hash_password=existing_user.hash_password,
-        salt=existing_user.salt,
         sign_up_date=date.today(),
         name="Jean Updated",
         phone_number="0000000001",
     )
+    # Inject private attributes
+    updated_user._hash_password = existing_user._hash_password
+    updated_user._salt = existing_user._salt
 
     user_dao.update_user(updated_user)
 
@@ -377,15 +378,14 @@ def test_update_driver(user_dao: UserDAO):
     updated_driver = Driver(
         id_user=2,
         username="driver_bob_updated",
-        hash_password="driver_h",
-        salt="driver_s",
-        password="p",
         sign_up_date=date.today(),
         name="Bob Driver Updated",
         phone_number="2222222222",
         vehicle_type="bike",
         availability=False,
     )
+    updated_driver._hash_password = "driver_h"
+    updated_driver._salt = "driver_s"
 
     user_dao.update_user(updated_driver)
     modified_driver = user_dao.find_user_by_id(2)
@@ -405,12 +405,12 @@ def test_update_admin(user_dao: UserDAO):
     updated_admin = Admin(
         id_user=3,
         username="super_admin_updated",
-        hash_password="admin_h",
-        salt="admin_s",
         sign_up_date=date.today(),
         name="Chief Admin Updated",
         phone_number="8888888888",
     )
+    updated_admin._hash_password = "admin_h"
+    updated_admin._salt = "admin_s"
 
     user_dao.update_user(updated_admin)
     modified_admin = user_dao.find_user_by_id(3)
@@ -475,7 +475,9 @@ def test_find_all_error(mock_db: MockDBConnector, user_dao: UserDAO):
 def test_update_user_error(mock_db: MockDBConnector, user_dao: UserDAO):
     """Tests error handling in update_user when the general 'user' table update fails."""
     mock_db.raise_exception = True
-    error_user = Customer(id_user=1, username="fail_update", hash_password="h", salt="s", name="N", phone_number="0")
+    error_user = Customer(id_user=1, username="fail_update", name="N", phone_number="0")
+    error_user._hash_password = "h"
+    error_user._salt = "s"
 
     updated_user = user_dao.update_user(error_user)
     assert updated_user is None
@@ -519,15 +521,14 @@ def test_update_driver_error_on_child_query(mock_db: MockDBConnector, user_dao: 
     updated_driver_data = Driver(
         id_user=2,
         username="bob_fail_update",
-        hash_password="h",
-        salt="s",
-        password="p",
         sign_up_date=date.today(),
         name="Bob",
         phone_number="1",
         vehicle_type="car",
         availability=True,
     )
+    updated_driver_data._hash_password = "h"
+    updated_driver_data._salt = "s"
 
     updated_user = user_dao.update_user(updated_driver_data)
 

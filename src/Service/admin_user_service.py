@@ -19,7 +19,6 @@ class AdminUserService:
     def create_admin_account(self, username: str, password: str, name: str, phone_number: str) -> Admin:
         """
         Validates and creates a new Admin account.
-        'mail' from skeleton is used as 'username'. 'phone_number' is required by the DAO.
         """
         if not username or not password or not name:
             raise ValueError("Username, password, and name are required.")
@@ -35,11 +34,13 @@ class AdminUserService:
 
         new_admin = Admin(
             username=username,
-            hash_password=hash_password,
             name=name,
-            salt=salt,
             phone_number=phone_number,
         )
+        # Set private attributes directly on the instance
+        new_admin._hash_password = hash_password
+        new_admin._salt = salt
+
         created_user = self.user_dao.add_user(new_admin)
 
         if not created_user or not isinstance(created_user, Admin):
@@ -65,13 +66,14 @@ class AdminUserService:
 
         new_driver = Driver(
             username=username,
-            hash_password=hash_password,
             name=name,
-            salt=salt,
             phone_number=phone_number,
             vehicle_type=vehicle_type,
             availability=availability,
         )
+        # Set private attributes directly on the instance
+        new_driver._hash_password = hash_password
+        new_driver._salt = salt
 
         created_user = self.user_dao.add_user(new_driver)
 

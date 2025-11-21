@@ -7,11 +7,11 @@ load_dotenv()
 
 class ResetDatabase:
     """
-    Réinitialisation de la base de données en utilisant DBConnector et des fichiers SQL.
+    Resetting the database using DBConnector and SQL files.
     """
 
     def lancer(self):
-        print("Ré-initialisation de la base de données")
+        print("Database reset")
 
         try:
             with open("data/init_db.sql", encoding="utf-8") as init_db:
@@ -25,14 +25,14 @@ class ResetDatabase:
             db_connector.sql_query(init_db_as_string, return_type=None)
             db_connector.sql_query(pop_db_as_string, return_type=None)
 
-            print("Ré-initialisation de la base de données - Terminée")
+            print("Database reset - Completed")
             return True
 
         except FileNotFoundError as e:
-            print(f"Erreur : Fichier SQL introuvable : {e}")
+            print(f"Error: SQL file not found : {e}")
             raise
         except Exception as e:
-            print(f"Erreur lors de la réinitialisation : {e}")
+            print(f"Error during reset : {e}")
             raise
 
 
