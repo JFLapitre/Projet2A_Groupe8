@@ -19,15 +19,13 @@ class AuthenticationService:
 
     def login(self, username: str, password: str) -> Customer:
         """
-        Authenticates a user with username/password using manual salt verification.
+        Authenticates a user with username/password using PasswordService helpers.
         """
         user = self.user_dao.find_user_by_username(username)
         if not user:
             raise ValueError("User not found.")
 
-        hashed_input_password = self.password_service.hash_password(password, user.salt)
-
-        if hashed_input_password != user.hash_password:
+        if not self.password_service.verify_password(user, password):
             raise ValueError("Incorrect password.")
 
         return user
@@ -35,13 +33,13 @@ class AuthenticationService:
     def register_customer(self, username: str, password: str, name: str, phone_number: str) -> Customer:
         """
         Registers a new customer.
-        The password is first checked for strength, then securely hashed and salted before storage.
+        Password is checked for strength and securely stored using PasswordService helpers.
         """
         if self.user_dao.find_user_by_username(username):
             raise ValueError(f"Username '{username}' already exists.")
 
         if len(username) < 6:
-            raise ValueError("Username must constain at least 6 caracters.")
+            raise ValueError("Username must contain at least 6 characters.")
 
         pattern = r"^[A-Za-z0-9._-]+$"
         if not re.match(pattern, username):
@@ -49,6 +47,7 @@ class AuthenticationService:
                 "Username may only contain letters (a-z, A-Z), digits (0-9), underscores (_), dots (.), or hyphens (-)."
             )
 
+        # Clean and validate phone number
         phone_number_clean = re.sub(r"[^\d+]", "", phone_number)
         if phone_number_clean.startswith("+"):
             number = phonenumbers.parse(phone_number_clean, None)
@@ -56,25 +55,16 @@ class AuthenticationService:
             number = phonenumbers.parse(phone_number_clean, "FR")
 
         if not phonenumbers.is_valid_number(number):
-            raise ValueError(
-                "Invalid phone number. If you have a stranger phone numer, please enter +xx for the region concerned"
-            )
+            raise ValueError("Invalid phone number. Please enter the full international format if outside France.")
 
         phone_number = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.INTERNATIONAL)
 
-        self.password_service.check_password_strength(password)
+        # Create new Customer object
+        new_customer = Customer(username=username, name=name, phone_number=phone_number)
 
-        salt = self.password_service.create_salt()
-        hashed_password = self.password_service.hash_password(password, salt)
+        # Set password and salt securely
+        self.password_service.set_password(new_customer, password)
 
-        new_customer = Customer(
-            username=username,
-            name=name,
-            hash_password=hashed_password,
-            salt=salt,
-            phone_number=phone_number,
-        )
-
+        # Add to DB via DAO
         created_customer = self.user_dao.add_user(new_customer)
-
         return created_customer
