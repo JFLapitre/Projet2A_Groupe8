@@ -141,11 +141,12 @@ class DriverService:
             raise ValueError(f"No delivery found with ID {delivery_id}.")
         addresses_list = {}
         customer_list = {}
+        phone_list = {}
         for order in delivery.orders:
             addresses_list[order.id_order] = order.address
-            user = order.customer.name
-            customer_list[order.id_order] = user
-        return addresses_list, customer_list
+            customer_list[order.id_order] = order.customer.name
+            phone_list[order.id_order] = order.customer.phone_number
+        return addresses_list, customer_list, phone_list
 
     def list_pending_orders(self) -> List[Order]:
         """
