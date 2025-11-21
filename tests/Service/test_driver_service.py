@@ -99,6 +99,7 @@ def sample_customer():
     customer = MagicMock(spec=Customer)
     customer.id = 10
     customer.name = "Test Customer"
+    customer.phone_number = "+33612345678"
     return customer
 
 
@@ -337,7 +338,7 @@ def test_get_delivery_details_returns_dicts(
     mock_delivery_dao.find_delivery_by_id.return_value = sample_delivery_inprogress
     mock_user_dao.find_user_by_id.return_value = sample_customer
 
-    result_addresses, result_customers = service.get_delivery_details(sample_delivery_inprogress.id)
+    result_addresses, result_customers, result_phones = service.get_delivery_details(sample_delivery_inprogress.id)
 
     mock_delivery_dao.find_delivery_by_id.assert_called_once_with(sample_delivery_inprogress.id)
 

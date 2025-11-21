@@ -104,8 +104,8 @@ def test_create_admin_account_success(
 
     assert isinstance(called_admin_obj, Admin)
     assert called_admin_obj.username == "newadmin"
-    assert called_admin_obj.hash_password == "testhash123"
-    assert called_admin_obj.salt == "testsalt"
+    assert called_admin_obj._hash_password == "testhash123"
+    assert called_admin_obj._salt == "testsalt"
     assert called_admin_obj.phone_number == "123456"
 
     assert result == created_admin_mock
@@ -194,8 +194,8 @@ def test_create_driver_account_success_secure(
 
     assert isinstance(called_driver_obj, Driver)
     assert called_driver_obj.username == "newdriver"
-    assert called_driver_obj.hash_password == "driverhash" 
-    assert called_driver_obj.salt == "driversalt"
+    assert called_driver_obj._hash_password == "driverhash" 
+    assert called_driver_obj._salt == "driversalt"
     assert called_driver_obj.vehicle_type == "car"
     assert called_driver_obj.availability is True
 

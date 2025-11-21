@@ -26,6 +26,10 @@ def mock_password_service() -> MagicMock:
     mock_ps.check_password_strength.return_value = None
     mock_ps.create_salt.return_value = "generated_mock_salt"
     mock_ps.hash_password.return_value = "generated_mock_hash"
+    # Mock set_password to mimic success by default
+    mock_ps.set_password.return_value = None
+    # Mock verify_password default to True to simplify login success tests
+    mock_ps.verify_password.return_value = True
     return mock_ps
 
 
@@ -50,13 +54,14 @@ def dummy_customer() -> Customer:
     """
     Provides a constant Customer object for login tests.
     """
-    return Customer(
+    c = Customer(
         id_user=1,
         username="existing_user",
         phone_number="+33 6 12 34 56 78",
-        salt="jambon",
-        hash_password="7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7",
     )
+    c._salt = "jambon"
+    c._hash_password = "7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7"
+    return c
 
 
 @pytest.fixture
@@ -80,16 +85,14 @@ def test_login_successful(
     password = "soleil1234"
 
     mock_user_dao.find_user_by_username.return_value = dummy_customer
-    mock_password_service.hash_password.return_value = (
-        "7877d4860ef88458096f549b618667d860540db5d59b1d153557d5cdbe1221e7"
-    )
+    mock_password_service.verify_password.return_value = True
 
     try:
         logged_in_user = service.login(username, password)
 
         assert logged_in_user is dummy_customer
         mock_user_dao.find_user_by_username.assert_called_with(username)
-        mock_password_service.hash_password.assert_called_with(password, "jambon")
+        mock_password_service.verify_password.assert_called_with(dummy_customer, password)
 
     except Exception as e:
         pytest.fail(f"login raised an unexpected exception: {e}")
@@ -115,12 +118,12 @@ def test_login_incorrect_password(
     username = "existing_user"
     wrong_password = "wrong_password"
     mock_user_dao.find_user_by_username.return_value = dummy_customer
-    mock_password_service.hash_password.return_value = "different_hash_value"
+    mock_password_service.verify_password.return_value = False
 
     with pytest.raises(ValueError, match="Incorrect password."):
         service.login(username, wrong_password)
 
-    mock_password_service.hash_password.assert_called_with(wrong_password, "jambon")
+    mock_password_service.verify_password.assert_called_with(dummy_customer, wrong_password)
 
 
 def test_register_customer_successful(
@@ -136,8 +139,11 @@ def test_register_customer_successful(
 
     try:
         new_user = service.register_customer(username, password, name, phone)
+        
         mock_user_dao.find_user_by_username.assert_called_with(username)
-        mock_password_service.check_password_strength.assert_called_with(password)
+        # We check that set_password was called, which implies handling of password/strength internally
+        mock_password_service.set_password.assert_called_once()
+        
         mock_user_dao.add_user.assert_called_once_with(ANY)
         created_user_arg = mock_user_dao.add_user.call_args[0][0]
 
@@ -187,7 +193,7 @@ def test_register_customer_username_exists(
 @pytest.mark.parametrize(
     "invalid_username, error_match",
     [
-        ("short", "Username must constain at least 6 caracters."),
+        ("short", "Username must contain at least 6 characters."),
         ("user!x", "Username may only contain letters"),
         ("user space", "Username may only contain letters"),
         ("user@name", "Username may only contain letters"),
@@ -207,16 +213,16 @@ def test_register_customer_invalid_username(
         service.register_customer(invalid_username, "ValidPassword123", "Name", "+33612345678")
 
     mock_user_dao.find_user_by_username.assert_called_with(invalid_username)
-    mock_password_service.check_password_strength.assert_not_called()
+    # We do not check set_password because validation fails before
     mock_user_dao.add_user.assert_not_called()
 
 
 @pytest.mark.parametrize(
     "invalid_phone, error_match",
     [
-        ("1234", "Invalid phone number. If you have a stranger phone numer"),
-        ("+33 12 34 56 78", "Invalid phone number. If you have a stranger phone numer"),
-        ("0000000000", "Invalid phone number. If you have a stranger phone numer"),
+        ("1234", "Invalid phone number. Please enter the full international format if outside France."),
+        ("+33 12 34 56 78", "Invalid phone number. Please enter the full international format if outside France."),
+        ("0000000000", "Invalid phone number. Please enter the full international format if outside France."),
     ],
 )
 def test_register_customer_invalid_phone_number(
@@ -235,7 +241,6 @@ def test_register_customer_invalid_phone_number(
         service.register_customer(valid_username, "ValidPassword123", "Name", invalid_phone)
 
     mock_user_dao.find_user_by_username.assert_called_with(valid_username)
-    mock_password_service.check_password_strength.assert_not_called()
     mock_user_dao.add_user.assert_not_called()
 
 
@@ -244,17 +249,16 @@ def test_register_weak_password(
 ):
     """
     Tests that register raises an Exception if the password strength check fails.
+    We configure the mocked set_password to raise the error.
     """
     weak_password = "short"
     error_message = "Password length must be at least 8 characters"
 
-    mock_password_service.check_password_strength.side_effect = ValueError(error_message)
+    mock_password_service.set_password.side_effect = ValueError(error_message)
 
     with pytest.raises(ValueError, match=error_message):
         service.register_customer("another_user_ok", weak_password, "Name", "+33612345678")
 
     mock_user_dao.find_user_by_username.assert_called_with("another_user_ok")
-    mock_password_service.check_password_strength.assert_called_with(weak_password)
-    mock_password_service.create_salt.assert_not_called()
-    mock_password_service.hash_password.assert_not_called()
+    mock_password_service.set_password.assert_called()
     mock_user_dao.add_user.assert_not_called()

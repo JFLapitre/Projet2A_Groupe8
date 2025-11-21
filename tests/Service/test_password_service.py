@@ -26,12 +26,12 @@ def test_hash_password_with_known_salt(service: PasswordService):
 
 def test_hash_password_requires_salt(service: PasswordService):
     """
-    Tests that hash_password raises ValueError if no salt is provided.
+    Tests that hash_password raises ValueError if no salt is provided (empty string).
     """
     password = "onepassword"
 
     with pytest.raises(ValueError) as e:
-        service.hash_password(password)
+        service.hash_password(password, "")
 
     assert "Salt must be provided for secure hashing." in str(e.value)
 
@@ -110,7 +110,7 @@ def test_strength_length_and_common_passwords(service: PasswordService, invalid_
         ("password123!", "capital letter"),
         ("Password!", "digit"),
         ("PASSWORD123!", "lower letter"),
-        ("azertyuiop", "all the caracters' types"),
+        ("azertyuiop", "all character types"),
     ],
 )
 def test_strength_low_score(service: PasswordService, low_score_password, missing_char_type):
@@ -120,5 +120,5 @@ def test_strength_low_score(service: PasswordService, low_score_password, missin
     with pytest.raises(ValueError) as e:
         service.check_password_strength(low_score_password)
 
-    assert "Your password must have all the caracters' types" in str(e.value)
+    assert "Your password must have all character types" in str(e.value)
     assert "You actually have" in str(e.value)

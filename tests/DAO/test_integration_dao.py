@@ -65,13 +65,16 @@ def test_integration_workflow_order(daos):
     """
     new_customer = Customer(
         username="integration_user",
-        hash_password="hashed_pass",
-        salt="random_salt",
         name="Integration Tester",
         phone_number="+33612345678",
         sign_up_date=date.today(),
     )
+    # Manually set private attributes required for DAO insertion
+    new_customer._hash_password = "hashed_pass"
+    new_customer._salt = "random_salt"
+
     created_customer = daos["user"].add_user(new_customer)
+    assert created_customer is not None
     assert created_customer.id_user is not None
 
     new_address = Address(city="TestCity", postal_code=12345, street_name="Integration Blvd", street_number="42")
@@ -113,13 +116,14 @@ def test_integration_delivery_workflow(daos):
     """
     driver = Driver(
         username="fast_driver",
-        hash_password="pwd",
-        salt="slt",
         name="Fast Eddie",
         phone_number="0700000000",
         vehicle_type="scooter",
         availability=True,
     )
+    driver._hash_password = "pwd"
+    driver._salt = "slt"
+
     created_driver = daos["user"].add_user(driver)
     assert isinstance(created_driver, Driver)
 
@@ -149,8 +153,12 @@ def test_integration_cascade_delete(daos):
     """
     Test: Verifies that deleting a customer also deletes their orders (ON DELETE CASCADE).
     """
-    temp_customer = Customer(username="temp_user", hash_password="pwd", salt="slt", name="Temp", phone_number="000")
+    temp_customer = Customer(username="temp_user", name="Temp", phone_number="000")
+    temp_customer._hash_password = "pwd"
+    temp_customer._salt = "slt"
+
     created_temp = daos["user"].add_user(temp_customer)
+    assert created_temp is not None
 
     address = daos["address"].find_all_addresses()[0]
     order = Order(customer=created_temp, address=address, items=[], status="pending", price=10.0)
@@ -170,10 +178,14 @@ def test_integration_unique_username(daos, db_connector):
     """
     Test: Verifies that two users cannot be created with the same username.
     """
-    u1 = Customer(username="unique_one", hash_password="p", salt="s", name="U1", phone_number="1")
+    u1 = Customer(username="unique_one", name="U1", phone_number="1")
+    u1._hash_password = "p"
+    u1._salt = "s"
     daos["user"].add_user(u1)
 
-    u2 = Customer(username="unique_one", hash_password="p", salt="s", name="U2", phone_number="2")
+    u2 = Customer(username="unique_one", name="U2", phone_number="2")
+    u2._hash_password = "p"
+    u2._salt = "s"
 
     result = daos["user"].add_user(u2)
     assert result is None
