@@ -137,8 +137,8 @@ class AdminMenuService:
         """
         Validates and creates a new bundle that applies a discount.
         """
-        if not (0 < discount < 100):
-            raise ValueError("Discount must be between 0 and 100 (exclusive).")
+        if not (0 < discount < 1):
+            raise ValueError("Discount must be between 0 and 1 (exclusive).")
 
         if not required_item_types:
             raise ValueError("Item types cannot be empty.")

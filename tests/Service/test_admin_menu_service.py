@@ -418,7 +418,7 @@ def test_create_discounted_bundle_duplicate_name(
     mock_bundle_dao.find_all_bundles.return_value = [existing]
 
     with pytest.raises(ValueError, match="already exists"):
-        service.create_discounted_bundle("Existing", "Desc", sample_item_types, 20.0)
+        service.create_discounted_bundle("Existing", "Desc", sample_item_types, 0.2)
 
 
 def test_create_discounted_bundle_duplicate_config(service: AdminMenuService, mock_bundle_dao: MagicMock):
@@ -489,7 +489,6 @@ def test_update_discounted_bundle_duplicate_config(service: AdminMenuService, mo
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.find_all_bundles.return_value = [bundle, other]
     
-    # FIXED: Updated regex match to correspond to service error message
     with pytest.raises(ValueError, match="exact item types configuration"):
         service.update_discounted_bundle(1, required_item_types=["drink", "main"])
 
