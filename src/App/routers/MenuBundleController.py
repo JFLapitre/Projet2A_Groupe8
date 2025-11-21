@@ -123,7 +123,7 @@ def update_discounted_bundle(
     id_bundle: int = Path(..., description="ID of the discounted bundle to update"),
     name: Optional[str] = Query(None, description="New name"),
     desc: Optional[str] = Query(None),
-    discount: Optional[float] = Query(None, description="New promotion (ex: 10.5)."),
+    discount: Optional[float] = Query(None, description="New promotion (ex: 0.10)."),
     required_item_types: Optional[List[str]] = Query(None),
     service=Depends(get_service),
 ):

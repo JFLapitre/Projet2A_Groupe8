@@ -1,6 +1,5 @@
-import logging
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,20 +8,12 @@ from src.DAO.addressDAO import AddressDAO
 from src.DAO.bundleDAO import BundleDAO
 from src.DAO.DBConnector import DBConnector
 from src.DAO.itemDAO import ItemDAO
-
 from src.DAO.orderDAO import OrderDAO
 from src.DAO.userDAO import UserDAO
 from src.Model.address import Address
 from src.Model.customer import Customer
-from src.Model.discounted_bundle import DiscountedBundle
 from src.Model.item import Item
 from src.Model.order import Order
-
-if TYPE_CHECKING:
-    from src.DAO.addressDAO import AddressDAO
-    from src.DAO.bundleDAO import BundleDAO
-    from src.DAO.itemDAO import ItemDAO
-    from src.DAO.userDAO import UserDAO
 
 
 class MockDBConnector:

@@ -355,7 +355,6 @@ def test_update_predefined_bundle_price_missing(service: AdminMenuService, mock_
     del bundle.price
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     
-    # FIXED: Do NOT pass a new name, so it doesn't fail on duplicate name check or mock logic
     with pytest.raises(Exception, match="Price is missing on existing bundle"):
         service.update_predefined_bundle(1)
 
@@ -401,14 +400,14 @@ def test_create_discounted_bundle_success(
     mock_bundle_dao.find_all_bundles.return_value = []
     mock_bundle_dao.add_discounted_bundle.return_value = MagicMock(spec=DiscountedBundle)
 
-    service.create_discounted_bundle("Menu Complet", "Desc", sample_item_types, 25.0)
+    service.create_discounted_bundle("Menu Complet", "Desc", sample_item_types, 0.25)
 
     mock_bundle_dao.add_discounted_bundle.assert_called_once_with(ANY)
 
     called_bundle = mock_bundle_dao.add_discounted_bundle.call_args[0][0]
     assert isinstance(called_bundle, DiscountedBundle)
     assert called_bundle.name == "Menu Complet"
-    assert called_bundle.discount == 25.0
+    assert called_bundle.discount == 0.25
     assert called_bundle.required_item_types == sample_item_types
 
 
@@ -431,23 +430,23 @@ def test_create_discounted_bundle_duplicate_config(service: AdminMenuService, mo
 
 
 def test_create_discounted_bundle_validation_discount_low(service: AdminMenuService, sample_item_types: list):
-    with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
+    with pytest.raises(ValueError, match="Discount must be between 0 and 1"):
         service.create_discounted_bundle("Bad Discount", "Desc", sample_item_types, 0)
 
 
 def test_create_discounted_bundle_validation_discount_high(service: AdminMenuService, sample_item_types: list):
-    with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
-        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_types, 100)
+    with pytest.raises(ValueError, match="Discount must be between 0 and 1"):
+        service.create_discounted_bundle("Bad Discount", "Desc", sample_item_types, 1)
 
 
 def test_create_discounted_bundle_validation_item_types_empty(service: AdminMenuService):
     with pytest.raises(ValueError, match="Item types cannot be empty."):
-        service.create_discounted_bundle("Bad Discount", "Desc", [], 20.0)
+        service.create_discounted_bundle("Bad Discount", "Desc", [], 0.2)
 
 
 def test_create_discounted_bundle_validation_invalid_strings(service: AdminMenuService):
     with pytest.raises(ValueError, match="All item types must be valid, non-empty strings"):
-        service.create_discounted_bundle("Bad", "Desc", ["Main", "  "], 20.0)
+        service.create_discounted_bundle("Bad", "Desc", ["Main", "  "], 0.2)
 
 
 def test_create_discounted_bundle_dao_failure(
@@ -456,26 +455,26 @@ def test_create_discounted_bundle_dao_failure(
     mock_bundle_dao.find_all_bundles.return_value = []
     mock_bundle_dao.add_discounted_bundle.return_value = None
     with pytest.raises(Exception, match="Failed to create discounted bundle"):
-        service.create_discounted_bundle("Fail", "Desc", sample_item_types, 20.0)
+        service.create_discounted_bundle("Fail", "Desc", sample_item_types, 0.2)
 
 
 def test_update_discounted_bundle_success(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["main"])
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=0.1, required_item_types=["main"])
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.find_all_bundles.return_value = [bundle]
     mock_bundle_dao.update_bundle.return_value = True
 
-    service.update_discounted_bundle(2, name="New", discount=15, required_item_types=["side", "drink"])
+    service.update_discounted_bundle(2, name="New", discount=0.15, required_item_types=["side", "drink"])
 
     assert bundle.name == "New"
-    assert bundle.discount == 15
+    assert bundle.discount == 0.15
     assert bundle.required_item_types == ["side", "drink"]
     mock_bundle_dao.update_bundle.assert_called_once_with(bundle)
 
 
 def test_update_discounted_bundle_duplicate_name(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=1, name="Old", discount=10, required_item_types=[])
-    other = DiscountedBundle(id_bundle=2, name="Existing", discount=10, required_item_types=[])
+    bundle = DiscountedBundle(id_bundle=1, name="Old", discount=0.1, required_item_types=[])
+    other = DiscountedBundle(id_bundle=2, name="Existing", discount=0.1, required_item_types=[])
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.find_all_bundles.return_value = [bundle, other]
 
@@ -484,8 +483,8 @@ def test_update_discounted_bundle_duplicate_name(service: AdminMenuService, mock
 
 
 def test_update_discounted_bundle_duplicate_config(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=1, name="ToUpdate", discount=10, required_item_types=[])
-    other = DiscountedBundle(id_bundle=2, name="Other", discount=10, required_item_types=["main", "drink"])
+    bundle = DiscountedBundle(id_bundle=1, name="ToUpdate", discount=0.1, required_item_types=[])
+    other = DiscountedBundle(id_bundle=2, name="Other", discount=0.1, required_item_types=["main", "drink"])
 
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.find_all_bundles.return_value = [bundle, other]
@@ -509,21 +508,21 @@ def test_update_discounted_bundle_wrong_type(service: AdminMenuService, mock_bun
 
 
 def test_update_discounted_bundle_invalid_discount(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["main"])
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=0.1, required_item_types=["main"])
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
-    with pytest.raises(ValueError, match="Discount must be between 0 and 100"):
-        service.update_discounted_bundle(2, discount=150)
+    with pytest.raises(ValueError, match="Discount must be between 0 and 1"):
+        service.update_discounted_bundle(2, discount=1.5)
 
 
 def test_update_discounted_bundle_invalid_item_types(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["main"])
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=0.1, required_item_types=["main"])
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     with pytest.raises(ValueError, match="Item types cannot be empty"):
         service.update_discounted_bundle(2, required_item_types=[])
 
 
 def test_update_discounted_bundle_dao_failure(service: AdminMenuService, mock_bundle_dao: MagicMock):
-    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=10, required_item_types=["main"])
+    bundle = DiscountedBundle(id_bundle=2, name="Old", description="Desc", discount=0.1, required_item_types=["main"])
     mock_bundle_dao.find_bundle_by_id.return_value = bundle
     mock_bundle_dao.update_bundle.return_value = False
     with pytest.raises(Exception, match="Failed to update discounted bundle"):

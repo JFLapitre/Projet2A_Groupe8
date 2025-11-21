@@ -7,6 +7,12 @@ from src.Model.item import Item
 
 
 class OneItemBundle(AbstractBundle):
+    """
+    A bundle to wrap a single item and use bundle logic.
+
+    Attributes:
+        composition (list[Item]): one item in a list for bundle logic.
+    """
     composition: List[Item] = Field(default_factory=list)
 
     def compute_price(self) -> float:

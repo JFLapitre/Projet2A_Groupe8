@@ -37,7 +37,6 @@ class AdminUserService:
             name=name,
             phone_number=phone_number,
         )
-        # Set private attributes directly on the instance
         new_admin._hash_password = hash_password
         new_admin._salt = salt
 
@@ -51,6 +50,9 @@ class AdminUserService:
     def create_driver_account(
         self, username: str, password: str, name: str, phone_number: str, vehicle_type: str, availability=True
     ) -> Driver:
+        """
+        Validates and creates a new driver account.
+        """
         if not username or not password or not name or not phone_number:
             raise ValueError("Username, password, name, and phone number are required.")
         if not vehicle_type:
@@ -71,7 +73,6 @@ class AdminUserService:
             vehicle_type=vehicle_type,
             availability=availability,
         )
-        # Set private attributes directly on the instance
         new_driver._hash_password = hash_password
         new_driver._salt = salt
 

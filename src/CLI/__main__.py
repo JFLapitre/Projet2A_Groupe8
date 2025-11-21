@@ -40,16 +40,13 @@ def run_cli():
     session = Session()
     services = _build_services()
 
-    # Étape 1 — Authentification
     auth_view = AuthView(session, services)
     authenticated = auth_view.display()
     if not authenticated:
         print("Goodbye.")
         return
 
-    # Step 2 — Dispatch to main view based on role
     if session.role == "customer":
-        # CustomerMainView est la seule classe à lancer
         view = CustomerMainView(session, services)
         view.display()
 
