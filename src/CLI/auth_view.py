@@ -1,3 +1,4 @@
+import getpass
 import logging
 from typing import TYPE_CHECKING
 
@@ -59,7 +60,7 @@ class AuthView:
             bool: True if login succeeds, False otherwise.
         """
         username: str = input("Username: ").strip()
-        password: str = input("Password: ").strip()
+        password: str = getpass.getpass("Password: ").strip()
 
         try:
             user: "AbstractUser" = self.auth_service.login(username, password)
@@ -96,7 +97,7 @@ class AuthView:
             "Enter a password. Your password must be at least 8 characters long "
             "and include uppercase, lowercase, digits, and special characters."
         )
-        password: str = input("Password: ").strip()
+        password: str = getpass.getpass("Password: ").strip()
         print("Enter your name (First name and Last name)")
         name: str = input("Name: ")
         phone_number: str = input("Phone number: ").strip()
