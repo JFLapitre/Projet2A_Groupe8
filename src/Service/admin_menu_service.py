@@ -281,8 +281,8 @@ class AdminMenuService:
             bundle.description = description
 
         if discount is not None:
-            if not (0 < discount < 100):
-                raise ValueError("Discount must be between 0 and 100 (exclusive).")
+            if not (0 < discount < 1):
+                raise ValueError("Discount must be between 0 and 1 (exclusive).")
             bundle.discount = discount
 
         if required_item_types is not None:
