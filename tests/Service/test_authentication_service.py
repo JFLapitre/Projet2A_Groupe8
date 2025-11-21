@@ -132,10 +132,9 @@ def test_register_customer_successful(
     username = "new_user_1"
     password = "ValidPassword123"
     phone = "+33 6 12 34 56 78"
-    name = "John Doe" # Added missing argument
+    name = "John Doe" 
 
     try:
-        # Correction: ajout du paramètre name
         new_user = service.register_customer(username, password, name, phone)
         mock_user_dao.find_user_by_username.assert_called_with(username)
         mock_password_service.check_password_strength.assert_called_with(password)
@@ -160,10 +159,9 @@ def test_register_customer_successful_phone_unformatted(
     username = "user_ok"
     password = "ValidPassword123"
     phone = "0612345678"
-    name = "Jane Doe" # Added missing argument
+    name = "Jane Doe" 
 
-    # Correction: ajout du paramètre name
-    new_user = service.register_customer(username, password, name, phone)
+    service.register_customer(username, password, name, phone)
 
     created_user_arg = mock_user_dao.add_user.call_args[0][0]
     assert created_user_arg.phone_number == "+33 6 12 34 56 78"
@@ -180,7 +178,6 @@ def test_register_customer_username_exists(
     existing_username = "existing_user"
 
     with pytest.raises(ValueError, match=f"Username '{existing_username}' already exists."):
-        # Correction: ajout du paramètre name
         service.register_customer(existing_username, "any_password", "Name", "+33612345678")
 
     mock_user_dao.find_user_by_username.assert_called_with(existing_username)
@@ -207,7 +204,6 @@ def test_register_customer_invalid_username(
     Tests that register raises ValueError for username validation failures (length or characters).
     """
     with pytest.raises(ValueError, match=error_match):
-        # Correction: ajout du paramètre name
         service.register_customer(invalid_username, "ValidPassword123", "Name", "+33612345678")
 
     mock_user_dao.find_user_by_username.assert_called_with(invalid_username)
@@ -236,7 +232,6 @@ def test_register_customer_invalid_phone_number(
     valid_username = "validuser"
 
     with pytest.raises(ValueError, match=error_match):
-        # Correction: ajout du paramètre name
         service.register_customer(valid_username, "ValidPassword123", "Name", invalid_phone)
 
     mock_user_dao.find_user_by_username.assert_called_with(valid_username)
@@ -256,7 +251,6 @@ def test_register_weak_password(
     mock_password_service.check_password_strength.side_effect = ValueError(error_message)
 
     with pytest.raises(ValueError, match=error_message):
-        # Correction: ajout du paramètre name
         service.register_customer("another_user_ok", weak_password, "Name", "+33612345678")
 
     mock_user_dao.find_user_by_username.assert_called_with("another_user_ok")
