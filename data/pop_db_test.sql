@@ -1,17 +1,17 @@
 INSERT INTO tests.user (id_user, username, hash_password, salt, user_type, sign_up_date) VALUES
-(1,'groupe8', '05530bfc09764dcbce797ad8c1313819ea19bd932684c9b056b95d523ba3bdcf', '8759bb4e872578c20b9a835a4f78d8b46dcea0a80745c3dfcc71a9e5d8f6e35f', 'admin', '2000-01-01'),
-(2, 'jane_smith', '9faef269131b1838ab8e95af580e7c109e1de4448ba0282bdf06f19726ff55ea', '776e37cc088064e6aef5cd504181f07e83ab5e495e724a5a492f0b495cec3e1c', 'customer', '2024-02-20'),
-(3, 'bob_driver', 'db7bdbc3bc99617b49292001145c705fdde6111d24716f0c7984ea02546231c1', '5002971dd49c959b140e1ad3576cdd34be96c3ccab3fbc355009934f89137111', 'driver', '2024-01-10'),
-(4,'john_doe', 'aa453f466c612b04de2e62b5501c264e462b06bac3ce18dc4bf7ad38e2d17bdf', '9a7fc02853c99c560238517027351d7deb7efeb2097686bd565c59bdaf059af6', 'customer', '2024-01-15'),
-(5, 'charlie_customer', '96feb3fd1738208a82870371dc52a5def69343165bcf2789e1a53f54eda61336', '76b132d093f2081b52c12bf8bd9add1c857fd1a4d924093b170c8c7acad1df25', 'customer', '2024-03-05'),
-(6, 'emma_white', 'f2d81a260dea8b100dd6542b44f7b237e40348b11b15886618c07e036b5a10cc', 'c6a2b8e0b7b8a7b0e1b6f3c8a9f0b5d4e3f2a1c0d9e8b7a6f5d4c3b2a1e0f9d8', 'customer', '2024-04-10'),
-(7, 'liam_brown', '5f4dcc3b5aa765d61d8327deb882cf99574f1b7f2f5f7f2b7f3b6a9c8b7f5b3a', 'd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1', 'customer', '2024-05-01'),
-(8, 'sophia_clark', '3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1', '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'customer', '2024-05-15'),
-(9, 'Bryanisinthekitchen', '8a4f5b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a', 'f1e2d3c4b5a6f7e8d9c0b1a2e3f4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0e1f2', 'driver', '2024-02-15'),
-(10, 'Maxivitesse', 'b1a0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0', 'a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1', 'driver', '2024-03-20'),
-(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'admin', '2024-01-20'),
-(12, 'ava_walker', 'f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8', 'e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5', 'customer', '2024-06-01'),
-(13, 'william_hall', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'customer', '2024-06-10');
+(1,'groupe8', '0fb57c52498aa60e706f4c065f8681a10786fffca4e375880a6f9354075c7913', '148832655724dae986ad7fb0b44a727b11befb22ff319bc3fc9804c296ccff36', 'admin', '2000-01-01'), -- Pwd: Sq5GxkKbvi3(
+(2, 'jane_smith', '54188f349247996b9dcfa428a9318d23a727d16a282929f702074db5fcae5edc', 'e7dd6e29e784440d9fa5fb2a7b8f0a884197247a3d41072590cee330359bcea4', 'customer', '2024-02-20'), -- Pwd: wZm$JT4vLhp@
+(3, 'bob_driver', '344f2ef0ccd686819cebde68d63a4965f13d9c8664deab1d1184d2981753a15c', '37a7af87bf28c447f88774398c073c32374a17281daceb87dc25bb3677d62813', 'driver', '2024-01-10'), -- Pwd: $ge8)4AP2Oj)
+(4,'john_doe', '6d0efe03fdae098e0cd67c1805b20181befea2162978102943b29a2b304a0d23', 'cd5e3de8653d246f2c572c49468c9a8891f4ae33de4048ee2d9c6f7a54b7cc48', 'customer', '2024-01-15'), -- Pwd: 5Clfso1Ld&#(
+(5, 'charlie_customer', '29891ef18fd51873f7b73e2a5446d57e4c6b5f5cf4f49f705a3be04479db94cc', 'aa42289de71e4e16b720ee2e6cb74a0c41f0e0b65d4a70cb8d15415c01cef93c', 'customer', '2024-03-05'), -- Pwd: BAp6O#pF(z6A
+(6, 'emma_white', '114110414987309953cef16fb636fe64b717aa1114499a1292d00b974fd12e55', 'a5d6573955d868f0c4c67db05f134a6a33d7122aefb01df5ef297380a2587081', 'customer', '2024-04-10'), -- Pwd: 3%R*6#r9TqXE
+(7, 'liam_brown', 'bd7f0b7c01a7650f3fbb338807a5fada5c3d731dbdb3aa2fb0535077512e8891', '451cb307c3240179cf6fd6f1813791024c1745c9c7128910a04262d26a60ebbc', 'customer', '2024-05-01'), -- Pwd: 61o4)!mh6APF
+(8, 'sophia_clark', 'cb597753c62dc8df46c8f0fd5367f82c46c7b0f4cdc36400e276dca8f36b0ca5', 'c87499199d36c42becfa9199b3d220c6e90f06ddb91632e3eaf99a8bce914b6f', 'customer', '2024-05-15'), -- Pwd: jdqLFj6O&0I2
+(9, 'Bryanisinthekitchen', 'b05657c8b698170d8e35db17484e832228ea5c027e035ae8eb2de78087c1a50d', '786e21382164a7667bab9bce9b41077a86e0ff01c567370f8421847f60bf8064', 'driver', '2024-02-15'), -- Pwd: @sv5*gNLw4sm
+(10, 'Maxivitesse', 'e024562a4cfebf5bed32ee204d3349722efce9fb7b058e65986274f706d3317c', '36437258a6311e841f5b726b5e7759e4eb698c6f2a168d6d43384e68bda9d40c', 'driver', '2024-03-20'), -- Pwd: R3c*f#3bF1H%
+(11, 'james_lewis', '5c0e665092ef000f7ed297eceb54fa52c9fb66fde409af0a7d2a3a8cc5ff36cf', '1f58912c6ccf0c21759c2042c329ed10d3964b47d5767a0fd87b5130f8b41d26', 'admin', '2024-01-20'), -- Pwd: 0zMzh3Fyli)$
+(12, 'ava_walker', '984c6742d1c1a4895d4a30116ddd9e2b8728d60428f2c22a7b0c1010a060043c', '52e3fa0c832ecaa1802bd1773fbfda05a13b1d3332bbb1e76bcdf741142673f5', 'customer', '2024-06-01'), -- Pwd: hl*O4o5nnbH)
+(13, 'william_hall', '2d83014064f177b65938212d98e327f5224a8baa5bf9f27f8221676e7ed720e3', '3cbdd98e3f1ed2caa46cc81b1f9fde31fccd20cf6cde57279e208904bea6e892', 'customer', '2024-06-10'); -- Pwd: 0STU37RVhTY^
 
 INSERT INTO tests.address (city, postal_code, street_name, street_number) VALUES
 ('Rennes', '35000', 'Rue de la Soif', 10),
