@@ -19,7 +19,7 @@ class DriverMainView(AbstractView):
             print("\n=== EJR Eats — Driver Menu ===")
             print("1) View pending order")
             print("2) Create delivery")
-            print("3) Get your delivery ID")
+            print("3) Get your deliveries ID")
             print("4) Get itinerary")
             print("5) Get delivery details")
             print("6) Mark delivery as completed")
