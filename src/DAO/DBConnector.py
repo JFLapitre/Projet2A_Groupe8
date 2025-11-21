@@ -7,6 +7,12 @@ from psycopg2.extras import RealDictCursor
 
 
 class DBConnector:
+    """
+    Database connector class for PostgreSQL operations.
+
+    This class provides a simplified interface for connecting to and executing SQL queries
+    on a PostgreSQL database. It supports both environment-based and custom configuration.
+    """
     def __init__(self, config=None, test=False):
         if config is not None:
             self.host = config["host"]
