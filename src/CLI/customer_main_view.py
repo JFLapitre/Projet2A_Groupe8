@@ -26,7 +26,6 @@ class CustomerMainView:
         self.services: Dict = services or {}
         self.cart: List["Bundle"] = []
 
-        # Instantiate sub-views, passing services, session, and cart
         self.menu_view: BrowseMenuView = BrowseMenuView(self.services, self.cart)
         self.checkout_view: AddressCheckoutView = AddressCheckoutView(self.services, self.session, self.cart)
 

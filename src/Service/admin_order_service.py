@@ -10,6 +10,9 @@ from src.Model.order import Order
 
 class AdminOrderService:
     def __init__(self, db_connector: DBConnector):
+        """
+        Initializes the service and injects dependencies into the DAOs.
+        """
         self.item_dao = ItemDAO(db_connector=db_connector)
         self.user_dao = UserDAO(db_connector=db_connector)
         self.address_dao = AddressDAO(db_connector=db_connector)
@@ -25,8 +28,14 @@ class AdminOrderService:
         )
 
     def list_waiting_orders(self) -> list[Order]:
+        """
+        Returns the list of all pending orders
+        """
         all_orders = self.order_dao.find_all_orders()
         return [order for order in all_orders if order.status == "pending"]
 
     def list_deliveries(self) -> list[Delivery]:
+        """
+        Returns the list of all deliveries.
+        """
         return self.delivery_dao.list_deliveries()
