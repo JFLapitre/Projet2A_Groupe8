@@ -43,45 +43,50 @@ class UserDAO:
                 return None
 
             user_type = raw_user["user_type"]
+
             if user_type == "customer":
-                return Customer(
+                user = Customer(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["customer_name"],
                     phone_number=raw_user["customer_phone"],
                 )
+
             elif user_type == "driver":
-                return Driver(
+                user = Driver(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["driver_name"],
                     phone_number=raw_user["driver_phone"],
                     vehicle_type=raw_user["vehicle_type"],
                     availability=raw_user["availability"],
                 )
+
             elif user_type == "admin":
-                return Admin(
+                user = Admin(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["admin_name"],
                     phone_number=raw_user["admin_phone"],
                 )
 
+            else:
+                return None
+
+            # Inject private attributes
+            user._hash_password = raw_user["hash_password"]
+            user._salt = raw_user["salt"]
+
+            return user
+
         except Exception as e:
             logging.error(f"Failed to fetch user {id_user}: {e}")
             return None
 
-    def find_user_by_username(self, username: int) -> Optional[Union[Customer, Driver, Admin]]:
-        """Find a user by their username (returns the correct type)."""
+    def find_user_by_username(self, username: str) -> Optional[Union[Customer, Driver, Admin]]:
         try:
             raw_user = self.db_connector.sql_query(
                 """
@@ -103,48 +108,55 @@ class UserDAO:
                 {"username": username},
                 "one",
             )
+
             if not raw_user:
                 return None
 
             user_type = raw_user["user_type"]
+
             if user_type == "customer":
-                return Customer(
+                user = Customer(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["customer_name"],
-                    phone_number=raw_user["customer_phone"]
+                    phone_number=raw_user["customer_phone"],
                 )
+
             elif user_type == "driver":
-                return Driver(
+                user = Driver(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["driver_name"],
                     phone_number=raw_user["driver_phone"],
                     vehicle_type=raw_user["vehicle_type"],
-                    availability=raw_user["availability"]
+                    availability=raw_user["availability"],
                 )
+
             elif user_type == "admin":
-                return Admin(
+                user = Admin(
                     id_user=raw_user["id_user"],
                     username=raw_user["username"],
-                    hash_password=raw_user["hash_password"],
-                    salt=raw_user["salt"],
                     sign_up_date=raw_user["sign_up_date"],
                     name=raw_user["admin_name"],
-                    phone_number=raw_user["admin_phone"]
+                    phone_number=raw_user["admin_phone"],
                 )
+
+            else:
+                return None
+
+            # Inject private attributes
+            user._hash_password = raw_user["hash_password"]
+            user._salt = raw_user["salt"]
+
+            return user
+
         except Exception as e:
             logging.error(f"Failed to fetch user {username}: {e}")
             return None
 
     def find_all(self, user_type: Optional[str] = None) -> List[Union[Customer, Driver, Admin]]:
-        """Find all users (optionally filtered by type)."""
         try:
             query = """
                 SELECT u.*,
@@ -162,6 +174,7 @@ class UserDAO:
                 LEFT JOIN admin a USING (id_user)
             """
             params = {}
+
             if user_type:
                 query += " WHERE u.user_type = %(user_type)s"
                 params["user_type"] = user_type
@@ -169,77 +182,76 @@ class UserDAO:
             raw_users = self.db_connector.sql_query(query, params, "all")
             users = []
 
-            for user in raw_users:
-                print(user)
-                if user["user_type"] == "customer":
-                    users.append(
-                        Customer(
-                            id_user=user["id_user"],
-                            username=user["username"],
-                            hash_password=user["hash_password"],
-                            sign_up_date=user["sign_up_date"],
-                            name=user["customer_name"],
-                            phone_number=user["customer_phone"],
-                            salt=user["salt"],
-                        )
+            for u in raw_users:
+                if u["user_type"] == "customer":
+                    obj = Customer(
+                        id_user=u["id_user"],
+                        username=u["username"],
+                        sign_up_date=u["sign_up_date"],
+                        name=u["customer_name"],
+                        phone_number=u["customer_phone"],
                     )
-                elif user["user_type"] == "driver":
-                    users.append(
-                        Driver(
-                            id_user=user["id_user"],
-                            username=user["username"],
-                            hash_password=user["hash_password"],
-                            sign_up_date=user["sign_up_date"],
-                            name=user["driver_name"],
-                            phone_number=user["driver_phone"],
-                            vehicle_type=user["vehicle_type"],
-                            availability=user["availability"],
-                            salt=user["salt"],
-                        )
+
+                elif u["user_type"] == "driver":
+                    obj = Driver(
+                        id_user=u["id_user"],
+                        username=u["username"],
+                        sign_up_date=u["sign_up_date"],
+                        name=u["driver_name"],
+                        phone_number=u["driver_phone"],
+                        vehicle_type=u["vehicle_type"],
+                        availability=u["availability"],
                     )
-                elif user["user_type"] == "admin":
-                    users.append(
-                        Admin(
-                            id_user=user["id_user"],
-                            username=user["username"],
-                            hash_password=user["hash_password"],
-                            sign_up_date=user["sign_up_date"],
-                            name=user["admin_name"],
-                            phone_number=user["admin_phone"],
-                            salt=user["salt"],
-                        )
+
+                elif u["user_type"] == "admin":
+                    obj = Admin(
+                        id_user=u["id_user"],
+                        username=u["username"],
+                        sign_up_date=u["sign_up_date"],
+                        name=u["admin_name"],
+                        phone_number=u["admin_phone"],
                     )
-            print(users)
+
+                else:
+                    continue
+
+                # Inject private attributes
+                obj._hash_password = u["hash_password"]
+                obj._salt = u["salt"]
+
+                users.append(obj)
+
             return users
+
         except Exception as e:
             logging.error(f"Failed to fetch users: {e}")
             return []
 
     def add_user(self, user: Union[Customer, Driver, Admin]) -> Optional[Union[Customer, Driver, Admin]]:
-        """Add a new user"""
         if isinstance(user, Customer):
             user_type = "customer"
         elif isinstance(user, Driver):
             user_type = "driver"
-        elif isinstance(user, Admin):
+        else:
             user_type = "admin"
 
         try:
             result = self.db_connector.sql_query(
                 """
-            INSERT INTO "user" (id_user, username, hash_password, salt, user_type, sign_up_date)
-            VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
-            RETURNING id_user;
-            """,
+                INSERT INTO "user" (id_user, username, hash_password, salt, user_type, sign_up_date)
+                VALUES (DEFAULT, %(username)s, %(hash_password)s, %(salt)s, %(user_type)s, %(sign_up_date)s)
+                RETURNING id_user;
+                """,
                 {
                     "username": user.username,
-                    "hash_password": user.hash_password,
-                    "salt": user.salt,
+                    "hash_password": user._hash_password,
+                    "salt": user._salt,
                     "user_type": user_type,
                     "sign_up_date": date.today(),
                 },
                 "one",
             )
+
             id_user = result["id_user"]
 
             if user_type == "customer":
@@ -251,6 +263,7 @@ class UserDAO:
                     {"id_user": id_user, "name": user.name, "phone_number": user.phone_number},
                     None,
                 )
+
             elif user_type == "driver":
                 self.db_connector.sql_query(
                     """
@@ -266,7 +279,8 @@ class UserDAO:
                     },
                     None,
                 )
-            elif user_type == "admin":
+
+            else:  # admin
                 self.db_connector.sql_query(
                     """
                     INSERT INTO admin (id_user, name, phone_number)
@@ -277,18 +291,18 @@ class UserDAO:
                 )
 
             return self.find_user_by_id(id_user)
+
         except Exception as e:
             logging.error(f"Failed to add user {user.username}: {e}")
             return None
 
     def update_user(self, user: Union[Customer, Driver, Admin]) -> Optional[Union[Customer, Driver, Admin]]:
-        """Update an existing user"""
         try:
             if isinstance(user, Customer):
                 user_type = "customer"
             elif isinstance(user, Driver):
                 user_type = "driver"
-            elif isinstance(user, Admin):
+            else:
                 user_type = "admin"
 
             self.db_connector.sql_query(
@@ -302,7 +316,7 @@ class UserDAO:
                 {
                     "id_user": user.id_user,
                     "username": user.username,
-                    "hash_password": user.hash_password,
+                    "hash_password": user._hash_password,
                     "user_type": user_type,
                 },
                 None,
@@ -323,6 +337,7 @@ class UserDAO:
                     },
                     None,
                 )
+
             elif user_type == "driver":
                 self.db_connector.sql_query(
                     """
@@ -342,7 +357,8 @@ class UserDAO:
                     },
                     None,
                 )
-            elif user_type == "admin":
+
+            else:  # admin
                 self.db_connector.sql_query(
                     """
                     UPDATE admin
@@ -359,12 +375,12 @@ class UserDAO:
                 )
 
             return self.find_user_by_id(user.id_user)
+
         except Exception as e:
             logging.error(f"Failed to update user {user.id_user}: {e}")
             return None
 
     def delete_user(self, id_user: int) -> bool:
-        """Delete a user by ID"""
         try:
             user = self.find_user_by_id(id_user)
             if not user:
@@ -372,25 +388,20 @@ class UserDAO:
                 return False
 
             if isinstance(user, Customer):
-                user_type = "customer"
-            elif isinstance(user, Driver):
-                user_type = "driver"
-            elif isinstance(user, Admin):
-                user_type = "admin"
-
-            if user_type == "customer":
                 self.db_connector.sql_query(
                     "DELETE FROM customer WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
                     None,
                 )
-            elif user_type == "driver":
+
+            elif isinstance(user, Driver):
                 self.db_connector.sql_query(
                     "DELETE FROM driver WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
                     None,
                 )
-            elif user_type == "admin":
+
+            else:  # admin
                 self.db_connector.sql_query(
                     "DELETE FROM admin WHERE id_user = %(id_user)s",
                     {"id_user": id_user},
@@ -404,6 +415,7 @@ class UserDAO:
             )
 
             return True
+
         except Exception as e:
             logging.error(f"Failed to delete user {id_user}: {e}")
             return False

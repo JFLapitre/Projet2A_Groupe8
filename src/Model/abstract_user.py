@@ -2,7 +2,7 @@ from abc import ABC
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 
 class AbstractUser(BaseModel, ABC):
@@ -12,13 +12,13 @@ class AbstractUser(BaseModel, ABC):
     Attributes:
         id_user (Optional[int]): Unique identifier for the user.
         username (str): Username for authentification.
-        hash_password (str): Hash password for authentification.
-        salt (str): Salt for authentification with hash password.
+        _hash_password (str): Hash password for authentification. (private attribute)
+        _salt (str): Salt for authentification with hash password. (private attribute)
         sign_up_date (Optional[datetime]): Date of last authentification.
     """
 
     id_user: Optional[int] = None
     username: str
-    hash_password: str
-    salt: str
+    _hash_password: str = PrivateAttr()
+    _salt: str = PrivateAttr()
     sign_up_date: Optional[datetime] = None

@@ -184,10 +184,10 @@ MOCK_ADDRESSES = {
     20: Address(id_address=20, city="Lyon", postal_code=69001, street_name="Republic Street", street_number=25),
 }
 MOCK_ITEMS_BUNDLES = {
-    1001: Item(id_item=1001, name="Item1", price=10.0, item_type="food", stock=1),
-    1002: Item(id_item=1002, name="Item2", price=15.0, item_type="food", stock=1),
-    1003: Item(id_item=1003, name="Item3", price=12.50, item_type="food", stock=1),
-    2001: Item(id_item=2001, name="Mega Discount (as Item)", price=150.0, item_type="bundle_placeholder", stock=1),
+    1001: Item(id_item=1001, name="Item1", price=10.0, item_type="dessert", stock=1),
+    1002: Item(id_item=1002, name="Item2", price=15.0, item_type="dessert", stock=1),
+    1003: Item(id_item=1003, name="Item3", price=12.50, item_type="dessert", stock=1),
+    2001: Item(id_item=2001, name="Mega Discount (as Item)", price=150.0, item_type="main", stock=1),
 }
 
 
