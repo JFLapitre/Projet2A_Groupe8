@@ -26,8 +26,6 @@ if TYPE_CHECKING:
 
 
 class MockDBConnector:
-    """Mock to simulate database connection and query execution."""
-
     def __init__(self):
         self.orders = [
             {
@@ -41,7 +39,7 @@ class MockDBConnector:
             {
                 "id_order": 102,
                 "id_user": 1,
-                "status": "completed",
+                "status": "delivered",
                 "price": 12.50,
                 "id_address": 10,
                 "order_date": datetime(2025, 1, 16),
@@ -49,7 +47,7 @@ class MockDBConnector:
             {
                 "id_order": 103,
                 "id_user": 2,
-                "status": "processing",
+                "status": "in_progress",
                 "price": 99.00,
                 "id_address": 20,
                 "order_date": datetime(2025, 1, 17),
@@ -57,7 +55,7 @@ class MockDBConnector:
             {
                 "id_order": 104,
                 "id_user": 2,
-                "status": "shipped",
+                "status": "delivered",
                 "price": 150.00,
                 "id_address": 20,
                 "order_date": datetime(2025, 1, 18),
@@ -158,7 +156,6 @@ class MockDBConnector:
         return None
 
 
-
 MOCK_USERS = {
     1: Customer(
         id_user=1,
@@ -184,27 +181,20 @@ MOCK_ADDRESSES = {
     20: Address(id_address=20, city="Lyon", postal_code=69001, street_name="Republic Street", street_number=25),
 }
 MOCK_ITEMS_BUNDLES = {
-    1001: Item(id_item=1001, name="Item1", price=10.0, item_type="dessert", stock=1),
-    1002: Item(id_item=1002, name="Item2", price=15.0, item_type="dessert", stock=1),
-    1003: Item(id_item=1003, name="Item3", price=12.50, item_type="dessert", stock=1),
+    1001: Item(id_item=1001, name="Item1", price=10.0, item_type="main", stock=1),
+    1002: Item(id_item=1002, name="Item2", price=15.0, item_type="main", stock=1),
+    1003: Item(id_item=1003, name="Item3", price=12.50, item_type="main", stock=1),
     2001: Item(id_item=2001, name="Mega Discount (as Item)", price=150.0, item_type="main", stock=1),
 }
 
 
-
-
 @pytest.fixture
 def mock_db_connector_impl() -> MockDBConnector:
-    """Internal fixture for the MockDBConnector implementation (contains logic)."""
     return MockDBConnector()
 
 
 @pytest.fixture
 def mock_db(mock_db_connector_impl) -> MagicMock:
-    """
-    FIX: Wraps MockDBConnector in a MagicMock with spec=DBConnector.
-    Uses side_effect on the mock's method to allow error simulation.
-    """
     mock = MagicMock(spec=DBConnector)
     mock.sql_query.side_effect = mock_db_connector_impl.sql_query
     return mock
@@ -212,7 +202,6 @@ def mock_db(mock_db_connector_impl) -> MagicMock:
 
 @pytest.fixture
 def mock_user_dao() -> MagicMock:
-    """Mock for UserDAO with spec and side_effect for initialization."""
     mock = MagicMock(spec=UserDAO)
     mock.find_user_by_id.side_effect = lambda id: MOCK_USERS.get(id, None)
     return mock
@@ -220,7 +209,6 @@ def mock_user_dao() -> MagicMock:
 
 @pytest.fixture
 def mock_address_dao() -> MagicMock:
-    """Mock for AddressDAO with spec and side_effect for initialization."""
     mock = MagicMock(spec=AddressDAO)
     mock.find_address_by_id.side_effect = lambda id: MOCK_ADDRESSES.get(id, None)
     return mock
@@ -228,7 +216,6 @@ def mock_address_dao() -> MagicMock:
 
 @pytest.fixture
 def mock_item_dao() -> MagicMock:
-    """Mock for ItemDAO with spec and side_effect for initialization."""
     mock = MagicMock(spec=ItemDAO)
     mock.find_item_by_id.side_effect = lambda id: MOCK_ITEMS_BUNDLES.get(id, None)
     return mock
@@ -236,13 +223,11 @@ def mock_item_dao() -> MagicMock:
 
 @pytest.fixture
 def mock_bundle_dao() -> MagicMock:
-    """Mock for BundleDAO (required for Pydantic)."""
     return MagicMock(spec=BundleDAO)
 
 
 @pytest.fixture
 def order_dao(mock_db: MagicMock, mock_item_dao, mock_user_dao, mock_address_dao, mock_bundle_dao) -> OrderDAO:
-    """Fixture to provide a configured OrderDAO instance."""
     return OrderDAO(
         db_connector=mock_db,
         item_dao=mock_item_dao,
@@ -252,10 +237,7 @@ def order_dao(mock_db: MagicMock, mock_item_dao, mock_user_dao, mock_address_dao
     )
 
 
-
-
 def test_find_order_by_id_nominal(order_dao: OrderDAO):
-    """Test finding an existing order by ID."""
     order = order_dao.find_order_by_id(101)
     assert order is not None
     assert order.id_order == 101
@@ -266,10 +248,6 @@ def test_find_order_by_id_nominal(order_dao: OrderDAO):
 
 
 def test_find_order_with_bundle(order_dao: OrderDAO):
-    """
-    Test finding an order containing a Bundle (via ItemDAO).
-    The type assertion verifies the Item placeholder.
-    """
     order = order_dao.find_order_by_id(104)
     assert order is not None
     assert order.id_order == 104
@@ -279,13 +257,11 @@ def test_find_order_with_bundle(order_dao: OrderDAO):
 
 
 def test_find_order_by_id_not_found(order_dao: OrderDAO):
-    """Test finding a non-existent order."""
     order = order_dao.find_order_by_id(999)
     assert order is None
 
 
 def test_find_all_orders(order_dao: OrderDAO):
-    """Test retrieving all existing orders."""
     orders = order_dao.find_all_orders()
     assert len(orders) == 4
     assert orders[0].id_order == 101
@@ -293,25 +269,22 @@ def test_find_all_orders(order_dao: OrderDAO):
 
 
 def test_find_orders_by_customer(order_dao: OrderDAO):
-    """Test retrieving orders for a specific customer."""
     orders = order_dao.find_orders_by_customer(1)
     assert len(orders) == 2
     assert all(o.customer.id_user == 1 for o in orders)
 
 
 def test_find_orders_by_customer_no_orders(order_dao: OrderDAO):
-    """Test retrieving orders for a customer with no orders."""
     orders = order_dao.find_orders_by_customer(99)
     assert orders == []
 
 
 def test_add_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockDBConnector):
-    """Test adding a new order."""
     new_order_data = Order(
         customer=MOCK_USERS[1],
         address=MOCK_ADDRESSES[10],
         items=[MOCK_ITEMS_BUNDLES[1001]],
-        status="new",
+        status="pending",
         price=10.0,
         order_date=datetime.now().replace(microsecond=0),
     )
@@ -322,14 +295,13 @@ def test_add_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockDBCo
     assert added_order is not None
     assert added_order.id_order == mock_db_connector_impl.next_id_order - 1
     assert len(mock_db_connector_impl.orders) == initial_order_count + 1
-    assert added_order.status == "new"
+    assert added_order.status == "pending"
 
 
 def test_update_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockDBConnector):
-    """Test updating an existing order's status and items."""
     order_to_update = order_dao.find_order_by_id(101)
 
-    order_to_update.status = "shipped"
+    order_to_update.status = "delivered"
     order_to_update.price = 50.00
     order_to_update.items = [MOCK_ITEMS_BUNDLES[1003]]
 
@@ -337,7 +309,7 @@ def test_update_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockD
     assert success is True
 
     updated_order = order_dao.find_order_by_id(101)
-    assert updated_order.status == "shipped"
+    assert updated_order.status == "delivered"
     assert updated_order.price == 50.00
     assert len(updated_order.items) == 1
     assert updated_order.items[0].id_item == 1003
@@ -348,7 +320,6 @@ def test_update_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockD
 
 
 def test_delete_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockDBConnector):
-    """Test deleting an existing order."""
     initial_order_count = len(mock_db_connector_impl.orders)
 
     success = order_dao.delete_order(101)
@@ -360,10 +331,7 @@ def test_delete_order_nominal(order_dao: OrderDAO, mock_db_connector_impl: MockD
     assert len([oi for oi in mock_db_connector_impl.order_items if oi["id_order"] == 101]) == 0
 
 
-
-
 def test_find_order_by_id_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during find_order_by_id."""
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     order = order_dao.find_order_by_id(101)
     assert order is None
@@ -371,7 +339,6 @@ def test_find_order_by_id_db_error(order_dao: OrderDAO, mock_db: MagicMock):
 
 
 def test_find_all_orders_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during find_all_orders."""
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     orders = order_dao.find_all_orders()
     assert orders == []
@@ -379,7 +346,6 @@ def test_find_all_orders_db_error(order_dao: OrderDAO, mock_db: MagicMock):
 
 
 def test_find_orders_by_customer_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during find_orders_by_customer."""
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     orders = order_dao.find_orders_by_customer(1)
     assert orders == []
@@ -387,13 +353,12 @@ def test_find_orders_by_customer_db_error(order_dao: OrderDAO, mock_db: MagicMoc
 
 
 def test_add_order_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during add_order (INSERT failure)."""
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     new_order_data = Order(
         customer=MOCK_USERS[1],
         address=MOCK_ADDRESSES[10],
         items=[MOCK_ITEMS_BUNDLES[1001]],
-        status="new",
+        status="pending",
         price=10.0,
         order_date=datetime.now().replace(microsecond=0),
     )
@@ -403,7 +368,6 @@ def test_add_order_db_error(order_dao: OrderDAO, mock_db: MagicMock):
 
 
 def test_update_order_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during update_order (UPDATE failure)."""
     order_to_update = order_dao.find_order_by_id(101)
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     success = order_dao.update_order(order_to_update)
@@ -412,7 +376,6 @@ def test_update_order_db_error(order_dao: OrderDAO, mock_db: MagicMock):
 
 
 def test_delete_order_db_error(order_dao: OrderDAO, mock_db: MagicMock):
-    """Test error handling during delete_order (DELETE failure)."""
     mock_db.sql_query.side_effect = Exception("Simulated DB Error")
     success = order_dao.delete_order(101)
     assert success is False

@@ -1,10 +1,7 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.App.auth import admin_required
 from src.App.init_app import admin_order_service
-from src.Model.order import Order
 
 order_router = APIRouter(prefix="/orders", tags=["Consulting orders"], dependencies=[Depends(admin_required)])
 
@@ -31,14 +28,36 @@ def find_order_by_id(id_order: int, dao=Depends(get_order_dao)):
         raise HTTPException(status_code=400, detail="Invalid request") from Exception
 
 
-@order_router.get("/", status_code=status.HTTP_200_OK, response_model=List[Order])
+@order_router.get("/", status_code=status.HTTP_200_OK)
 def get_pending_orders(admin_service=Depends(get_admin_order_service)):
     """
     Retrieves all orders with the status 'pending'.
-    This route is protected and accessible only to administrators.
+    Includes item names in the response.
     """
     try:
         pending_orders = admin_service.list_waiting_orders()
-        return pending_orders
+
+        formatted = []
+        for order in pending_orders:
+            formatted_order = {
+                    "id_order": order.id_order,
+                    "status": order.status,
+                    "address": {
+                        "streetnumber": order.address.street_number,
+                        "streetname": order.address.street_name,
+                        "city": order.address.city,
+                    }
+                    if order.address
+                    else None,
+                    "Customer name": order.customer.name,
+                    "Customer phone_number": order.customer.phone_number,
+                    "items": [item.name for item in order.items],
+                    "order_date": order.order_date,
+                    "price": order.price,
+                }
+            formatted.append(formatted_order)
+
+        return formatted
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred while fetching orders: {e}") from e

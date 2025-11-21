@@ -1,113 +1,115 @@
--- ============================================================
--- TEST DATA POPULATION (Schema: tests)
--- ============================================================
+INSERT INTO tests.user (id_user, username, hash_password, salt, user_type, sign_up_date) VALUES
+(1,'groupe8', '05530bfc09764dcbce797ad8c1313819ea19bd932684c9b056b95d523ba3bdcf', '8759bb4e872578c20b9a835a4f78d8b46dcea0a80745c3dfcc71a9e5d8f6e35f', 'admin', '2000-01-01'),
+(2, 'jane_smith', '9faef269131b1838ab8e95af580e7c109e1de4448ba0282bdf06f19726ff55ea', '776e37cc088064e6aef5cd504181f07e83ab5e495e724a5a492f0b495cec3e1c', 'customer', '2024-02-20'),
+(3, 'bob_driver', 'db7bdbc3bc99617b49292001145c705fdde6111d24716f0c7984ea02546231c1', '5002971dd49c959b140e1ad3576cdd34be96c3ccab3fbc355009934f89137111', 'driver', '2024-01-10'),
+(4,'john_doe', 'aa453f466c612b04de2e62b5501c264e462b06bac3ce18dc4bf7ad38e2d17bdf', '9a7fc02853c99c560238517027351d7deb7efeb2097686bd565c59bdaf059af6', 'customer', '2024-01-15'),
+(5, 'charlie_customer', '96feb3fd1738208a82870371dc52a5def69343165bcf2789e1a53f54eda61336', '76b132d093f2081b52c12bf8bd9add1c857fd1a4d924093b170c8c7acad1df25', 'customer', '2024-03-05'),
+(6, 'emma_white', 'f2d81a260dea8b100dd6542b44f7b237e40348b11b15886618c07e036b5a10cc', 'c6a2b8e0b7b8a7b0e1b6f3c8a9f0b5d4e3f2a1c0d9e8b7a6f5d4c3b2a1e0f9d8', 'customer', '2024-04-10'),
+(7, 'liam_brown', '5f4dcc3b5aa765d61d8327deb882cf99574f1b7f2f5f7f2b7f3b6a9c8b7f5b3a', 'd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1', 'customer', '2024-05-01'),
+(8, 'sophia_clark', '3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1', '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'customer', '2024-05-15'),
+(9, 'Bryanisinthekitchen', '8a4f5b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a', 'f1e2d3c4b5a6f7e8d9c0b1a2e3f4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0e1f2', 'driver', '2024-02-15'),
+(10, 'Maxivitesse', 'b1a0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0', 'a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1', 'driver', '2024-03-20'),
+(11, 'james_lewis', '1b2a3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b', 'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'admin', '2024-01-20'),
+(12, 'ava_walker', 'f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8', 'e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5', 'customer', '2024-06-01'),
+(13, 'william_hall', 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2', 'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3', 'customer', '2024-06-10');
 
--- 1. USERS (Hash/Salt pairs provided by user)
-INSERT INTO tests.user (username, hash_password, salt, user_type, sign_up_date) VALUES
--- Customers (ID 1-5)
-('alice_dupont',  '48509134ada98578077b37eed8faade004bb036b314ed8fafe80abb4feb17d29', '071bd72d2e52b72b94b3e47afe5e172a2f8826e355e54285fa466e26e24e5282', 'customer', '2024-01-01'), -- Pwd: P@ssW0rd1
-('bob_martin',    '7dde5351f5852fdcc6bc4f1a2b12b2ba35ea93823776cbbba8f306bc6f2bb634', 'a1dd5ab3dda693d41837c73ad3fd347ba046588db991cc3f1cc5cb260eddf5af', 'customer', '2024-01-05'), -- Pwd: S3cure!TxT
-('charlie_brown', '68e4498e77e7c3940c1a8da24d31c53308c2e26e6c8bf83808bfa7e77fd9f55e', 'fb480e326fcc737c273064cd0153234c18d6c0777c9a6d91ba4c2c7fe93d7a13', 'customer', '2024-02-10'), -- Pwd: Azerty_789!
-('david_lee',     '167ec9a6e356723a4b1de1c92806876b86a18b5a2eefef860c18b1e78f0ecb75', 'b9d8e3cd2c777cffc84c050632b337ce8b719fa16a39369073a6a55e1c2a3ff7', 'customer', '2024-03-15'), -- Pwd: L0gin$2024
-('eve_adam',      'c0ee2a3c9cbbc9a01fa92aa4e706dec11dd507f50b896c2cd6ff70523d1d9fe7', '23e8b3acd44f1b44329c92c983bc068fa724d78c75ff201ec297f2f66bccee48', 'customer', '2024-03-20'), -- Pwd: H@shM3Pls
-
--- Drivers (ID 6-8)
-('driver_max',    '13cc81bcd5d058ef87a9c859b17edcd80efea1d0f284763cec7770cbdb9555b0', '9f8e44c0294740eaf225486a75b6275b80f3d8cd68376a1226d16620a78e6c6d', 'driver',   '2024-01-10'), -- Pwd: Pyth0n#Code
-('driver_sam',    'd959c789ceae5753cdf3b839a0163f4a9caf810632269bdc2c1009d021bb2ae7', '15ce15d8ad64fb40e017918e2750598fd77a657b6f2dac8d5789cab7c3d4095b', 'driver',   '2024-02-01'), -- Pwd: D3vOpp$99
-('driver_leo',    '1c7d807324a0fbdd6b9ff6b69893a32328335ceec2af4fd806bd2bdee8386709', '497a026f233f10ee2dd1d2d93e8bca35ab3fb91eb346d1b22fe32a7783edacc9', 'driver',   '2024-02-15'), -- Pwd: Adm1n?SYS
-
--- Admin (ID 9)
-('admin_chief',   '948cc6ee100cb405c55b01e2ca7e8bd6313b941b66593fd4b79242f8ab49eb9d', '78da12e0656b329bcb8a017ac0c1589c377722e7bb471d8c0ae538295e4bc993', 'admin',    '2023-01-01'); -- Pwd: B1tCoin*Up
-
-
--- Customer details
-INSERT INTO tests.customer (id_user, name, phone_number) VALUES
-(1, 'Alice Dupont', '0601010101'),
-(2, 'Bob Martin', '0602020202'),
-(3, 'Charlie Brown', '0603030303'),
-(4, 'David Lee', '0604040404'),
-(5, 'Eve Adam', '0605050505');
-
--- Driver details
-INSERT INTO tests.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
-(6, 'Max Verstappen', '0701010101', 'car', TRUE),
-(7, 'Sam Porter', '0702020202', 'bike', TRUE),
-(8, 'Leo Messi', '0703030303', 'scooter', FALSE);
-
--- Admin details
-INSERT INTO tests.admin (id_user, name, phone_number) VALUES
-(9, 'Big Boss', '0101010101');
-
-
--- 2. ADDRESSES
 INSERT INTO tests.address (city, postal_code, street_name, street_number) VALUES
-('Paris', '75001', 'Rue de Rivoli', '10'),
-('Paris', '75011', 'Rue Oberkampf', '42'),
-('Lyon', '69002', 'Place Bellecour', '5'),
-('Marseille', '13001', 'Vieux Port', '1'),
-('Bordeaux', '33000', 'Rue Sainte-Catherine', '120');
+('Rennes', '35000', 'Rue de la Soif', 10),
+('Rennes', '35000', 'Place de la Mairie', 25),
+('Rennes', '35200', 'Avenue Jean Jaurès', 50),
+('Rennes', '35700', 'Rue de Fougères', 15),
+('Rennes', '35000', 'Place Sainte-Anne', 100);
 
+INSERT INTO tests.customer (id_user, name, phone_number) VALUES
+(4, 'John Doe', '+33 6 01 02 03 04'),
+(2, 'Jane Smith', '+33 6 12 34 56 78'),
+(5, 'Charlie Customer', '+33 6 23 45 67 89'),
+(6, 'Emma White', '+33 6 06 06 06 06'),
+(7, 'Liam Brown', '+33 6 07 07 07 07'),
+(8, 'Sophia Clark', '+33 6 08 08 08 08'),
+(12, 'Ava Walker', '+33 6 12 12 12 12'),
+(13, 'William Hall', '+33 6 13 13 13 13');
 
--- 3. ITEMS
-INSERT INTO tests.item (name, description, item_type, price, stock, availability) VALUES
-('Cheeseburger', 'Classic cheese burger', 'main', 12.50, 50, TRUE),
-('Vegan Burger', 'No meat burger', 'main', 13.50, 20, TRUE),
-('Fries', 'Crispy french fries', 'side', 4.00, 100, TRUE),
-('Coke', '33cl Can', 'drink', 2.50, 100, TRUE),
-('Water', '50cl Bottle', 'drink', 1.50, 100, TRUE),
-('Tiramisu', 'Homemade coffee cake', 'dessert', 6.00, 15, TRUE),
-('Caesar Salad', 'Chicken and salad', 'starter', 9.00, 20, TRUE),
-('Sushi Set', '12 pieces', 'main', 18.00, 10, TRUE),
-('Miso Soup', 'Hot soup', 'starter', 4.50, 30, TRUE),
-('Chocolate Cake', 'Delicious cake', 'dessert', 5.50, 0, TRUE); 
+INSERT INTO tests.admin (id_user, name, phone_number) VALUES
+(1, 'Groupe 8', '+33 7 69 52 27 94');
 
+INSERT INTO tests.driver (id_user, name, phone_number, vehicle_type, availability) VALUES
+(3, 'Bob Driver', '+33 6 45 67 89 01', 'bike', TRUE),
+(9, 'Bryan Donato Da Costa', '+33 6 56 87 46 89', 'car', TRUE),
+(10, 'Maxine Voinson', '+33 6 67 54 78 91', 'car', TRUE);
 
--- 4. BUNDLES
--- Predefined Bundles
+INSERT INTO tests.item (name, item_type, price, stock, availability) VALUES
+('Banh mi', 'main', 10.50, 20, TRUE),
+('Fajitas', 'main', 14.00, 15, TRUE),
+('Galettes bretonnes', 'main', 9.00, 30, TRUE),
+('Caesar Salad', 'starter', 8.50, 10, TRUE),
+('Greek Salad', 'starter', 7, 10, TRUE),
+('Tarte aux pommes', 'dessert', 6.00, 8, TRUE),
+('Coca Cola', 'drink', 3.00, 30, TRUE),
+('Mineral Water', 'drink', 2.00, 25, TRUE),
+('Lemonade', 'drink', 3, 20, TRUE),
+('Classic Burger', 'main', 11.00, 12, TRUE),
+('Fries', 'side', 3, 18, TRUE),
+('Mozzarella sticks', 'side', 4, 15, TRUE);
+
+INSERT INTO tests.bundle (name, description, bundle_type,  price, discount) VALUES
+('Banh mi Menu', 'Banh mi + Drink + Dessert', 'predefined', 17.00, NULL),
+('Burger Menu', 'Burger + Fries + Drink', 'predefined', 16.00, NULL);
+
 INSERT INTO tests.bundle (name, description, bundle_type, price, discount) VALUES
-('Burger Menu', 'Burger + Fries + Coke', 'predefined', 16.00, NULL),
-('Healthy Choice', 'Vegan Burger + Water', 'predefined', 14.00, NULL);
+('Promo for couple', 'Buy 2 main, get 10% off', 'discount',  NULL, 0.10),
+('Main and drink', '', 'discount', NULL, 0.20),
+('Complete bundle', '', 'discount', NULL, 0.2);
 
--- Predefined Bundle Items
-INSERT INTO tests.bundle_item (id_bundle, id_item) VALUES 
-(1, 1), (1, 3), (1, 4), -- Burger Menu
-(2, 2), (2, 5);         -- Healthy Choice
+INSERT INTO tests.bundle_required_item (id_bundle, item_type, quantity_required) VALUES
+(3, 'main', 2),
+(4, 'main', 1),
+(4, 'drink', 1),
+(5, 'main', 1),
+(5, 'starter', 1),
+(5, 'dessert', 1);
 
--- Discount Bundles
-INSERT INTO tests.bundle (name, description, bundle_type, required_item_types, discount) VALUES
-('Couple Promo', '2 Mains - 10% off', 'discount', ARRAY['main', 'main'], 0.10);
+INSERT INTO tests.bundle_item (id_bundle, id_item) VALUES
+(1, 1),
+(1, 9),
+(1, 6),
+(2, 9),
+(2, 10),
+(2, 11);
 
-
--- 5. ORDERS
 INSERT INTO tests.order (id_user, status, price, id_address, order_date) VALUES
-(1, 'validated', 16.00, 1, NOW() - INTERVAL '1 HOUR'), 
-(2, 'in_progress', 25.00, 2, NOW() - INTERVAL '30 MINUTE'),
-(3, 'delivered', 18.00, 3, NOW() - INTERVAL '1 DAY'),
-(1, 'pending', 12.50, 1, NOW());
+(1, 'delivered', 13.5, 1, '2024-10-01 12:30:00'),
+(2, 'in_progress', 31, 2, '2024-10-06 18:45:00'),
+(5, 'pending', 19, 3, '2024-10-06 19:15:00'),
+(4, 'in_progress', 11, 4, '2024-10-06 20:00:00'),
+(4, 'in_progress', 15.5, 5, '2024-10-06 20:05:00'); 
 
--- 6. ORDER ITEMS
-INSERT INTO tests.order_item (id_order, id_item) VALUES 
-(1, 1), (1, 3), (1, 4), -- Order 1
-(2, 1), (2, 1),         -- Order 2
-(3, 8),                 -- Order 3
-(4, 1);                 -- Order 4
-
-
--- 7. DELIVERIES
--- Active delivery (Order 2 -> Driver 6)
 INSERT INTO tests.delivery (id_driver, status, delivery_time) VALUES
-(6, 'in_progress', NULL);
+(3, 'delivered', '2024-10-01 13:15:00'),
+(3, 'in_progress', NULL),
+(3, 'in_progress', NULL);
 
-INSERT INTO tests.delivery_order (id_delivery, id_order) VALUES (1, 2);
+INSERT INTO tests.delivery_order (id_delivery, id_order) VALUES
+(1, 1),
+(2, 2),
+(2, 4),
+(2, 5);
 
--- Completed delivery (Order 3 -> Driver 7)
-INSERT INTO tests.delivery (id_driver, status, delivery_time) VALUES
-(7, 'completed', NOW() - INTERVAL '23 HOUR');
+INSERT INTO tests.order_item (id_order, id_item) VALUES
+(1, 1),
+(1, 6),
+(2, 2),
+(2, 8),
+(3, 9),
+(3, 10),
+(3, 5),
+(4, 3),
+(4, 7),
+(5, 4),
+(5, 11),
+(5, 6);
 
-INSERT INTO tests.delivery_order (id_delivery, id_order) VALUES (2, 3);
 
-
--- 8. RESET SEQUENCES
 SELECT setval('tests.user_id_user_seq', (SELECT MAX(id_user) FROM tests.user));
 SELECT setval('tests.address_id_address_seq', (SELECT MAX(id_address) FROM tests.address));
 SELECT setval('tests.item_id_item_seq', (SELECT MAX(id_item) FROM tests.item));

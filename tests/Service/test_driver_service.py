@@ -272,7 +272,7 @@ def test_complete_delivery_success(
 
     mock_delivery_dao.find_delivery_by_id.assert_called_once_with(sample_delivery_inprogress.id)
 
-    assert sample_delivery_inprogress.status == "completed"
+    assert sample_delivery_inprogress.status == "delivered"
     assert sample_delivery_inprogress.delivery_time == mock_now
 
     for order in sample_delivery_inprogress.orders:
@@ -312,7 +312,7 @@ def test_complete_delivery_order_update_fails(
 
     assert "Could not update status for orders in delivery 50: DB Error" in caplog.text
 
-    assert sample_delivery_inprogress.status == "completed"
+    assert sample_delivery_inprogress.status == "delivered"
     mock_delivery_dao.update_delivery.assert_called_once_with(sample_delivery_inprogress)
 
 

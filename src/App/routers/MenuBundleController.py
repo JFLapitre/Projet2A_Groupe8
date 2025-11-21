@@ -142,9 +142,10 @@ def update_discounted_bundle(
         handle_service_error(e)
 
 
-@menu_bundle_router.delete("/bundles/{id_bundle}", status_code=status.HTTP_204_NO_CONTENT)
+@menu_bundle_router.delete("/bundles/{id_bundle}", status_code=status.HTTP_200_OK)
 def delete_bundle(id_bundle: int, service=Depends(get_service)):
     try:
         service.delete_bundle(id_bundle)
+        return {"message": f"Bundle {id_bundle} deleted successfully"}
     except Exception as e:
         handle_service_error(e)
