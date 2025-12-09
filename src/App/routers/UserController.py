@@ -48,7 +48,10 @@ def create_admin_user(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
-        service.create_admin_account(username=username, password=password, name=name, phone_number=phone_number)
+        newadmin = service.create_admin_account(
+            username=username, password=password, name=name, phone_number=phone_number
+        )
+        return newadmin
     except Exception as e:
         handle_service_error(e)
 
@@ -72,13 +75,14 @@ def create_driver_user(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     try:
-        service.create_driver_account(
+        newdriver = service.create_driver_account(
             username=username,
             password=password,
             name=name,
             phone_number=phone_number,
             vehicle_type=vehicle_type,
         )
+        return newdriver
     except Exception as e:
         handle_service_error(e)
 

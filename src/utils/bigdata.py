@@ -91,6 +91,13 @@ class ResetDatabase:
             print(f"Error during mass insertion of users : {e}")
             raise
 
+        self.db_connector.sql_query("SELECT setval('fd.user_id_user_seq', (SELECT MAX(id_user) FROM fd.user));"
+            "SELECT setval('fd.address_id_address_seq', (SELECT MAX(id_address) FROM fd.address));"
+            "SELECT setval('fd.item_id_item_seq', (SELECT MAX(id_item) FROM fd.item));"
+            "SELECT setval('fd.bundle_id_bundle_seq', (SELECT MAX(id_bundle) FROM fd.bundle));"
+            "SELECT setval('fd.order_id_order_seq', (SELECT MAX(id_order) FROM fd.order));"
+            "SELECT setval('fd.delivery_id_delivery_seq', (SELECT MAX(id_delivery) FROM fd.delivery));")
+
     def generate_bulk_orders(self, order_count=1000):
         pass
 
